@@ -1,590 +1,719 @@
 const months = [
   {
     name: "M1", fullName: "Month 1", label: "Launch",
-    theme: "Introduce yourself & establish your niche identity",
+    theme: "Introduce The Husband's Corner — your voice, your taste, your niche",
     focus: ["Account launch", "Intro content", "First impressions"],
     weeks: [
       {
         label: "Week 1 — who are you?",
         posts: [
-          { day: "Mon", pl: "both",  title: "Account intro post",        desc: "Who you are, what you read, why horror/thriller. Pin this." },
-          { day: "Wed", pl: "ig",    title: "Shelfie reveal",             desc: "Your horror/thriller shelf or stack. Dark moody aesthetic." },
-          { day: "Fri", pl: "tt",    title: "'Books that broke me' reel", desc: "Fast cuts of 5 covers + trending audio. Great first hook." },
-          { day: "Sat", pl: "ig",    title: "Author spotlight post",      desc: "Deep-dive on a favourite horror author to cap the week." }
+          { day: "Mon", pl: "both", title: "Husband's Bait: The opener",             desc: "Introduce your account through the lens of your niche — what is The Husband's Corner, and why does the name say everything? Pin this post." },
+          { day: "Wed", pl: "tt",   title: "Books that kept me up — intro reel",     desc: "Your most memorable dark, thriller or horror reads. Fast cuts of covers, trending audio, zero spoilers. A great first hook for BookTok." },
+          { day: "Fri", pl: "ig",   title: "Author spotlight: your starting point",  desc: "Deep-dive on the thriller or mystery author who made you fall in love with the genre. Great for credibility and new followers." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — series opener",          desc: "Introduce the first saga you'll be following on this account. Show book 1, explain the premise, tell followers why you're committed to it." }
         ],
         stories: [
-          { title: "Meet me story",        desc: "Slides: name, top 3 horror reads, your reading vibe. Use polls." },
-          { title: "'This or that' horror", desc: "Supernatural vs psychological — tap to vote. Easy engagement." }
+          { title: "Meet The Husband's Corner", desc: "Story slides: your name, top 5 thriller/mystery/horror reads, your reading aesthetic, what followers can expect. Use polls and question stickers." },
+          { title: "'Thriller or mystery?' poll", desc: "Which do your new followers prefer? Use the results to shape your early content mix." }
         ]
       },
       {
         label: "Week 2 — your taste",
         posts: [
-          { day: "Mon", pl: "tt",   title: "All-time fave horror book",    desc: "Why it scared you, personal story. Vulnerability = follows." },
-          { day: "Wed", pl: "ig",   title: "5-star thriller flat lay",      desc: "Favourite thriller with moodboard props. Use #thrillerbooks." },
-          { day: "Fri", pl: "both", title: "Hot take poll",                 desc: "'Stephen King is overrated — agree or disagree?' Drives comments." },
-          { day: "Sun", pl: "tt",   title: "'Books that kept me up' reel",  desc: "Weekend traffic is high on TikTok. Fast cuts, trending audio." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: your defining comparison", desc: "Pick two domestic or psychological thrillers that shaped what this account is about. Compare tone, terror, and which one haunts you more." },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #1",                   desc: "Share your Goodreads 'want to read' shelf — or a handpicked list of the thrillers and mysteries you haven't started yet. Link in bio." },
+          { day: "Fri", pl: "both", title: "Currently reading check-in",              desc: "Where you are in a book right now — page count, a spoiler-free reaction, your current level of dread. Very relatable content." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Continue the saga you opened last week. Feature what changes in book 2 and whether the series is living up to its promise." }
         ],
         stories: [
-          { title: "Rating reveal story", desc: "Slide by slide: each book from this week's flat lay, with your star rating." },
-          { title: "Question box",        desc: "'Ask me anything about horror books' — feed answers all week." }
+          { title: "Star rating reveal",    desc: "Slide-by-slide: your recent reads, each with a star rating and a single-sentence reaction. Saves well." },
+          { title: "Question box",          desc: "'Ask me anything about thrillers, mystery, or horror' — answer throughout the week in stories." }
         ]
       },
       {
-        label: "Week 3 — series & sagas",
+        label: "Week 3 — the niche",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Saga starter rec",            desc: "'Start here if you're new to horror sagas' — ranked list reel." },
-          { day: "Wed", pl: "ig",   title: "Saga series aesthetic",        desc: "All books in a series laid out. Great shareable format." },
-          { day: "Fri", pl: "both", title: "Currently reading check-in",   desc: "Where you are in a book + a creepy quote teaser." },
-          { day: "Sat", pl: "ig",   title: "Reading nook setup",           desc: "Your physical reading spot styled for horror vibes. Very saveable." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the marriage secret",     desc: "Feature a thriller where the husband is hiding something catastrophic. The hook that defines your account's name — play it straight and personal." },
+          { day: "Thu", pl: "ig",   title: "Aesthetic shelfie — dark and moody",      desc: "Your horror, thriller, and mystery shelf styled for maximum atmosphere. Dark aesthetic, moodboard props, heavy on the dread." },
+          { day: "Fri", pl: "both", title: "Sub-genre guide: your niche explained",   desc: "A carousel or reel explaining the difference between thriller, mystery, suspense, and horror. Great evergreen education content for new followers." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Third entry of the saga. Is it still gripping? Feature a mid-series moment and whether the commitment is paying off." }
         ],
         stories: [
-          { title: "Reading progress bar", desc: "Use the poll sticker as a 'progress bar' for your current read. Update daily." },
-          { title: "Saga reading order",   desc: "Swipe-through guide: how to read a series in order. Save-worthy." }
+          { title: "Reading progress bar",    desc: "Use a poll sticker as a progress bar for your current read. Update it daily all week." },
+          { title: "'This or that' mystery",  desc: "Domestic thriller vs psychological thriller — tap to vote. Easy engagement for new followers." }
         ]
       },
       {
         label: "Week 4 — community",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'Tag someone' reel",           desc: "'Tag a friend who'd survive a horror novel' — viral mechanic." },
-          { day: "Wed", pl: "ig",   title: "Month 1 wrap-up carousel",     desc: "What you read, what scared you, what's next. Recap carousel." },
-          { day: "Fri", pl: "both", title: "Reading challenge tease",       desc: "Announce your Month 2 reading theme to build anticipation." },
-          { day: "Sun", pl: "tt",   title: "Week in books reel",            desc: "Quick round-up of everything you read this month. Montage format." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: classic vs modern",      desc: "A golden age mystery vs a contemporary thriller. Compare the puzzle mechanics, the narration style, and which era keeps you more on edge." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #1",                         desc: "3–5 thrillers, mysteries, or horror reads you're hoping to get to. Include books not yet published so you can tag the authors early." },
+          { day: "Fri", pl: "both", title: "Friday Faves #1: accounts to follow",     desc: "Spotlight 3–5 fellow Bookstagram/BookTok accounts covering thriller, mystery, suspense, or horror. Your first community post." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — month 1 saga wrap",       desc: "Quick recap of the books you've featured in the saga this month. Where does the series stand? Would you recommend it to new readers?" }
         ],
         stories: [
-          { title: "Month 1 stats story",           desc: "Pages read, books finished, average rating — show your numbers." },
-          { title: "'What should I read next?' poll", desc: "Give followers 2 options and let them decide Month 2's first read." }
+          { title: "Month 1 stats",               desc: "Posts made, books featured, engagement highlights. Show the beginning of the journey." },
+          { title: "'What should I read next?' poll", desc: "Give followers two options for next month's first comparison post — they decide." }
         ]
       }
     ]
   },
+
   {
     name: "M2", fullName: "Month 2", label: "Consistency",
-    theme: "Build a posting rhythm & start engaging with the community",
-    focus: ["Engagement loops", "Comment bait", "Community building"],
+    theme: "Build your posting rhythm and start engaging deeper with your community",
+    focus: ["Engagement loops", "Genre education", "Community building"],
     weeks: [
       {
         label: "Week 1 — sub-genre deep dive",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Psychological vs supernatural",  desc: "'What's scarier?' debate reel. Two-sided arguments perform well." },
-          { day: "Wed", pl: "ig",   title: "Sub-genre guide carousel",        desc: "Psychological / supernatural / slasher / cosmic — what is each?" },
-          { day: "Fri", pl: "both", title: "Sub-genre poll",                  desc: "Let followers vote on what you should read next." },
-          { day: "Sun", pl: "ig",   title: "Moody aesthetic post",            desc: "Dark flat lay matching the sub-genre you're currently reading." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the double life",         desc: "Feature a thriller where the husband has been living a second, secret life. The 'who did I marry?' trope at its most effective." },
+          { day: "Wed", pl: "ig",   title: "Psychological vs supernatural horror — debate reel", desc: "What's scarier: a monster or a person? A reel arguing both sides. Two-sided debate posts perform well on BookTok." },
+          { day: "Fri", pl: "tt",   title: "'Books that broke me' scary reel",        desc: "The reads that genuinely disturbed you — thriller, horror, suspense. Cover transitions, no spoilers, trending audio. Pure emotional hook." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — new saga begins",         desc: "Introduce a new thriller or crime series. Why this one, why now, and what sets it apart from anything else in the genre." }
         ],
         stories: [
-          { title: "Sub-genre quiz",      desc: "'Which horror sub-genre are you?' — quiz format with emoji sliders." },
-          { title: "Behind the shelfie",  desc: "Time-lapse or BTS of setting up your aesthetic book photo." }
+          { title: "Sub-genre quiz",        desc: "'Which thriller sub-genre are you?' — psychological / locked room / domestic / horror. Quiz format with tap-through." },
+          { title: "Behind the flat lay",   desc: "BTS time-lapse of setting up a moody book photo. Followers love seeing the craft behind the aesthetic." }
         ]
       },
       {
-        label: "Week 2 — author spotlight",
+        label: "Week 2 — author worlds",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Stephen King starter guide",    desc: "'Where to start with King' is evergreen and highly searchable." },
-          { day: "Wed", pl: "ig",   title: "Author aesthetic post",          desc: "Books by one author styled together. Clean, shareable visual." },
-          { day: "Fri", pl: "tt",   title: "'Underrated authors' reel",      desc: "5 horror authors who deserve more hype." },
-          { day: "Sat", pl: "ig",   title: "Author biography carousel",      desc: "Key facts, best books, reading order for the spotlighted author." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: tone comparison",        desc: "Two thriller authors with completely different tones — one atmospheric and slow, one propulsive and fast. Which pace keeps you more hooked?" },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #2",                   desc: "A curated list: thrillers, mysteries, and dark fiction you've been gifted, recommended, or saved but haven't touched yet." },
+          { day: "Thu", pl: "ig",   title: "Author aesthetic carousel",               desc: "Feature a thriller or mystery author's full body of work styled together. Clean, visual, shareable — great for author fans." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Book 2 of the saga you opened last week. What deepens in the second instalment? Does the series find its voice?" }
         ],
         stories: [
-          { title: "Author trivia",    desc: "Drop 3 facts about the author — followers guess who it is before the reveal." },
-          { title: "Reading update",   desc: "Where are you in their book? Quote from the page you're on right now." }
+          { title: "Author trivia game",   desc: "Drop 3 clues about a thriller author — followers DM their guess before you reveal." },
+          { title: "Reading update",       desc: "Current page, current mood, current level of paranoia. A quick personal update." }
         ]
       },
       {
         label: "Week 3 — reaction content",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Live reading reaction",           desc: "Film yourself reacting to a shocking plot twist. Raw = relatable." },
-          { day: "Wed", pl: "ig",   title: "Quote card post",                  desc: "Creepy / iconic quote from current read as a styled graphic." },
-          { day: "Fri", pl: "both", title: "'Did NOT see that coming' post",   desc: "Spoiler-free shock reactions. Gets curious comments." },
-          { day: "Sun", pl: "tt",   title: "Reactions round-up reel",          desc: "Week's most memorable book moments stitched together." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the perfect façade",      desc: "A book where the marriage looks perfect from the outside. Feature the moment the cracks appear — spoiler-free but emotionally raw." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #2",                         desc: "Your thriller and horror TBR pile. Include upcoming releases — tag authors and publishers for early visibility." },
+          { day: "Fri", pl: "tt",   title: "Live reading reaction — that scene",      desc: "Film yourself reacting to a shocking plot twist or horror moment. No title, no spoilers, just the raw reaction. Gets enormous comments." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Mid-series check-in. Is the saga maintaining pace? Feature the moment that made you want to keep reading." }
         ],
         stories: [
-          { title: "Spoiler vault story", desc: "'DM me if you've read it — I need to talk about THAT ending.'" },
-          { title: "Emoji rating",        desc: "Rate the book's twist with emojis only. Followers guess which book." }
+          { title: "Spoiler vault",       desc: "'DM me if you've finished this one — I need to talk about THAT ending with someone.'" },
+          { title: "Emoji rating",        desc: "Rate your current read using only emojis. Followers guess which book." }
         ]
       },
       {
-        label: "Week 4 — lists & rankings",
+        label: "Week 4 — lists and rankings",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Thriller ranking reel",         desc: "Tier-list format: S/A/B/C — very watchable, drives debate." },
-          { day: "Wed", pl: "ig",   title: "'Books by vibe' carousel",       desc: "Moody autumn read / can't sleep / airplane thriller — grouped recs." },
-          { day: "Fri", pl: "both", title: "Month 2 reading recap",          desc: "Stats: pages read, books finished, star ratings summary." },
-          { day: "Sat", pl: "ig",   title: "Reader recs post",               desc: "Spotlight books your followers recommended this month." }
+          { day: "Tue", pl: "tt",   title: "Two for Tuesday: plot twist face-off",    desc: "Two books famous for their plot twists. Compare the mechanics of each reveal — did you see it coming? Which one landed harder?" },
+          { day: "Wed", pl: "tt",   title: "Thriller tier list reel",                 desc: "Tier-list format — S/A/B/C ranking of books by scare level, twist quality, or overall impact. Very watchable, very debatable." },
+          { day: "Fri", pl: "both", title: "Friday Faves #2: thriller authors",       desc: "3–5 thriller, mystery, or horror authors whose full back catalogue you'd recommend without hesitation. Evergreen content." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — series progress update",  desc: "Where you are in your current saga — pages read, books left, most memorable moment so far. Community check-in format." }
         ],
         stories: [
-          { title: "Live tier list",        desc: "Drop covers into S/A/B tiers in real time. Followers watch and react via DM." },
-          { title: "Month wrap countdown",  desc: "5 slides counting down your top 5 of the month, one reveal per slide." }
+          { title: "Live tier list",          desc: "Drop books into scare / twist / quality tiers in real time. Followers react via DM." },
+          { title: "Month 2 wrap countdown",  desc: "5 slides counting down your top 5 reads and reactions this month." }
         ]
       }
     ]
   },
+
   {
-    name: "M3", fullName: "Month 3", label: "Growth",
-    theme: "Double down on what's working & chase algorithmic reach",
-    focus: ["Trending audio", "Collab bait", "Series content"],
+    name: "M3", fullName: "Month 3", label: "Domestic Thrillers",
+    theme: "Deep dive into the domestic thriller — your core niche territory",
+    focus: ["Domestic thrillers", "Marriage secrets", "Genre education"],
     weeks: [
       {
-        label: "Week 1 — trending formats",
+        label: "Week 1 — defining the genre",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'POV you picked up X' reel",   desc: "POV format is huge on BookTok. Hook viewers in 2 seconds." },
-          { day: "Wed", pl: "ig",   title: "Book aesthetic vs reality",     desc: "Pinterest cover vs your messy read copy. Relatable comedy." },
-          { day: "Fri", pl: "tt",   title: "Trending sound + book recs",    desc: "Overlay trending audio with book cover transitions." },
-          { day: "Sat", pl: "ig",   title: "Follower milestone post",       desc: "Celebrate reaching a follower count. Gratitude converts lurkers." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: where the genre began",   desc: "Feature a domestic thriller that established the genre's template. Why this book is the godmother of everything The Husband's Corner covers." },
+          { day: "Wed", pl: "both", title: "What IS a domestic thriller? — guide",    desc: "Educational carousel or reel: the tropes, the structure, the typical cast of characters. Great evergreen post for new followers." },
+          { day: "Fri", pl: "tt",   title: "Plot twist bait — spoiler-free reaction", desc: "'I just finished THAT scene...' React without naming the book or the twist. Gets followers desperate to guess which book it is." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — new domestic thriller series", desc: "Start a thriller or crime saga with a domestic angle — marriages, families, neighbourhoods. Feature why the series works." }
         ],
         stories: [
-          { title: "'Guess the book' story", desc: "Read out clues one by one — followers DM their guesses." },
-          { title: "Format poll",            desc: "'What do you want more of?' — reels / carousels / shelfies / reactions." }
+          { title: "Domestic thriller trope quiz", desc: "'Which trope are you?' — unreliable narrator / perfect-looking marriage / secret identity. Tap-through quiz format." },
+          { title: "Flat lay BTS",                 desc: "Show the setup process for a moody domestic thriller aesthetic photo. Relatable behind-the-scenes content." }
         ]
       },
       {
-        label: "Week 2 — saga deep dive",
+        label: "Week 2 — trust no one",
         posts: [
-          { day: "Mon", pl: "both", title: "Saga reading order guide",        desc: "'How to read the X universe' — high-value pinnable content." },
-          { day: "Wed", pl: "tt",   title: "Series finale reaction",          desc: "Emotional wrap-up of finishing a saga. Very shareable." },
-          { day: "Fri", pl: "ig",   title: "Saga aesthetic flat lay",         desc: "All saga books + thematic props. Pin as a series anchor post." },
-          { day: "Sun", pl: "tt",   title: "'Should you start this saga?' reel", desc: "Pros, cons, length, commitment — honest overview." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: the unreliable narrator", desc: "Two thrillers where the narrator is lying to you — in completely different ways. Compare the deception mechanics and which pulls it off better." },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #3",                    desc: "A curated list: domestic thrillers you haven't read yet. 'The TBR that will ruin your marriage plans' — a shareable, saveable format." },
+          { day: "Fri", pl: "ig",   title: "Currently reading — domestic thriller edition", desc: "Where you are in a domestic thriller right now. Quote from the page you're on, your current level of distrust for the narrator." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Second entry in the domestic-adjacent saga. Does it deepen the world or lose what made book 1 work?" }
         ],
         stories: [
-          { title: "Saga countdown",    desc: "'X books left in this series' — daily update sticker countdown." },
-          { title: "Fan theories poll", desc: "Drop a theory about the saga — followers vote true / false." }
+          { title: "'Would you read it?' poll",  desc: "Show the cover of a polarising domestic thriller — does the blurb convince followers or turn them off?" },
+          { title: "Narrator trust poll",        desc: "'How long into this book before you stopped trusting the narrator?' Followers respond with a number." }
         ]
       },
       {
-        label: "Week 3 — collab & duet bait",
+        label: "Week 3 — husbands and wives",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'Finish this sentence' reel",    desc: "'The horror book that changed me was ___' — duet magnet." },
-          { day: "Wed", pl: "ig",   title: "'Books we both love' post",       desc: "Call out a fellow Bookstagrammer. Cross-promo reach." },
-          { day: "Fri", pl: "both", title: "Readathon announcement",          desc: "Set a challenge: '5 thrillers in 2 weeks' — drives follow for updates." },
-          { day: "Sat", pl: "tt",   title: "Collab duet response reel",       desc: "Respond to a community duet or stitch. Shows you engage back." }
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the wife who knew",        desc: "Feature a book where the wife slowly realises the man she married is a stranger. The moment of discovery as the thriller's engine." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #3",                          desc: "Your marriage and domestic thriller TBR. Ask followers which one you should read first — community-driven choice content." },
+          { day: "Fri", pl: "tt",   title: "Hot take poll: domestic thriller debate",  desc: "A controversial take on the genre — 'the twist is always the husband' or 'unreliable narrators have been overdone.' Drives comments." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Third instalment of the saga. How does the series evolve? Feature the moment that confirms this is a long-term commitment." }
         ],
         stories: [
-          { title: "Readathon sign-up story", desc: "'Comment SIGN ME UP' under this story to join the readathon." },
-          { title: "Collab shoutout",         desc: "Highlight a fellow horror/thriller account. Community love builds loyalty." }
+          { title: "'Which wife?' debate",      desc: "Two iconic wives with explosive secrets from two different books — followers pick the more dangerous one." },
+          { title: "Reading ritual story",      desc: "Your thriller-reading ritual: time, setting, props. Inspires the cosy-dark aesthetic." }
         ]
       },
       {
-        label: "Week 4 — milestone & recap",
+        label: "Week 4 — the dark side",
         posts: [
-          { day: "Mon", pl: "both", title: "3-month stats post",          desc: "Followers, books read, most popular post. Transparency builds trust." },
-          { day: "Wed", pl: "tt",   title: "'My horror journey so far' reel", desc: "Montage of content, growth reflections. Emotional = shareable." },
-          { day: "Fri", pl: "ig",   title: "Q&A answers carousel",        desc: "Answer follower questions in a carousel. Builds community warmth." },
-          { day: "Sun", pl: "both", title: "Month 4 teaser",              desc: "Tease your next theme — builds anticipation over the weekend." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: locked in the house",     desc: "Two thrillers set almost entirely inside a home. The house as a prison — compare how each author uses domestic space to trap the reader." },
+          { day: "Thu", pl: "ig",   title: "Dark aesthetic post — the marriage shelf", desc: "Style your domestic thriller stack for maximum dread. The covers, the props, the atmosphere. A highly saveable flat lay." },
+          { day: "Fri", pl: "both", title: "Friday Faves #3: bookstagram thriller accounts", desc: "Shout out fellow thriller/mystery accounts doing great work. Cross-promo content that builds community." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — saga check-in",           desc: "Month 3 saga update: where you are, what's happened, and whether it's still gripping enough to recommend." }
         ],
         stories: [
-          { title: "3-month anniversary", desc: "Celebrate with a 'swipe to see my first post vs now' story arc." },
-          { title: "Ask me anything",     desc: "Open question box — answer throughout the day as a story series." }
+          { title: "3-month stats",      desc: "Followers, most-engaged post, books featured so far — show the numbers at the 3-month mark." },
+          { title: "Ask me anything",    desc: "Open question box on thrillers, mystery, and horror — answer all day in your stories." }
         ]
       }
     ]
   },
+
   {
-    name: "M4", fullName: "Month 4", label: "Themes",
-    theme: "Lean into seasonal themes & cross-genre horror",
-    focus: ["Seasonal content", "Cross-genre", "Atmosphere"],
+    name: "M4", fullName: "Month 4", label: "Psychological Suspense",
+    theme: "Mind-game thrillers and the art of the unreliable narrator",
+    focus: ["Unreliable narrators", "Psychological horror", "Mind games"],
     weeks: [
       {
-        label: "Week 1 — horror sub-niches",
+        label: "Week 1 — the unreliable narrator",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Cosy horror reel",              desc: "Horror that feels weirdly comforting — growing micro-trend." },
-          { day: "Wed", pl: "ig",   title: "Gothic vs folk horror",          desc: "Aesthetic comparison carousel. Highly shareable visual format." },
-          { day: "Fri", pl: "both", title: "'If you like X film, read Y'",   desc: "Cross-media hooks pull in non-book audiences from TikTok." },
-          { day: "Sat", pl: "ig",   title: "Cosy horror aesthetic post",     desc: "Candles, blankets, atmospheric covers — cosy but creepy vibes." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: she didn't know",         desc: "A thriller told from the wife's POV as she slowly uncovers the truth. The gap between what she believes and what's real." },
+          { day: "Wed", pl: "both", title: "The unreliable narrator — a guide",        desc: "Carousel or reel: what makes a narrator unreliable, the different types, and why it works as a thriller device. Great educational content." },
+          { day: "Fri", pl: "tt",   title: "Horror crossover — psychological dread",   desc: "The thrillers that crossed into actual horror for you. Not just tense — genuinely frightening. What made them cross the line?" },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — psychological crime series", desc: "A thriller or crime saga with a strong psychological angle. Feature book 1 and the element that makes this saga unsettling." }
         ],
         stories: [
-          { title: "Horror sub-niche quiz",  desc: "'Which horror sub-niche are you?' — 4-question tap-through quiz." },
-          { title: "Film → book bridge",     desc: "Poll: 'Have you seen [film]?' then swipe → 'Then read this.'" }
+          { title: "Unreliable narrator quiz",        desc: "Describe 3 narrators without naming the books — followers guess which titles. Reveal at end of day." },
+          { title: "'Do you trust the narrator?' poll", desc: "Feature a specific book — followers vote yes/no on whether they trusted the main character." }
         ]
       },
       {
-        label: "Week 2 — thriller sub-genres",
+        label: "Week 2 — the twist economy",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Legal thriller starter reel",    desc: "'Never read legal thrillers? Start here.' Searchable niche." },
-          { day: "Wed", pl: "ig",   title: "Domestic thriller aesthetic",    desc: "Books like Gone Girl styled together. Still evergreen content." },
-          { day: "Fri", pl: "both", title: "'Thriller bingo' post",          desc: "Tropes bingo card — followers screenshot and share their results." },
-          { day: "Sun", pl: "tt",   title: "'Domestic thriller tropes' reel", desc: "Unreliable narrator, dark secrets, suburban horror — rated and ranked." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: the re-read test",        desc: "A book that's completely different on a second read vs one that's just as good first time. Does knowing the twist change the experience?" },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #4",                    desc: "A curated list: psychological thrillers you haven't read yet — the ones famous for a twist you've been warned not to spoil." },
+          { day: "Fri", pl: "ig",   title: "'If you liked this film, read this' bridge", desc: "Match a psychological thriller film to a book equivalent. Cross-media hooks pull in audiences who don't usually follow book accounts." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Does the saga deepen the psychological complexity in book 2? Feature the moment the series reveals its true ambitions." }
         ],
         stories: [
-          { title: "Bingo card story", desc: "'Screenshot this and mark off what you've read' — massive saves." },
-          { title: "Trope vote",       desc: "'Which thriller trope never gets old?' — multiple choice poll." }
+          { title: "Twists ranked",         desc: "Rank your top 5 thriller twists from 'satisfying' to 'I threw the book across the room.'" },
+          { title: "Film → book rec game",  desc: "'Tell me your favourite psychological thriller film and I'll DM you a book match.'" }
         ]
       },
       {
-        label: "Week 3 — emotional content",
+        label: "Week 3 — fear of the familiar",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'Books that made me cry AND scared me'", desc: "Emotional horror is underserved. Taps two audiences." },
-          { day: "Wed", pl: "ig",   title: "Most impactful read so far",              desc: "Personal essay-style caption on the book that moved you most." },
-          { day: "Fri", pl: "both", title: "Favourite villain deep-dive",             desc: "Literary villain analysis — builds credibility and sparks debate." },
-          { day: "Sat", pl: "ig",   title: "Emotional horror flat lay",               desc: "Books that hit differently — styled with emotional, raw aesthetic." }
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the flight she didn't know about", desc: "A thriller that uses a piece of hidden information — a flight, a phone call, a receipt — as the moment everything unravels." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #4",                          desc: "Your psychological suspense TBR — the mind-game thrillers waiting on your shelf or your list. Tag the authors." },
+          { day: "Fri", pl: "tt",   title: "Reading reaction — the paranoia builds",   desc: "Film a short reaction mid-book, before you've finished it. 'I can't stop reading but I also can't breathe.' That feeling." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Book 3 of the psychological crime saga. Is the series still maintaining its grip, or has the formula started to show?" }
         ],
         stories: [
-          { title: "Villain poll bracket",         desc: "'Who's the best horror villain?' — tournament bracket over 2 days." },
-          { title: "'Rate your book hangover'",    desc: "1–10 slider sticker — 'How emotionally destroyed are you right now?'" }
+          { title: "Fear map story",    desc: "Map your reading fears: serial killers / domestic traps / psychological manipulation / the supernatural. Poll each one." },
+          { title: "Small town vibes",  desc: "Aesthetic slides: the claustrophobic, intimate world of a small-town suspense novel." }
         ]
       },
       {
-        label: "Week 4 — seasonal pivot",
+        label: "Week 4 — the genre at its edges",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Summer horror recs reel",     desc: "'What to read at the beach that will ruin the beach.' Fun hook." },
-          { day: "Wed", pl: "ig",   title: "Reading setup photo",          desc: "Your reading nook styled for the season. Very saveable." },
-          { day: "Fri", pl: "both", title: "Month 4 wrap-up",              desc: "Books read, highlights, tease of a big Month 5 series read." },
-          { day: "Sun", pl: "tt",   title: "'Underrated summer horror' reel", desc: "Books that don't get the beach-read love they deserve." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: literary thriller vs genre thriller", desc: "Where does literary fiction end and thriller begin? Compare two books on the boundary — same darkness, different prestige." },
+          { day: "Wed", pl: "tt",   title: "Community debate: most divisive thriller",  desc: "'Agree or disagree' — pick a controversial thriller take. 'This twist ruined the book.' 'Unreliable narrators are a lazy trick.' Go." },
+          { day: "Fri", pl: "both", title: "Friday Faves #4: thriller podcasts and creators", desc: "Podcasts, BookTubers, and creators in the thriller and mystery space worth following. Community-building content." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — saga wrap for the month",  desc: "Month 4 saga recap: progress update, favourite moment, and whether you'd still recommend it to a first-time reader." }
         ],
         stories: [
-          { title: "Summer reading list",    desc: "Swipe through your planned summer TBR with aesthetics per book." },
-          { title: "'Ruin the beach' poll",  desc: "Vote on which horror book would make you most paranoid at the beach." }
+          { title: "Genre boundary debate",  desc: "'Literary thriller is just a thriller with better sentences' — agree or disagree? Followers vote and comment why." },
+          { title: "Month 4 wrap",           desc: "Best read, best comparison post, most controversial take — the month at a glance." }
         ]
       }
     ]
   },
+
   {
-    name: "M5", fullName: "Month 5", label: "Deep Dives",
-    theme: "Long-form analysis & series completions that build authority",
-    focus: ["Authority content", "Series completion", "Analysis"],
+    name: "M5", fullName: "Month 5", label: "International Crime",
+    theme: "Scandinavian noir and crime fiction from beyond the English-speaking world",
+    focus: ["Nordic Noir", "International crime", "Atmosphere and setting"],
     weeks: [
       {
-        label: "Week 1 — author universe",
+        label: "Week 1 — cold and dark",
         posts: [
-          { day: "Mon", pl: "tt",   title: "King universe map reel",      desc: "How King's books connect — huge engagement from die-hard fans." },
-          { day: "Wed", pl: "ig",   title: "Author universe carousel",     desc: "Visual map of connected books. Highly shareable, saveable." },
-          { day: "Fri", pl: "both", title: "'Where to start' poll",        desc: "Followers vote on which author universe you tackle next." },
-          { day: "Sat", pl: "tt",   title: "Hidden connections reel",      desc: "Easter eggs and references between books in a universe. Niche gold." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the cold marriage",       desc: "A Scandi noir or international thriller where the marriage at the centre is as cold as the setting. The domestic thriller in a frozen landscape." },
+          { day: "Wed", pl: "both", title: "What is Nordic Noir? — intro guide",      desc: "Carousel or reel explaining the Scandi crime tradition: the tone, the social commentary, the landscapes. Great entry-point content." },
+          { day: "Fri", pl: "ig",   title: "Nordic aesthetic mood board",             desc: "Cold, dark, minimal — the visual language of Scandinavian crime fiction. A flat lay or mood board that captures the atmosphere." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — Scandi crime series begins", desc: "Start a Scandinavian or international crime saga. Feature book 1, the detective, the world. Why this series is a must for thriller fans." }
         ],
         stories: [
-          { title: "Universe map story",              desc: "Breakdown of connected books in swipe format — one link per slide." },
-          { title: "'Have you read all of them?' quiz", desc: "Checklist poll — followers tick off which books they've read." }
+          { title: "Nordic Noir aesthetic slides",     desc: "Mood board for the cold, dark, minimal visual world of Scandi crime. Build the aesthetic." },
+          { title: "'Have you read Nordic Noir?' poll", desc: "Gauge where your audience is — entry-point readers vs die-hard fans of Scandi crime." }
         ]
       },
       {
-        label: "Week 2 — book vs adaptation",
+        label: "Week 2 — beyond Scandinavia",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Book vs film comparison reel", desc: "'They ruined / nailed this adaptation.' Very watchable debate." },
-          { day: "Wed", pl: "ig",   title: "Book vs show carousel",        desc: "What changed, what stayed, was it worth it?" },
-          { day: "Fri", pl: "both", title: "Adaptation hot take",          desc: "Controversial opinion on a famous adaptation. Drives comments." },
-          { day: "Sun", pl: "ig",   title: "'Best adaptation' bracket",    desc: "Poll your followers to find the community's favourite." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: two countries, two approaches", desc: "Two international crime novels from different countries. How does national identity — landscape, culture, social tone — shape the thriller?" },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #5",                   desc: "A list focused entirely on international and translated crime fiction. Your global thriller TBR — link in bio." },
+          { day: "Fri", pl: "tt",   title: "Author deep-dive reel",                   desc: "Deep-dive on a Scandi or international crime author — their world, their recurring themes, their best entry points. Builds credibility." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Book 2 of the international crime saga. Does the second entry broaden the world or stay tight and focused?" }
         ],
         stories: [
-          { title: "'Book or show?' live vote",    desc: "Real-time results as followers vote on the best adaptation." },
-          { title: "Behind-the-scenes casting",    desc: "'Who would YOU cast in this horror adaptation?' — open DM question." }
+          { title: "Country quiz",       desc: "'Can you guess which country this crime novel is set in?' — clue by clue, cover reveal at the end." },
+          { title: "Translation poll",   desc: "'Do you read translated crime fiction?' — yes / sometimes / no. Use the results for a future post." }
         ]
       },
       {
-        label: "Week 3 — reading challenge",
+        label: "Week 3 — cold cases, cold climates",
         posts: [
-          { day: "Mon", pl: "both", title: "Readathon update",                   desc: "Mid-challenge check-in. Books so far, what's next, how are you feeling?" },
-          { day: "Wed", pl: "tt",   title: "'Reading 5 books in 5 days' vlog",   desc: "Day-by-day updates edited into one reel. High-value content." },
-          { day: "Fri", pl: "ig",   title: "Challenge wrap-up post",             desc: "All 5 books, star ratings, which was scariest. Great carousel." },
-          { day: "Sat", pl: "both", title: "Community readathon spotlight",      desc: "Highlight followers who joined your challenge. Builds loyalty." }
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the cold case wife",       desc: "A thriller where a cold case pulls an old marriage back into the present. The past refusing to stay buried — husband included." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #5",                          desc: "Your international crime and Nordic Noir TBR. Include titles from authors outside the US and UK — tag them." },
+          { day: "Fri", pl: "ig",   title: "Cold case aesthetic post",                 desc: "Evidence boards, faded documents, a detective's obsession — the visual world of the cold case thriller." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Third instalment of the international saga. Where has the series taken you and is it worth committing to the long game?" }
         ],
         stories: [
-          { title: "Daily readathon update", desc: "Short daily story: pages read today, favourite moment, current mood." },
-          { title: "Progress countdown",     desc: "Countdown sticker: 'X books to go.' Update each morning." }
+          { title: "Cold case mood board",       desc: "Faded evidence, clippings, an obsessive detective wall — the aesthetic of an unsolved case." },
+          { title: "'Past or present' tense poll", desc: "Do you prefer thrillers in present tense or revealed through past-tense flashbacks? Followers vote." }
         ]
       },
       {
-        label: "Week 4 — recommendations engine",
+        label: "Week 4 — the craft of crime fiction",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'Tell me your fave film' reel",   desc: "Match followers to a horror book based on their film taste." },
-          { day: "Wed", pl: "ig",   title: "Personalised rec carousel",        desc: "'If you liked [genre], read [book]' — 8 pairings. Very saveable." },
-          { day: "Fri", pl: "both", title: "Month 5 stats & milestone",        desc: "Celebrate a follower milestone. Gratitude content converts lurkers." },
-          { day: "Sun", pl: "tt",   title: "Reader-recommended reel",          desc: "Books your followers told you to read this month — honest reviews." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: plot vs character",       desc: "A crime novel where the puzzle is everything vs one where the detective's inner life is the story. Which type of crime fiction do you prefer?" },
+          { day: "Thu", pl: "ig",   title: "Series commitment — how far is too far?",  desc: "A discussion post: the longest crime sagas and whether committing to 10+ books is worth it. Great comment driver." },
+          { day: "Fri", pl: "both", title: "Friday Faves #5: crime fiction blogs and reviewers", desc: "Shout out the crime fiction critics, review bloggers, and BookTube channels doing great work in the genre." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — month 5 recap",           desc: "Month 5 saga update: the international crime series in review. Books covered, highlights, and whether the saga is still earning its place on the shelf." }
         ],
         stories: [
-          { title: "Film → book matcher", desc: "'Tell me your favourite horror film and I'll DM you a book rec.'" },
-          { title: "Rec of the day",      desc: "One book rec per day this week — quick story, not a full post." }
+          { title: "Series commitment poll",   desc: "'How many books deep are you willing to go with a series?' — followers vote on their limit." },
+          { title: "Month 5 stats",            desc: "Books covered, most engaged post, favourite comparison of the month." }
         ]
       }
     ]
   },
+
   {
     name: "M6", fullName: "Month 6", label: "Midpoint",
-    theme: "Review your best content & plan the second half strategically",
-    focus: ["Best-of content", "Strategy review", "Audience Q&A"],
+    theme: "Review your best content and plan the second half strategically",
+    focus: ["Best-of content", "Community check-in", "Strategy reset"],
     weeks: [
       {
         label: "Week 1 — best of so far",
         posts: [
-          { day: "Mon", pl: "both", title: "Top 5 posts compilation",     desc: "Reshare best-performing content with a 'then vs now' spin." },
-          { day: "Wed", pl: "ig",   title: "Top 5 books read so far",     desc: "Half-year reading wrap-up. Great anchor carousel to pin." },
-          { day: "Fri", pl: "tt",   title: "Half-year reading reel",      desc: "Montage of every book you've read. Satisfying, shareable." },
-          { day: "Sat", pl: "ig",   title: "Half-year aesthetic gallery", desc: "Your best 6 photos in a styled grid — great for new visitors." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the scariest so far",     desc: "Feature the most unsettling 'husband thriller' you've covered so far. A mid-year callback that new followers won't have seen." },
+          { day: "Wed", pl: "both", title: "Half-year reading stats post",             desc: "Pages read, books covered, most-engaged post, most popular comparison. The numbers at the halfway point." },
+          { day: "Fri", pl: "ig",   title: "Best-of compilation carousel",            desc: "Your 5 best posts from months 1–6 in one carousel. 'Start here' content for anyone who just found the account." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — new saga begins",         desc: "Start a new thriller or mystery saga for the second half of the year. Why this one?" }
         ],
         stories: [
-          { title: "'Then vs now' story arc",   desc: "Side-by-side: your first post vs your best post this month." },
-          { title: "Half-year reading stats",   desc: "Pages, books, genres, most-read author — infographic-style slides." }
+          { title: "'Then vs now' story arc",   desc: "Your first post vs your best post at 6 months — side by side. The growth is real." },
+          { title: "Half-year reading stats",   desc: "Swipe through your stats: books, pages, genres, platform breakdown." }
         ]
       },
       {
         label: "Week 2 — audience deep dive",
         posts: [
-          { day: "Mon", pl: "both", title: "Follower Q&A",                    desc: "Answer questions from your community. Deep engagement format." },
-          { day: "Wed", pl: "ig",   title: "'You recommended, I read' post",  desc: "Read a follower rec and review it. Creates loyalty." },
-          { day: "Fri", pl: "tt",   title: "'Your taste in horror' quiz reel", desc: "'Comment your answer and I'll tell you what to read next.'" },
-          { day: "Sun", pl: "ig",   title: "Community shoutout post",          desc: "Feature 5 horror/thriller accounts your followers should follow." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: follower-voted comparison", desc: "Ask in stories: which two books should I compare? Feature the top two voted picks head-to-head. Community-driven content builds loyalty." },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #6",                   desc: "A list built entirely from follower recommendations — the books your community told you to read. Link in bio." },
+          { day: "Fri", pl: "tt",   title: "'You recommended, I read' reaction",      desc: "Read a follower-recommended book and give your honest reaction. This format creates deep engagement and repeat visitors." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Second entry of the new saga. First impressions of the series so far — what's working, what isn't." }
         ],
         stories: [
-          { title: "Q&A answer series",          desc: "Batch-answer question box submissions across 10+ story slides." },
-          { title: "'Rate your recommendation'", desc: "Followers vote 1–5 on the book you read based on their suggestion." }
+          { title: "Q&A answer series",   desc: "Batch-answer question box submissions across 10+ story slides. Followers love this format." },
+          { title: "'Rate my taste'",      desc: "Show your full recent reading list — followers rate your taste from 1–5." }
         ]
       },
       {
-        label: "Week 3 — controversial week",
+        label: "Week 3 — controversial takes",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Most overrated horror book reel",  desc: "Brave take = massive comment section." },
-          { day: "Wed", pl: "ig",   title: "Unpopular opinions carousel",       desc: "5 horror/thriller takes your followers might disagree with." },
-          { day: "Fri", pl: "both", title: "'Fight me on this' poll",           desc: "Put your hottest take to a vote. Algorithm loves comment velocity." },
-          { day: "Sat", pl: "tt",   title: "Debate response reel",              desc: "React to the most interesting comments from your hot take posts." }
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the most controversial",  desc: "Feature a thriller with a husband character who divides readers — some find him genuinely evil, some find the book too extreme. The most debated." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #6",                          desc: "The books you've been putting off — the ones that intimidate you or that you've been saving for the 'right moment.' Your avoidance TBR." },
+          { day: "Fri", pl: "tt",   title: "Hot take reel — overrated thriller",       desc: "One beloved thriller you think is overrated. Brave takes get enormous comment sections. Be specific and honest." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Mid-saga check-in. What's the most gripping moment so far and is the series still delivering?" }
         ],
         stories: [
-          { title: "'Agree or disagree?' series", desc: "One unpopular opinion per story slide — followers tap yes/no." },
-          { title: "Comment reaction story",      desc: "Screenshot the most interesting debate comments and react live." }
+          { title: "'Agree or disagree?' series",  desc: "One unpopular opinion per slide — followers tap yes/no across 5 slides." },
+          { title: "Comment reaction story",       desc: "Screenshot the most interesting debate comments from your hot takes and react to them live." }
         ]
       },
       {
         label: "Week 4 — second half planning",
         posts: [
-          { day: "Mon", pl: "both", title: "Autumn reading list reveal",        desc: "Tease your Autumn/October reading list. Builds anticipation." },
-          { day: "Wed", pl: "tt",   title: "'My TBR is out of control' reel",  desc: "Show your to-be-read pile. Relatable, funny, highly commentable." },
-          { day: "Fri", pl: "ig",   title: "6-month celebration post",          desc: "Milestone, gratitude, what's coming in months 7–10." },
-          { day: "Sun", pl: "both", title: "'What do you want more of?' post",  desc: "Let followers shape your second half. Community = ownership." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: summer-ruining reads",   desc: "Two thrillers that are the perfect 'beach reads you'll immediately regret.' The books that ruin the holiday. Summer thriller energy." },
+          { day: "Thu", pl: "ig",   title: "Second half reading goals post",          desc: "Your reading intentions for months 7–12. Share the list publicly and invite followers to hold you accountable." },
+          { day: "Fri", pl: "both", title: "Friday Faves #6: thriller communities online", desc: "The best online spaces for thriller readers — Reddit, Discord, Facebook groups, newsletters. A community map." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — month 6 saga update",    desc: "Month 6 recap: where the saga stands, how many books in, and what keeps you coming back for more." }
         ],
         stories: [
-          { title: "TBR pile reveal",    desc: "'Rate my TBR' — show each book, followers vote keep/remove." },
-          { title: "Autumn teaser",      desc: "Spooky aesthetic slides teasing October content — build the hype early." }
+          { title: "TBR pile vote",      desc: "'Rate my second-half TBR' — show each book, followers vote keep/remove." },
+          { title: "Summer reading poll", desc: "Followers vote on which genre they actually read in summer — is the beach really for cosy mysteries?" }
         ]
       }
     ]
   },
+
   {
-    name: "M7", fullName: "Month 7", label: "Autumn Prep",
-    theme: "Build towards spooky season — your biggest opportunity of the year",
-    focus: ["Autumn aesthetic", "Spooky season tease", "TBR reveals"],
+    name: "M7", fullName: "Month 7", label: "Classic Crime",
+    theme: "The Golden Age of crime fiction and its modern legacy",
+    focus: ["Golden Age mystery", "Classic puzzle crime", "Then vs now"],
     weeks: [
       {
-        label: "Week 1 — autumn aesthetics",
+        label: "Week 1 — the golden age",
         posts: [
-          { day: "Mon", pl: "ig",   title: "Autumn reading setup",        desc: "First seasonal shelfie. Candles, leaves, dark covers." },
-          { day: "Wed", pl: "tt",   title: "'Best autumn horror' reel",   desc: "Books that feel made for the season. Cosy-spooky genre is huge." },
-          { day: "Fri", pl: "both", title: "Autumn TBR announcement",     desc: "Your full October reading list. High-save, high-share format." },
-          { day: "Sat", pl: "ig",   title: "Autumn aesthetic mood board", desc: "Visual collage of the colour palette and props you'll use all season." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the gothic marriage",     desc: "Feature the domestic thriller trope as it appeared in classic Gothic fiction — the first wife's shadow, the second wife's dread." },
+          { day: "Wed", pl: "both", title: "Golden Age mystery — beginner's guide",   desc: "Carousel or reel: what is the Golden Age, who were the queens of crime, and where to start. Entry-point content for new readers." },
+          { day: "Fri", pl: "ig",   title: "Cosy mystery aesthetic post",             desc: "Teacups, village maps, reading glasses, candles — the visual world of the cosy mystery. Shareable and very aesthetic." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — classic crime series begins", desc: "Start a classic or long-running crime saga. Feature book 1 and the detective who anchors it." }
         ],
         stories: [
-          { title: "Autumn setup BTS", desc: "Behind the scenes of setting up your seasonal reading corner." },
-          { title: "TBR poll",         desc: "Show two books — followers vote which you read first in October." }
+          { title: "Golden Age quiz",        desc: "Name the classic crime novel from a one-line plot summary — followers DM their guesses." },
+          { title: "'Classic or modern?' poll", desc: "Which era of crime fiction do followers prefer? Use results to shape your classics content." }
         ]
       },
       {
-        label: "Week 2 — classic horror",
+        label: "Week 2 — the puzzle mystery",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Classic horror starter reel",     desc: "Shelley, Stoker, Poe — 'start here if you want the roots.'" },
-          { day: "Wed", pl: "ig",   title: "Classic vs modern horror",        desc: "How the genre evolved. Great educational carousel format." },
-          { day: "Fri", pl: "both", title: "'Have you read the classics?' poll", desc: "Simple poll tells you your audience's taste profile." },
-          { day: "Sun", pl: "ig",   title: "Classics aesthetic flat lay",     desc: "Aged covers, candlelight, quill — maximalist gothic styling." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: the impossible crime",   desc: "Two locked-room or impossible-crime mysteries — a classic and a modern one. Is the puzzle format timeless or does it feel dated today?" },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #7",                   desc: "A classics-focused list: the Golden Age titles and long-running crime series still on your to-read list." },
+          { day: "Fri", pl: "tt",   title: "Puzzle mystery deep dive",                desc: "A reel breaking down what makes a puzzle mystery work — fair play, red herrings, the impossible setup. Educational and very engaging." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Second book of the classic crime saga. Does the series age well and does the detective gain depth in subsequent entries?" }
         ],
         stories: [
-          { title: "'Old or new horror?' debate", desc: "Followers defend their era. Classic horror defenders vs modern fans." },
-          { title: "Classic horror quote game",   desc: "Drop a quote — followers guess the book. Winner gets a shoutout." }
+          { title: "Suspect line-up story",   desc: "Post character descriptions from a whodunit — followers vote on who they think did it." },
+          { title: "Classic cover vs modern", desc: "Show two editions of the same book — followers vote on which cover they prefer." }
         ]
       },
       {
-        label: "Week 3 — anticipation building",
+        label: "Week 3 — classic vs modern",
         posts: [
-          { day: "Mon", pl: "tt",   title: "October reading challenge reveal", desc: "Announce your personal Spooktober challenge with rules." },
-          { day: "Wed", pl: "ig",   title: "Horror sub-genre bingo card",      desc: "Followers save this to use all October. Massive save metric." },
-          { day: "Fri", pl: "both", title: "'Are you doing Spooktober?' post", desc: "Find your community of Spooktober readers." },
-          { day: "Sat", pl: "tt",   title: "Spooktober prep reel",             desc: "How you're physically prepping: snacks, candles, stack — full ritual." }
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the classic dangerous marriage", desc: "Feature how the 'sinister husband' trope appeared in Golden Age and Gothic fiction long before the modern domestic thriller. The origin story." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #7",                          desc: "Your classic crime and Golden Age TBR. Include long-running series you want to commit to — tag the publishers and reading communities." },
+          { day: "Fri", pl: "tt",   title: "Classic crime vs modern thriller — debate reel", desc: "A reel arguing both sides: does the puzzle mystery of the Golden Age hold up against the psychological thriller of today? Which era is more genuinely unsettling?" },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Mid-classic-saga check-in. The books are ageing — is the series gaining patina or losing its grip?" }
         ],
         stories: [
-          { title: "Spooktober sign-up",    desc: "'Comment your username to join the challenge' — visible community." },
-          { title: "Bingo card preview",    desc: "Swipe through each bingo square with a book recommendation for each." }
+          { title: "Cosy mystery vs dark crime",  desc: "Which do followers prefer — the gentle puzzle or the deeply disturbing crime novel? Tap to vote." },
+          { title: "'Would you survive a classic mystery?' quiz", desc: "Tap through: victim, detective, or murderer — which one are you in a Christie novel?" }
         ]
       },
       {
-        label: "Week 4 — countdown begins",
+        label: "Week 4 — crime across time",
         posts: [
-          { day: "Mon", pl: "both", title: "October countdown post",             desc: "'X days until Spooktober — are you ready?' Hype-building." },
-          { day: "Wed", pl: "tt",   title: "'Books for every type of scared' reel", desc: "Scared of clowns? Scared of the dark? Personalised rec hooks." },
-          { day: "Fri", pl: "ig",   title: "Mood board for October",             desc: "Visual preview of the aesthetic you're going for this Spooktober." },
-          { day: "Sun", pl: "both", title: "'Last book before October' post",    desc: "What you're finishing before the challenge begins. Transition moment." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: historical crime",        desc: "Two crime novels set in the past. How does setting a mystery in history change the stakes, the investigation, and the horror?" },
+          { day: "Thu", pl: "ig",   title: "Historical crime aesthetic post",          desc: "Aged covers, ink, old letters, maps — the visual world of historical crime fiction. Very aesthetic, very saveable." },
+          { day: "Fri", pl: "both", title: "Friday Faves #7: classic crime publishers and imprints", desc: "The publishers doing the best work in classic crime, golden age reprints, and historical mysteries. A discovery post." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — month 7 saga wrap",       desc: "Month 7 classic crime saga update. Books covered, highlights, and whether you'd recommend the series to a modern thriller reader." }
         ],
         stories: [
-          { title: "Daily countdown story", desc: "One story per day: '7 days until Spooktober' with a scare teaser." },
-          { title: "Fear poll series",      desc: "'What scares you most?' — different category each day this week." }
+          { title: "Historical crime quiz",  desc: "'What decade is this novel set in?' — plot clues, no title. Followers guess the era." },
+          { title: "Month 7 wrap",           desc: "Best classic featured, most surprising discovery this month, golden age highlights." }
         ]
       }
     ]
   },
+
   {
-    name: "M8 \u2620", fullName: "Month 8 \u2014 October", label: "SPOOKTOBER",
-    theme: "Your PEAK month — max posting, max engagement, maximum reach",
-    focus: ["Daily posting", "Halloween content", "Viral formats"],
+    name: "M8 ☽", fullName: "Month 8 — Dark Season", label: "Horror & Darkness",
+    theme: "Lean into the dark side — horror, gothic atmosphere, and books that genuinely terrify",
+    focus: ["Horror spotlight", "Gothic aesthetic", "Scare season"],
     weeks: [
       {
-        label: "Week 1 — Spooktober opens",
+        label: "Week 1 — the horror shelf",
         posts: [
-          { day: "Day 1", pl: "both", title: "Spooktober Day 1 kick-off",  desc: "Book #1 reveal. Set the tone — your most atmospheric post of the month." },
-          { day: "Day 3", pl: "tt",   title: "Spooktober reel update",     desc: "Days 1–3 in 60 seconds. Fast-paced, energy is everything this month." },
-          { day: "Day 5", pl: "ig",   title: "Mid-week shelfie",           desc: "Your reading setup with October 1 atmosphere — peak aesthetic month." },
-          { day: "Day 7", pl: "both", title: "Week 1 recap",               desc: "7 days in — how scared are you? Books so far, mini ratings." }
+          { day: "Mon", pl: "both", title: "Husband's Bait: the husband as monster",  desc: "The domestic thriller taken to its logical horror extreme. Feature a book where the husband isn't metaphorically a monster — he's something worse." },
+          { day: "Wed", pl: "tt",   title: "'Books that genuinely terrified me' horror reel", desc: "Not just suspenseful — actually frightening. Your most disturbing reads across thriller, horror, and everything in between. Fast cuts, creepy audio." },
+          { day: "Fri", pl: "ig",   title: "Scare-o-meter post",                      desc: "Rate recent reads from 1 to 10 on how scared you were. The scare-o-meter is a format that gets saved and shared constantly." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — horror or gothic series begins", desc: "Start a horror-adjacent or gothic thriller saga. Feature book 1 and why this series earns its place on a thriller account." }
         ],
         stories: [
-          { title: "Daily Spooktober update",    desc: "Every single day this month: pages read, current mood, creepiest moment." },
-          { title: "'Scare-o-meter' daily poll", desc: "Slide 1–10 — how scared are you today? One story per day." }
+          { title: "Scare-o-meter daily poll",  desc: "'How scared are you right now?' — 1–10 slider sticker. Run it every day this week." },
+          { title: "Horror shelf aesthetics",   desc: "Your scariest covers styled together. Maximum atmosphere. The horror side of The Husband's Corner." }
         ]
       },
       {
-        label: "Week 2 — scare levels",
+        label: "Week 2 — gothic and dark",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Scare-o-meter reel",               desc: "Rate books from 1–10 on how scared you were. Very watchable." },
-          { day: "Wed", pl: "ig",   title: "Week 1 Spooktober recap",           desc: "7 books, 7 covers, mini ratings. Carousel format." },
-          { day: "Fri", pl: "both", title: "'Scariest book I've ever read' reveal", desc: "Save this for mid-October peak traffic." },
-          { day: "Sat", pl: "tt",   title: "'Mid-Spooktober check-in' reel",   desc: "Are you surviving the challenge? Personal and funny update." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: horror vs psychological thriller", desc: "A book that is genuinely horror vs one that is psychological thriller. Where's the line? Compare what each does to make you afraid." },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #8",                   desc: "A dark season list: horror, gothic fiction, and the reads you save for the scariest time of year. Share the Goodreads shelf." },
+          { day: "Fri", pl: "ig",   title: "Gothic atmosphere photo shoot",           desc: "Dark academia, candles, velvet, candlelight — maximum gothic atmosphere. Your most atmospheric post of the season." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Second entry of the gothic or horror series. Does the darkness deepen or does the series soften after book 1?" }
         ],
         stories: [
-          { title: "Scare ranking story",  desc: "All books so far ranked scariest → least scary. Followers can DM to debate." },
-          { title: "Reading ritual story", desc: "Your October reading ritual: time, snacks, lighting. Inspires others." }
+          { title: "Horror sub-genre quiz",      desc: "'Which horror sub-genre are you?' — psychological / gothic / supernatural / body horror. Tap-through quiz." },
+          { title: "Most unsettling book poll",  desc: "What's the most genuinely disturbing book you've ever read? Open for followers to share in DMs." }
         ]
       },
       {
-        label: "Week 3 — themed content",
+        label: "Week 3 — the season builds",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Gothic horror theme week reel",   desc: "5 Gothic horror recs. Daily themed series = subscribers come back." },
-          { day: "Wed", pl: "ig",   title: "Gothic aesthetic photo shoot",     desc: "Dark academia, candles, velvet — maximum Spooktober aesthetic." },
-          { day: "Fri", pl: "both", title: "Halloween costume as book character", desc: "Dress as a horror character, reveal the book." },
-          { day: "Sat", pl: "ig",   title: "Midpoint book stack photo",        desc: "All October reads so far in one epic stack. Peak visual content." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the house was always wrong", desc: "Feature a thriller or horror novel where the home itself is a source of dread — and the husband is part of why you can't leave." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #8 — the dark TBR",          desc: "Your horror and gothic TBR. The scary reads you've been saving. Tag the authors — horror authors love bookstagram engagement." },
+          { day: "Fri", pl: "tt",   title: "'Scary book challenge' prep reel",        desc: "Announce a personal reading challenge: a set number of horror or dark reads before the month ends. Drives follow-along content." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Third book of the horror or gothic saga. Is the series earning its darkness or coasting on atmosphere?" }
         ],
         stories: [
-          { title: "Costume reveal story",  desc: "'Guess which horror character I am' — reveal after 20 replies." },
-          { title: "Gothic vibes inspo slides", desc: "Aesthetic references for gothic horror: films, art, music that matches." }
+          { title: "Scare challenge sign-up",   desc: "'Comment SCARE ME to join the challenge' — creates visible community participation." },
+          { title: "Dark reading ritual",       desc: "Your reading setup for horror season: the time, the lighting, the props. Inspires and intimidates followers in equal measure." }
         ]
       },
       {
         label: "Week 4 — Halloween week",
         posts: [
-          { day: "Mon",  pl: "both", title: "'Last minute Halloween read' reel", desc: "Books you can finish in one sitting before Halloween." },
-          { day: "Wed",  pl: "ig",   title: "Halloween shelfie",                 desc: "Your most decorated, maximalist horror shelfie of the year." },
-          { day: "Fri",  pl: "tt",   title: "Spooktober final round-up",         desc: "All books read. Stats. Scariest. Most disappointing. Best." },
-          { day: "Sat",  pl: "both", title: "Halloween day special post",        desc: "On October 31st — your personal horror ritual and book rec for the night." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: horror adjacent or full horror?", desc: "A book that sits on the horror/thriller border vs one that is unambiguously horror. Same darkness, very different tools — compare them." },
+          { day: "Thu", pl: "ig",   title: "Dark season shelfie — maximum atmosphere",  desc: "Your most decorated, maximalist dark shelfie of the year. The gothic peak of The Husband's Corner aesthetic." },
+          { day: "Fri", pl: "both", title: "Friday Faves #8: horror and dark fiction accounts", desc: "Shout out the bookstagram and booktok accounts covering horror and dark fiction. Expand the niche community." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — dark season saga wrap",   desc: "Month 8 saga recap. Does the horror series stand alongside the thrillers and mysteries you've featured this year?" }
         ],
         stories: [
-          { title: "Halloween countdown stories", desc: "'X hours until Halloween' — daily story leading to October 31st." },
-          { title: "Final Spooktober wrap",       desc: "Last story of the month: emotional sign-off, thank your followers." }
+          { title: "Horror wrap story",      desc: "Sign off the dark season: every scary book covered this month, rated, ranked." },
+          { title: "'Scariest read of the year' poll", desc: "Community votes on the most frightening book featured on The Husband's Corner so far." }
         ]
       }
     ]
   },
+
   {
-    name: "M9", fullName: "Month 9", label: "Post-Peak",
-    theme: "Ride the October follower wave with quality content",
-    focus: ["New followers", "Evergreen content", "Recap season"],
+    name: "M9", fullName: "Month 9", label: "Marriage & Secrets",
+    theme: "Your core niche at full power — books about husbands, wives, and the secrets they keep",
+    focus: ["Marriage thrillers", "Husband/wife dynamics", "Account identity"],
     weeks: [
       {
-        label: "Week 1 — new follower onboarding",
+        label: "Week 1 — the marriage thriller",
         posts: [
-          { day: "Mon", pl: "both", title: "'Welcome to my page' intro repost", desc: "Repost your Month 1 intro for all the October new followers." },
-          { day: "Wed", pl: "ig",   title: "Best of Spooktober carousel",        desc: "Top 5 books from October for anyone who missed the daily posts." },
-          { day: "Fri", pl: "tt",   title: "Post-October book hangover reel",    desc: "'Nothing hits the same after Spooktober.' Funny, relatable." },
-          { day: "Sun", pl: "ig",   title: "'Start here' pinned post update",    desc: "Refresh your pinned intro post with your October growth milestone." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the double life revealed", desc: "A thriller about a husband whose double life comes apart all at once. Feature the unravelling — the moment the wife discovers the architecture of his lies." },
+          { day: "Wed", pl: "both", title: "Marriage thriller deep dive",              desc: "Carousel or reel: what makes the marriage thriller work as a genre? The tropes, the structure, why the domestic space amplifies dread." },
+          { day: "Fri", pl: "tt",   title: "True crime adjacent — fact vs fiction",   desc: "Thrillers inspired by real cases. Does knowing there's a real husband behind the story make the fiction more or less frightening?" },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — new marriage-adjacent series", desc: "Start a saga with a strong domestic or marriage angle. Feature book 1 and the relationship dynamic at its centre." }
         ],
         stories: [
-          { title: "'Welcome new followers' story", desc: "Introduce yourself again — your name, niche, and what they can expect." },
-          { title: "October highlights reel",       desc: "Best story moments from Spooktober compiled into a single story recap." }
+          { title: "Marriage thriller starter pack", desc: "The 5 books every follower needs to read to understand what The Husband's Corner is really about." },
+          { title: "'Whose POV?' poll",               desc: "Do you prefer reading from the wife's or the husband's perspective in a domestic thriller? Followers vote." }
         ]
       },
       {
-        label: "Week 2 — thriller pivot",
+        label: "Week 2 — betrayal",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'Best thrillers for winter' reel",   desc: "Pivot toward thriller for seasonal variety. Dark, twisty." },
-          { day: "Wed", pl: "ig",   title: "Winter thriller aesthetic",           desc: "Dark nights, plot twists, hot drinks. New seasonal visual language." },
-          { day: "Fri", pl: "both", title: "Thriller vs horror: what's the diff?", desc: "Educational post — great for new followers from October." },
-          { day: "Sat", pl: "tt",   title: "'Thriller recs based on your mood' reel", desc: "'Feeling anxious? Try X. Feeling dark? Try Y.'" }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: the second wife trope",  desc: "Two thrillers built around a predecessor wife — a first marriage whose shadow poisons the second. Compare how each author uses this device." },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #9",                   desc: "A dedicated marriage thriller list: 'The Husband's Corner reading list.' Your definitive shelf of the genre. Link in bio." },
+          { day: "Fri", pl: "ig",   title: "Betrayal themes post",                    desc: "A post on what 'betrayal' looks like across different thriller types — not just marriage. The emotional range of the genre." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Book 2 of the domestic-adjacent saga. Does the series deepen the relationship drama or pivot to something else entirely?" }
         ],
         stories: [
-          { title: "'Thriller or horror?' quiz", desc: "'I'll guess which you prefer based on 3 questions' — tap through." },
-          { title: "Winter reading setup",       desc: "Transitioning your reading corner from spooky to cosy-dark for winter." }
+          { title: "Marriage thriller trope poll",  desc: "'Which trope unsettles you most?' — dark secret / fake identity / controlling spouse / double life." },
+          { title: "Chilling quote card",            desc: "A single line from a marriage thriller — no title, no context. Followers guess the book." }
         ]
       },
       {
-        label: "Week 3 — awards & lists season",
+        label: "Week 3 — family secrets",
         posts: [
-          { day: "Mon", pl: "tt",   title: "Horror/thriller awards season reel", desc: "React to annual genre awards and best-of lists. Timely content." },
-          { day: "Wed", pl: "ig",   title: "'Most anticipated' carousel",         desc: "Books coming out soon that you're hyped for. Great for pre-orders." },
-          { day: "Fri", pl: "both", title: "End of year TBR preview",             desc: "What you plan to read before December 31. Builds accountability." },
-          { day: "Sun", pl: "ig",   title: "Industry round-up carousel",          desc: "Publishing news, upcoming adaptations, genre trends — authority content." }
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the children knew first",  desc: "A thriller where the children in the family understand something is wrong long before the wife does. The horror of childhood observation." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #9",                          desc: "Your marriage and family secrets thriller TBR. The books where the whole family unit is a site of concealed horror. Tag the authors." },
+          { day: "Fri", pl: "tt",   title: "Family secrets aesthetic post",             desc: "Style a flat lay or reel around the 'secrets behind closed doors' aesthetic. Dark homes, closed curtains, everyday objects with sinister undertones." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Book 3 of the saga. How has the marriage or family dynamic evolved through the series?" }
         ],
         stories: [
-          { title: "Awards reaction story",                      desc: "React to genre award nominations in real time — hot takes welcome." },
-          { title: "'Which upcoming book are you most excited for?'", desc: "Give 4 options — followers pick and comment why." }
+          { title: "'Dark family' poll",    desc: "Which fictional family would you least like to be part of? Four options from different books — followers vote." },
+          { title: "Live reaction story",   desc: "React in real time to reading 'that scene' in your current marriage thriller." }
         ]
       },
       {
-        label: "Week 4 — engagement push",
+        label: "Week 4 — The Husband's Corner identity",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'Guess the book' reel",         desc: "Read plot clues aloud — followers guess in comments. Addictive." },
-          { day: "Wed", pl: "ig",   title: "'This or that' horror edition",  desc: "Two books, followers pick one. Simple, high-engagement format." },
-          { day: "Fri", pl: "both", title: "Month 9 wrap + year countdown",  desc: "'X books left to read this year.' Creates urgency and community." },
-          { day: "Sat", pl: "tt",   title: "Community faves round-up reel",  desc: "Books your followers recommended this month — honest takes." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: what makes a great marriage thriller?", desc: "Analyse two books using your own criteria. An educational post about the craft of the sub-genre and what separates a great one from a mediocre one." },
+          { day: "Thu", pl: "ig",   title: "Account anniversary reflection",            desc: "'What The Husband's Corner has taught me about marriage thrillers.' A personal, reflective post that builds deeper community connection." },
+          { day: "Fri", pl: "both", title: "Friday Faves #9: the best marriage thrillers", desc: "Your definitive list of the best books in the genre. The content that defines The Husband's Corner and earns saves." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — month 9 saga wrap",        desc: "Month 9 saga update. Where does the domestic-adjacent series stand after three books?" }
         ],
         stories: [
-          { title: "'Guess the book' story edition", desc: "Text clue on slide 1, cover reveal on slide 2. Fast, addictive format." },
-          { title: "Year countdown story",           desc: "'X days left of the year' — how many books can you fit in?" }
+          { title: "'Best marriage thriller' community vote", desc: "Followers nominate their favourite — you reveal the community winner at end of month." },
+          { title: "Identity story arc",                      desc: "Why you started this account, what surprised you, and what drives you to keep going." }
         ]
       }
     ]
   },
+
   {
-    name: "M10", fullName: "Month 10", label: "Year-End",
-    theme: "Wind down with best-of lists and community celebration",
-    focus: ["Best-of lists", "Reading stats", "Gratitude content"],
+    name: "M10", fullName: "Month 10", label: "Locked Room",
+    theme: "Impossible crimes, isolated settings, and the thrill of the puzzle",
+    focus: ["Locked room mysteries", "Isolated settings", "Atmosphere"],
     weeks: [
       {
-        label: "Week 1 — annual lists",
+        label: "Week 1 — no escape",
         posts: [
-          { day: "Mon", pl: "tt",   title: "'My top 10 of the year' reel",   desc: "Start revealing annual rankings. Teaser format builds suspense." },
-          { day: "Wed", pl: "ig",   title: "Book of the year contenders",     desc: "Your shortlist carousel — followers vote in comments." },
-          { day: "Fri", pl: "both", title: "Biggest reading disappointments", desc: "Books that didn't live up to hype. Controversy = engagement." },
-          { day: "Sat", pl: "ig",   title: "Year-end aesthetic gallery",      desc: "Your 10 best photos of the year in one collage post." }
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the island wedding",       desc: "A thriller set at a gathering — a wedding, a party, a holiday — where a marriage secret surfaces when there's nowhere to leave." },
+          { day: "Wed", pl: "both", title: "The locked room mystery — a guide",        desc: "What is a locked room mystery, why does isolation amplify tension, and what are the classic isolated settings? A great entry-point carousel." },
+          { day: "Fri", pl: "ig",   title: "Atmospheric isolation post",               desc: "Storm windows, flickering lights, remote roads — the visual world of the locked room thriller. A dark, moody flat lay." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — locked room or island series", desc: "Start a thriller saga built around isolation or recurring sealed-setting mysteries. Feature book 1 and the premise." }
         ],
         stories: [
-          { title: "'Top 10 countdown' story arc", desc: "Reveal #10 down to #1 across 10 story slides — one per day." },
+          { title: "Setting poll",            desc: "'Which trapped setting would terrify you most?' — island / snowstorm / manor / remote lodge. Followers vote." },
+          { title: "Locked room aesthetics",  desc: "Build the visual mood for the isolated thriller. Storm, candlelight, no signal. Very shareable." }
+        ]
+      },
+      {
+        label: "Week 2 — everyone's a suspect",
+        posts: [
+          { day: "Tue", pl: "both", title: "Two for Tuesday: two sealed-room settings", desc: "Two thrillers that use isolation differently — one uses a building, one uses a natural landscape. How does the setting shape the suspects?" },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #10",                  desc: "A 'locked room and puzzle mysteries' list — your dedicated shelf for isolated settings and impossible crimes. Link in bio." },
+          { day: "Fri", pl: "tt",   title: "Suspect game — ensemble cast reel",        desc: "Break down a thriller with a large suspect pool. Who are the suspects, what's their motive, who did you think it was and when?" },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                  desc: "Second book of the isolated setting saga. Does the series find a new location or revisit the same world with different victims?" }
+        ],
+        stories: [
+          { title: "Suspect tier list",              desc: "Take a book with multiple suspects — rank them most to least likely. Followers debate via DM." },
+          { title: "'Who did it?' prediction poll",  desc: "For a book followers have likely read — poll on who they suspected from the beginning." }
+        ]
+      },
+      {
+        label: "Week 3 — the big reveal",
+        posts: [
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: nowhere left to hide",     desc: "A locked room or isolation thriller where a marriage secret is the thing that gets revealed when the trap closes. The setup that pays off everything." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #10",                         desc: "Your isolated setting and locked room TBR. The puzzle mysteries and island thrillers still waiting to be read." },
+          { day: "Fri", pl: "both", title: "Plot twist ranked post",                   desc: "Rank the best thriller plot twists you've featured this year — now that there are 9 months of content, this list has real weight." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                  desc: "Third entry of the isolated setting saga. How does the series maintain tension when the reader already knows the format?" }
+        ],
+        stories: [
+          { title: "Clue drop story",              desc: "Drop three clues from a book you just finished — followers guess the killer before you reveal." },
+          { title: "'Did you see it coming?' poll", desc: "For a specific read — poll how many followers guessed the twist before it landed." }
+        ]
+      },
+      {
+        label: "Week 4 — gothic atmosphere",
+        posts: [
+          { day: "Tue", pl: "both", title: "Two for Tuesday: gothic vs modern isolation", desc: "A classic gothic thriller vs a modern isolated setting mystery. Same core dread, completely different tools — compare the atmosphere." },
+          { day: "Thu", pl: "ig",   title: "Gothic thriller aesthetic post",            desc: "Dark houses, fog, winding staircases, candlelight — the gothic thriller aesthetic at its most atmospheric." },
+          { day: "Fri", pl: "both", title: "Friday Faves #10: thriller and mystery newsletters", desc: "The best email newsletters covering crime fiction and thrillers — curated recommendations delivered to your inbox." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — month 10 wrap",            desc: "Month 10 saga recap: the isolated setting series in full. Would you recommend it and which book was the peak?" }
+        ],
+        stories: [
+          { title: "Gothic atmosphere mood board", desc: "Dark houses, fog, candlelight — the gothic thriller aesthetic at its atmospheric best." },
+          { title: "Month 10 wrap",                desc: "Best locked room read featured, most popular comparison, highlights of the month." }
+        ]
+      }
+    ]
+  },
+
+  {
+    name: "M11", fullName: "Month 11", label: "Winter Thrillers",
+    theme: "Dark season reading — the best thrillers for long nights and cold days",
+    focus: ["Winter atmosphere", "Festive darkness", "Year-end TBR"],
+    weeks: [
+      {
+        label: "Week 1 — cold darkness",
+        posts: [
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the winter marriage",      desc: "Feature a thriller where the winter setting mirrors the state of the marriage. Cold outside, colder within. The seasonal domestic thriller." },
+          { day: "Wed", pl: "ig",   title: "Winter thriller aesthetic post",           desc: "Blankets, candlelight, dark covers, snow outside — your seasonal reading corner styled for maximum moody atmosphere." },
+          { day: "Fri", pl: "both", title: "Winter TBR announcement",                  desc: "Your full winter reading list — the thrillers and dark reads you'll work through in the darkest months. High saves format." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — new winter series begins", desc: "Start a saga that suits the dark season — Scandi crime, gothic series, atmospheric crime fiction. Feature book 1." }
+        ],
+        stories: [
+          { title: "Winter reading setup",  desc: "Your physical reading corner for the dark season: the props, the light, the vibe. Inspires followers." },
+          { title: "Winter TBR poll",       desc: "Show followers two winter-appropriate thrillers — they vote which you read first." }
+        ]
+      },
+      {
+        label: "Week 2 — festive darkness",
+        posts: [
+          { day: "Tue", pl: "both", title: "Two for Tuesday: Christmas-set thrillers", desc: "Two thrillers set during the holiday period. Compare how each author uses festive expectations to deepen the horror of what's actually happening." },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #11",                   desc: "A festive list: 'Thrillers to read instead of watching Christmas films.' Your holiday thriller alternatives — save-worthy format." },
+          { day: "Fri", pl: "tt",   title: "Year-end reflection reel",                 desc: "'Books that defined my year' — a fast-cut montage reel looking back at the reads and moments that shaped the account." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 2",                   desc: "Second entry of the winter saga. How does the series feel in the darker months — is the atmosphere enhanced by the season?" }
+        ],
+        stories: [
+          { title: "Festive thriller mood board",      desc: "Dark Christmas aesthetic: black ornaments, thriller covers, candlelight. The Husband's Corner meets the holidays." },
+          { title: "'Festive thriller or cosy?' poll", desc: "Followers choose their seasonal reading mood — dark and twisty or warm and puzzley." }
+        ]
+      },
+      {
+        label: "Week 3 — awards season",
+        posts: [
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the year's most disturbing husband", desc: "Feature the most unsettling husband character from all the books covered this year. A curated best-of from your own content." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #11 — next year preview",    desc: "The most anticipated thriller, mystery, and horror releases of the coming year. Build hype early and position yourself ahead of publication dates." },
+          { day: "Fri", pl: "tt",   title: "Award nominees reaction reel",             desc: "React to the year's crime fiction and thriller award nominations. Are you surprised? Do you agree? Hot takes perform well here." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — book 3",                   desc: "Mid-winter saga check-in. Three books deep — does the series still earn its place on a long reading list?" }
+        ],
+        stories: [
+          { title: "Year recap arc",        desc: "5 slides: the 5 things you've learned about thrillers, mystery, and horror from running The Husband's Corner." },
+          { title: "Follower shoutout",     desc: "Thank your most engaged followers by name. Community warmth as the year winds down." }
+        ]
+      },
+      {
+        label: "Week 4 — counting down",
+        posts: [
+          { day: "Tue", pl: "both", title: "Two for Tuesday: best reading discoveries of the year", desc: "The two most unexpected books of the year — ones you didn't expect to love. A personal, reflective comparison post." },
+          { day: "Thu", pl: "ig",   title: "Reading challenge wrap — year-end stats",   desc: "How many books, how many genres, how many platforms. The year in numbers before the final month." },
+          { day: "Fri", pl: "both", title: "Friday Faves #11: the year's best thriller covers", desc: "Shout out the books with the best cover design this year. Bookish aesthetics as content — easy engagement, great saves." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — month 11 saga wrap",        desc: "Winter saga update: books covered, atmosphere reviewed, and whether the series lands differently in the dark season." }
+        ],
+        stories: [
+          { title: "'Award or not?' poll",  desc: "Name 4 books — followers vote which one they'd give the year's thriller award to." },
+          { title: "Year countdown",        desc: "'X days left of the year' — daily story counting down." }
+        ]
+      }
+    ]
+  },
+
+  {
+    name: "M12", fullName: "Month 12", label: "Year-End",
+    theme: "Celebrate a year of The Husband's Corner with best-of lists and community love",
+    focus: ["Year-end lists", "Community celebration", "New year setup"],
+    weeks: [
+      {
+        label: "Week 1 — annual rankings",
+        posts: [
+          { day: "Mon", pl: "tt",   title: "Husband's Bait: the year in husbands",     desc: "A round-up of every Husband's Bait feature from the year. Which fictional husband was the most terrifying — ranked from 'red flag' to 'actual monster.'" },
+          { day: "Wed", pl: "both", title: "Top 10 books of the year — carousel",      desc: "Start revealing your annual rankings. One carousel with your personal top 10 thriller/mystery/horror reads — a post worth pinning." },
+          { day: "Fri", pl: "tt",   title: "Biggest reading disappointments reel",      desc: "Books that didn't live up to the hype. Controversial content that earns massive comments — be specific and honest." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — year's best saga reveal",  desc: "Which saga featured across the year was the best? A full year-end saga verdict with your final recommendation." }
+        ],
+        stories: [
+          { title: "'Top 10 countdown' story arc", desc: "Reveal your top 10 of the year across 10 story slides — one reveal per day." },
           { title: "'Agree with my ranking?'",     desc: "Followers vote agree/disagree on each pick in your top 10." }
         ]
       },
       {
-        label: "Week 2 — stats & data",
+        label: "Week 2 — stats and data",
         posts: [
-          { day: "Mon", pl: "both", title: "Reading stats post",             desc: "Total pages, books, average rating, longest book. Infographic format." },
-          { day: "Wed", pl: "tt",   title: "'Reading wrapped' reel",         desc: "Spotify Wrapped style — your reading year in numbers." },
-          { day: "Fri", pl: "ig",   title: "Author stats breakdown",         desc: "Which authors did you read most? Genre breakdown chart." },
-          { day: "Sat", pl: "both", title: "'Your stats vs mine' collab post", desc: "Challenge followers to share their own reading year stats." }
+          { day: "Tue", pl: "both", title: "Two for Tuesday: your two standout reads",  desc: "Your absolute top two books of the year — the ones you'd recommend before any others. Make the case for both." },
+          { day: "Wed", pl: "ig",   title: "Wishlist Wednesday #12",                    desc: "The final wishlist: 'Everything I didn't get to this year but will next year.' The carry-over list with full intention." },
+          { day: "Fri", pl: "tt",   title: "'Reading wrapped' reel",                   desc: "Spotify Wrapped style — your reading year in numbers. Books, pages, authors, genres, most-featured tropes. Format gets reshared." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — all sagas ranked",          desc: "Rank every saga featured across the year from favourite to least favourite. The definitive Husband's Corner saga verdict." }
         ],
         stories: [
-          { title: "'Reading wrapped' story version", desc: "Swipe through your stats one number at a time — each slide a reveal." },
-          { title: "Followers share their stats",     desc: "Reshare follower 'reading wrapped' stories to your story. Community warmth." }
+          { title: "'Reading wrapped' story version", desc: "Year in stats one slide at a time — books, pages, genres, biggest surprises. Each slide a new reveal." },
+          { title: "Follower stats share",             desc: "Invite followers to share their own reading wrapped — reshare the best ones to your story." }
         ]
       },
       {
         label: "Week 3 — community awards",
         posts: [
-          { day: "Mon", pl: "both", title: "'Follower book of the year' poll", desc: "Crowd-sourced award — followers vote. Huge engagement." },
-          { day: "Wed", pl: "ig",   title: "'Thank you' community post",       desc: "Genuine gratitude to your followers with milestone celebration." },
-          { day: "Fri", pl: "tt",   title: "Community fave reveal",            desc: "Announce the winning book your followers voted for." },
-          { day: "Sat", pl: "ig",   title: "'Follower of the year' shoutout",  desc: "Feature your most engaged, supportive community member." }
+          { day: "Mon", pl: "ig",   title: "Husband's Bait: the community's choice",   desc: "The husband/wife thriller your followers voted as their favourite across the year. Feature their pick and react to their verdict." },
+          { day: "Wed", pl: "both", title: "Community's top two — head-to-head",           desc: "Followers voted throughout the year — feature the two books your community chose as their annual favourites and compare them." },
+          { day: "Thu", pl: "both", title: "TBR Thursday #12 — next year's plan",      desc: "Your official TBR for the coming year — laid out, committed to, made public. The books that will shape Year 2." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday — The Husband's Corner saga awards", desc: "Best saga featured, most binged, most underrated, the one you'd hand to every new follower. Your own end-of-year saga awards." }
         ],
         stories: [
-          { title: "Live voting story",  desc: "'Your votes are coming in!' — update followers on the award results hourly." },
-          { title: "Gratitude series",   desc: "10 story slides, each thanking a specific follower or community moment." }
+          { title: "Community award ceremony",  desc: "Live-style reveal of the community votes. Which book won the year according to your followers?" },
+          { title: "Gratitude series",           desc: "10 story slides, each with a genuine thank-you to a part of the community — followers, authors who engaged, accounts that supported you." }
         ]
       },
       {
-        label: "Week 4 — new year setup",
+        label: "Week 4 — new year, new chapter",
         posts: [
-          { day: "Mon", pl: "tt",   title: "2027 most anticipated reveals",         desc: "Books you're most excited to read next year. Pre-hype content." },
-          { day: "Wed", pl: "ig",   title: "New year TBR pile photo",               desc: "Your physical TBR pile for next year. Always a crowd-pleaser." },
-          { day: "Fri", pl: "both", title: "Year-end sign-off post",                desc: "Personal reflection. What horror/thriller gave you this year." },
-          { day: "Sat", pl: "both", title: "'New year reading resolution' post",    desc: "Your one reading goal for next year — invite followers to share theirs." }
+          { day: "Tue", pl: "tt",   title: "Two for Tuesday: most anticipated releases", desc: "Two upcoming titles you're most excited about for next year. Build hype early and position yourself before the publication date." },
+          { day: "Thu", pl: "ig",   title: "First reads of the new year",                desc: "The first books you'll read on January 1st. Public commitment — followers will hold you to it." },
+          { day: "Fri", pl: "both", title: "Friday Faves #12: the full year's community", desc: "Every account, author, and creator you've connected with this year. The complete Husband's Corner community map." },
+          { day: "Sat", pl: "ig",   title: "Saga Saturday: year one final post",         desc: "The saga that meant the most across the whole year. Your final personal endorsement — one series, no caveats, just a recommendation." }
         ],
         stories: [
-          { title: "TBR pile reveal story", desc: "Swipe through every book on next year's TBR with a hype rating for each." },
-          { title: "New year message story", desc: "Personal, heartfelt sign-off — voice note or video for real connection." }
+          { title: "New year message",          desc: "Personal, heartfelt voice note or video sign-off. What The Husband's Corner means to you and what Year 2 holds." },
+          { title: "Year-one celebration arc",  desc: "Your first post vs your last post. The full journey of The Husband's Corner in two slides." }
         ]
       }
     ]

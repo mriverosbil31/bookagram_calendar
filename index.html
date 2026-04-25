@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chilling Pages — Content Calendar</title>
-  <meta name="description" content="10-month Bookstagram & BookTok content calendar for horror and thriller books. 4 posts/week + Instagram Stories strategy.">
+  <title>The Husband's Corner — Content Calendar</title>
+  <meta name="description" content="12-month Bookstagram & BookTok content calendar for thriller, mystery and suspense books. The Husband's Corner posting plan.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 
   <header class="site-header">
     <div class="header-inner">
-      <div class="logo">Chilling<span>Pages</span></div>
+      <div class="logo">The Husband's<span>Corner</span></div>
       <div class="legend">
         <div class="leg"><div class="leg-dot" style="background:#6B3FA0;"></div>Instagram</div>
         <div class="leg"><div class="leg-dot" style="background:#8b1a1a;"></div>TikTok</div>
@@ -25,18 +25,26 @@
   </header>
 
   <div class="hero-band">
-    <h1>Your <em>Horror &amp; Thriller</em><br>Content Calendar</h1>
-    <p class="hero-sub">Bookstagram &amp; BookTok — 4 posts/week + daily Instagram Stories</p>
+    <h1>Your <em>Thriller, Mystery &amp; Suspense</em><br>Content Calendar</h1>
+    <p class="hero-sub">The Husband's Corner — Bookstagram &amp; BookTok · 12-month plan</p>
   </div>
 
-  <nav class="month-nav-wrap" aria-label="Month navigation">
+  <nav class="view-nav-wrap" aria-label="View navigation">
+    <div class="view-nav">
+      <button class="vnav active" id="vnav-calendar" onclick="setView('calendar')">Calendar</button>
+      <button class="vnav" id="vnav-books" onclick="setView('books')">Books</button>
+      <button class="vnav" id="vnav-resources" onclick="setView('resources')">Reading Lists</button>
+    </div>
+  </nav>
+
+  <nav class="month-nav-wrap" id="month-nav-wrap" aria-label="Month navigation">
     <div class="month-nav" id="month-nav"></div>
   </nav>
 
   <main class="main" id="main-content" aria-live="polite"></main>
 
   <footer class="site-footer">
-    <p>"The oldest and strongest emotion of mankind is fear, and the oldest and strongest kind of fear is fear of the unknown." — H.P. Lovecraft</p>
+    <p>"There is nothing more deceptive than an obvious fact." — Arthur Conan Doyle</p>
   </footer>
 
   <script src="js/data.js"></script>
