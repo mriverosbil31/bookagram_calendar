@@ -12,7 +12,7 @@ A 10-month Bookstagram & BookTok content calendar for horror and thriller book a
 - 4 posts per week across Instagram and TikTok
 - Instagram Stories concepts woven into every week
 - Fully responsive — works on mobile, tablet, and desktop
-- Dark editorial aesthetic matching the horror/thriller niche
+- Dark editorial aesthetic matching the horror/thriller niches
 
 ## Project structure
 
