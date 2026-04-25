@@ -24,7 +24,7 @@ function saveAllBooks(obj) {
   localStorage.setItem(BOOKS_KEY, JSON.stringify(obj));
 }
 function getBooksForPost(id) {
-  return getAllBooks()[id] || [];
+  return (getAllBooks()[id] || []).map(normBook);
 }
 function getCustomLinks() {
   try { return JSON.parse(localStorage.getItem(CUSTOM_LINKS_KEY)) || []; }
@@ -34,18 +34,38 @@ function saveCustomLinks(arr) {
   localStorage.setItem(CUSTOM_LINKS_KEY, JSON.stringify(arr));
 }
 
-// ─── Book actions (no page re-render) ────────────────────────────
+// ─── Backward compat: stored entries may be plain strings ─────────
+function normBook(b) {
+  if (typeof b === 'string') return { title: b, author: '' };
+  return { title: b.title || '', author: b.author || '' };
+}
+
+function getAllAuthors() {
+  const authors = new Set();
+  Object.values(getAllBooks()).forEach(arr =>
+    arr.forEach(b => { const a = normBook(b).author; if (a) authors.add(a); })
+  );
+  return [...authors].sort();
+}
+
+// ─── Book actions ────────────────────────────────────────────────
 function addBook(postId) {
-  const input = document.getElementById('binput-' + postId);
-  if (!input) return;
-  const title = input.value.trim();
-  if (!title) return;
+  const titleInput  = document.getElementById('binput-'  + postId);
+  const authorInput = document.getElementById('bauthor-' + postId);
+  if (!titleInput) return;
+  const title  = titleInput.value.trim();
+  if (!title) { titleInput.focus(); return; }
+  const author = authorInput ? authorInput.value.trim() : '';
   const all = getAllBooks();
   if (!all[postId]) all[postId] = [];
-  if (!all[postId].includes(title)) all[postId].push(title);
+  const exists = all[postId].some(b => normBook(b).title.toLowerCase() === title.toLowerCase());
+  if (!exists) all[postId].push({ title, author });
   saveAllBooks(all);
-  input.value = '';
+  titleInput.value = '';
+  if (authorInput) authorInput.value = '';
+  titleInput.focus();
   refreshChips(postId);
+  refreshAuthorsList();
 }
 
 function removeBook(postId, idx) {
@@ -56,6 +76,7 @@ function removeBook(postId, idx) {
     saveAllBooks(all);
   }
   refreshChips(postId);
+  refreshAuthorsList();
 }
 
 function refreshChips(postId) {
@@ -63,15 +84,21 @@ function refreshChips(postId) {
   if (!el) return;
   const books = getBooksForPost(postId);
   el.innerHTML = books.map((b, i) =>
-    `<span class="book-chip">${esc(b)}<button class="chip-x" onclick="removeBook('${postId}',${i})" title="Remove">×</button></span>`
+    `<span class="book-chip">${esc(b.title)}${b.author ? `<span class="chip-author"> — ${esc(b.author)}</span>` : ''}<button class="chip-x" onclick="removeBook('${postId}',${i})" title="Remove">×</button></span>`
   ).join('');
+}
+
+function refreshAuthorsList() {
+  const el = document.getElementById('global-authors-list');
+  if (!el) return;
+  el.innerHTML = getAllAuthors().map(a => `<option value="${esc(a)}">`).join('');
 }
 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ─── Archive action (re-renders calendar) ────────────────────────
+// ─── Archive action ───────────────────────────────────────────────
 function toggleArchived(id) {
   const archived = getArchived();
   if (archived.has(id)) { archived.delete(id); } else { archived.add(id); }
@@ -95,7 +122,7 @@ function buildCard(item, id, isStory, isArchived) {
   const pl    = isStory ? 'story' : item.pl;
   const books = getBooksForPost(id);
   const chips = books.map((b, i) =>
-    `<span class="book-chip">${esc(b)}<button class="chip-x" onclick="removeBook('${id}',${i})" title="Remove">×</button></span>`
+    `<span class="book-chip">${esc(b.title)}${b.author ? `<span class="chip-author"> — ${esc(b.author)}</span>` : ''}<button class="chip-x" onclick="removeBook('${id}',${i})" title="Remove">×</button></span>`
   ).join('');
 
   return `<div class="post-card${isStory ? ' story-card' : ''}${isArchived ? ' is-archived' : ''}" data-id="${id}">
@@ -112,9 +139,15 @@ function buildCard(item, id, isStory, isArchived) {
     ${isArchived ? '<div class="posted-label">Posted</div>' : ''}
     <div class="book-section">
       <div id="bchips-${id}" class="book-chips">${chips}</div>
-      <div class="book-input-row">
-        <input id="binput-${id}" type="text" class="book-input" placeholder="Add book title…" onkeydown="if(event.key==='Enter')addBook('${id}')">
-        <button class="book-add-btn" onclick="addBook('${id}')">+</button>
+      <div class="book-inputs">
+        <input id="binput-${id}" type="text" class="book-input" placeholder="Book title…"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('bauthor-${id}').focus();}">
+        <div class="book-author-row">
+          <input id="bauthor-${id}" type="text" class="book-input book-author-input" placeholder="Author…"
+            list="global-authors-list"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addBook('${id}');}">
+          <button class="book-add-btn" onclick="addBook('${id}')">+</button>
+        </div>
       </div>
     </div>
   </div>`;
@@ -122,11 +155,12 @@ function buildCard(item, id, isStory, isArchived) {
 
 // ─── Calendar view ────────────────────────────────────────────────
 function renderCalendar() {
-  const m        = months[currentMonth];
-  const archived = getArchived();
+  const m         = months[currentMonth];
+  const archived  = getArchived();
   const archCards = [];
 
   let html = `
+    <datalist id="global-authors-list"></datalist>
     <div class="month-title-block">
       <div>
         <div class="month-title">${m.fullName}: ${m.label}</div>
@@ -180,6 +214,7 @@ function renderCalendar() {
     </div>`;
 
   document.getElementById('main-content').innerHTML = html;
+  refreshAuthorsList();
 }
 
 function toggleArchivedPanel(btn) {
@@ -189,19 +224,29 @@ function toggleArchivedPanel(btn) {
 }
 
 // ─── Books view ───────────────────────────────────────────────────
+function filterBooks(author) {
+  document.querySelectorAll('.book-card').forEach(card => {
+    const match = author === 'all' || (card.dataset.author || '') === author;
+    card.style.display = match ? '' : 'none';
+  });
+  document.querySelectorAll('.author-pill').forEach(pill => {
+    pill.classList.toggle('active', pill.dataset.author === author);
+  });
+}
+
 function renderBooksView() {
   const allBooks = getAllBooks();
-  // bookMap: title -> [{monthName, postTitle, id}]
-  const bookMap = {};
+  const bookMap  = {};
 
   months.forEach((m, mi) => {
     m.weeks.forEach((w, wi) => {
       const collect = (items, prefix) => {
         items.forEach((item, ii) => {
           const id = `m${mi}-w${wi}-${prefix}${ii}`;
-          (allBooks[id] || []).forEach(title => {
-            if (!bookMap[title]) bookMap[title] = [];
-            bookMap[title].push({ id, monthName: m.fullName, postTitle: item.title });
+          (allBooks[id] || []).map(normBook).forEach(b => {
+            const key = `${b.title}||${b.author}`;
+            if (!bookMap[key]) bookMap[key] = { title: b.title, author: b.author, mentions: [] };
+            bookMap[key].mentions.push({ monthName: m.fullName, postTitle: item.title });
           });
         });
       };
@@ -210,33 +255,46 @@ function renderBooksView() {
     });
   });
 
-  const entries = Object.entries(bookMap)
-    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+  const entries = Object.values(bookMap)
+    .sort((a, b) => b.mentions.length - a.mentions.length || a.title.localeCompare(b.title));
+
+  const authors = [...new Set(entries.map(e => e.author).filter(Boolean))].sort();
 
   let html = `<div class="books-view">
     <div class="view-header">
       <div class="view-header-title">Books Mentioned</div>
-      <div class="view-header-sub">Every book you've added across all posts, sorted by how often they appear.</div>
+      <div class="view-header-sub">Every book you've tagged across all posts. Filter by author or browse the full list.</div>
     </div>`;
 
   if (!entries.length) {
     html += `<div class="empty-state">
       <div class="empty-dash">—</div>
       <div class="empty-title">No books added yet</div>
-      <div class="empty-desc">Go to any post in the Calendar and type a book title in the field at the bottom of the card.</div>
+      <div class="empty-desc">Go to any post in the Calendar and add a book title — you can also tag the author for filtering here.</div>
     </div>`;
   } else {
-    html += `<div class="books-list">`;
-    entries.forEach(([title, mentions]) => {
-      const months_set = [...new Set(mentions.map(m => m.monthName))].join(' · ');
-      html += `<div class="book-row">
-        <div class="book-row-info">
-          <div class="book-row-title">${esc(title)}</div>
-          <div class="book-row-months">${months_set}</div>
+    html += `<div class="books-filter-bar">
+      <button class="author-pill active" data-author="all" onclick="filterBooks(this.dataset.author)">All <span class="pill-count">${entries.length}</span></button>`;
+    authors.forEach(a => {
+      const count = entries.filter(e => e.author === a).length;
+      html += `<button class="author-pill" data-author="${esc(a)}" onclick="filterBooks(this.dataset.author)">${esc(a)} <span class="pill-count">${count}</span></button>`;
+    });
+    html += `</div><div class="books-grid">`;
+
+    entries.forEach(e => {
+      const initial   = e.title.charAt(0).toUpperCase();
+      const monthsSet = [...new Set(e.mentions.map(m => m.monthName))].join(' · ');
+      html += `<div class="book-card" data-author="${esc(e.author)}">
+        <div class="book-card-initial">${esc(initial)}</div>
+        <div class="book-card-body">
+          <div class="book-card-title">${esc(e.title)}</div>
+          ${e.author ? `<div class="book-card-author">${esc(e.author)}</div>` : ''}
+          <div class="book-card-months">${esc(monthsSet)}</div>
+          <div class="book-card-count">${e.mentions.length} post${e.mentions.length !== 1 ? 's' : ''}</div>
         </div>
-        <div class="book-row-count">${mentions.length}</div>
       </div>`;
     });
+
     html += `</div>`;
   }
 
@@ -382,9 +440,9 @@ function setView(view) {
   document.getElementById('vnav-' + view).classList.add('active');
   const mnw = document.getElementById('month-nav-wrap');
   mnw.style.display = view === 'calendar' ? '' : 'none';
-  if (view === 'calendar')   { renderMonthNav(); renderCalendar(); }
-  else if (view === 'books')     renderBooksView();
-  else if (view === 'resources') renderResourcesView();
+  if (view === 'calendar')        { renderMonthNav(); renderCalendar(); }
+  else if (view === 'books')      renderBooksView();
+  else if (view === 'resources')  renderResourcesView();
 }
 
 function setMonth(i) {
@@ -397,7 +455,6 @@ function setMonth(i) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Inject monthly wrap-up post into Week 4 of every month
   months.forEach(m => {
     const week4 = m.weeks[3];
     if (week4) {
