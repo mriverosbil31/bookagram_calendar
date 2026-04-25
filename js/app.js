@@ -1,6 +1,7 @@
 // ─── Storage keys ─────────────────────────────────────────────────
-const ARCHIVED_KEY = 'thc_archived';
-const BOOKS_KEY    = 'thc_books';
+const ARCHIVED_KEY      = 'thc_archived';
+const BOOKS_KEY         = 'thc_books';
+const CUSTOM_LINKS_KEY  = 'thc_custom_links';
 
 // ─── State ────────────────────────────────────────────────────────
 let currentView  = 'calendar';
@@ -24,6 +25,13 @@ function saveAllBooks(obj) {
 }
 function getBooksForPost(id) {
   return getAllBooks()[id] || [];
+}
+function getCustomLinks() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_LINKS_KEY)) || []; }
+  catch { return []; }
+}
+function saveCustomLinks(arr) {
+  localStorage.setItem(CUSTOM_LINKS_KEY, JSON.stringify(arr));
 }
 
 // ─── Book actions (no page re-render) ────────────────────────────
@@ -236,6 +244,40 @@ function renderBooksView() {
   document.getElementById('main-content').innerHTML = html;
 }
 
+// ─── Custom links actions ─────────────────────────────────────────
+let addResourceOpen = false;
+
+function toggleAddResourceForm() {
+  addResourceOpen = !addResourceOpen;
+  const form = document.getElementById('add-resource-form');
+  const btn  = document.getElementById('add-resource-toggle');
+  if (form) form.classList.toggle('open', addResourceOpen);
+  if (btn)  btn.textContent = addResourceOpen ? '− Cancel' : '+ Add a link';
+}
+
+function addCustomLink() {
+  const title = document.getElementById('rl-title').value.trim();
+  const url   = document.getElementById('rl-url').value.trim();
+  const desc  = document.getElementById('rl-desc').value.trim();
+  const cat   = document.getElementById('rl-cat').value.trim() || 'Custom';
+  if (!title || !url) {
+    document.getElementById('rl-error').textContent = 'Title and URL are required.';
+    return;
+  }
+  const links = getCustomLinks();
+  links.push({ title, url, desc, category: cat });
+  saveCustomLinks(links);
+  addResourceOpen = false;
+  renderResourcesView();
+}
+
+function removeCustomLink(idx) {
+  const links = getCustomLinks();
+  links.splice(idx, 1);
+  saveCustomLinks(links);
+  renderResourcesView();
+}
+
 // ─── Resources view ───────────────────────────────────────────────
 const resources = [
   {
@@ -277,10 +319,12 @@ const resources = [
 ];
 
 function renderResourcesView() {
+  const custom = getCustomLinks();
+
   let html = `<div class="resources-view">
     <div class="view-header">
       <div class="view-header-title">Reading Lists</div>
-      <div class="view-header-sub">Curated Goodreads lists to help you plan content and discover what to feature next.</div>
+      <div class="view-header-sub">Curated lists to help you plan content and discover what to feature next.</div>
     </div>
     <div class="resources-grid">`;
 
@@ -293,7 +337,35 @@ function renderResourcesView() {
     </div>`;
   });
 
-  html += `</div></div>`;
+  custom.forEach((r, i) => {
+    html += `<div class="resource-card resource-card--custom">
+      <button class="resource-delete" onclick="removeCustomLink(${i})" title="Remove">×</button>
+      <div class="resource-category">${esc(r.category)}</div>
+      <div class="resource-title">${esc(r.title)}</div>
+      ${r.desc ? `<div class="resource-desc">${esc(r.desc)}</div>` : ''}
+      <a class="resource-btn" href="${esc(r.url)}" target="_blank" rel="noopener">Open List →</a>
+    </div>`;
+  });
+
+  html += `</div>
+
+    <div class="add-resource-panel">
+      <button class="add-resource-toggle" id="add-resource-toggle" onclick="toggleAddResourceForm()">+ Add a link</button>
+      <div class="add-resource-form" id="add-resource-form">
+        <div class="rl-row">
+          <input id="rl-title" type="text" class="rl-input" placeholder="List title *">
+          <input id="rl-cat"   type="text" class="rl-input" placeholder="Category (e.g. Horror)">
+        </div>
+        <input id="rl-url"  type="url"  class="rl-input rl-full" placeholder="https://... *">
+        <textarea id="rl-desc" class="rl-input rl-full rl-textarea" placeholder="Short description (optional)" rows="2"></textarea>
+        <div class="rl-actions">
+          <span id="rl-error" class="rl-error"></span>
+          <button class="rl-save" onclick="addCustomLink()">Save link</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
   document.getElementById('main-content').innerHTML = html;
 }
 
@@ -325,6 +397,18 @@ function setMonth(i) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Inject monthly wrap-up post into Week 4 of every month
+  months.forEach(m => {
+    const week4 = m.weeks[3];
+    if (week4) {
+      week4.posts.push({
+        day: "Sun", pl: "both",
+        title: "Monthly Wrap-Up",
+        desc: `Round up every book read or featured in ${m.fullName}. Share your Goodreads challenge progress — books read vs annual goal — and show how your 2026 reading year is looking overall so far.`
+      });
+    }
+  });
+
   renderMonthNav();
   renderCalendar();
 });
