@@ -45,6 +45,7 @@ function getAllAuthors() {
   Object.values(getAllBooks()).forEach(arr =>
     arr.forEach(b => { const a = normBook(b).author; if (a) authors.add(a); })
   );
+  getJournal().forEach(e => { if (e.author) authors.add(e.author); });
   return [...authors].sort();
 }
 
@@ -427,6 +428,232 @@ function renderResourcesView() {
   document.getElementById('main-content').innerHTML = html;
 }
 
+// ─── Reading Journal ──────────────────────────────────────────────
+const JOURNAL_KEY = 'thc_journal';
+
+function getJournal() {
+  try { return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || []; }
+  catch { return []; }
+}
+function saveJournal(arr) { localStorage.setItem(JOURNAL_KEY, JSON.stringify(arr)); }
+
+function setJournalRating(val) {
+  document.getElementById('jnl-rating-val').value = val;
+  document.querySelectorAll('.jnl-star-pick').forEach((s, i) => s.classList.toggle('on', i < val));
+}
+
+function addJournalEntry() {
+  const title    = document.getElementById('jnl-title').value.trim();
+  const author   = document.getElementById('jnl-author').value.trim();
+  const rating   = parseInt(document.getElementById('jnl-rating-val')?.value) || 0;
+  const dateRead = document.getElementById('jnl-date').value;
+  const thoughts = document.getElementById('jnl-thoughts').value.trim();
+  if (!title)    { document.getElementById('jnl-title').focus(); return; }
+  if (!thoughts) { document.getElementById('jnl-thoughts').focus(); return; }
+  const j = getJournal();
+  j.unshift({ title, author, rating, dateRead, thoughts, addedAt: Date.now() });
+  saveJournal(j);
+  renderJournalView();
+}
+
+function removeJournalEntry(idx) {
+  const j = getJournal();
+  j.splice(idx, 1);
+  saveJournal(j);
+  renderJournalView();
+}
+
+function toggleJournalExpand(btn, idx) {
+  const el = document.getElementById('jnl-body-' + idx);
+  if (!el) return;
+  const expanded = el.dataset.expanded === '1';
+  const entry = getJournal()[idx];
+  if (!entry) return;
+  if (expanded) {
+    el.innerHTML = esc(entry.thoughts.slice(0, 220) + '…').replace(/\n/g, '<br>');
+    el.dataset.expanded = '0';
+    btn.textContent = 'Read more ↓';
+  } else {
+    el.innerHTML = esc(entry.thoughts).replace(/\n/g, '<br>');
+    el.dataset.expanded = '1';
+    btn.textContent = 'Show less ↑';
+  }
+}
+
+function buildClaudePrompt(entry) {
+  const filled = Math.min(Math.max(parseInt(entry.rating) || 0, 0), 5);
+  const stars  = '★'.repeat(filled) + '☆'.repeat(5 - filled);
+  return `You are helping The Husband's Corner — a Bookstagram & BookTok account focused on thriller, mystery and suspense.
+
+Book: "${entry.title}"${entry.author ? ` by ${entry.author}` : ''}
+My rating: ${stars} (${filled}/5)${entry.dateRead ? `\nDate read: ${entry.dateRead}` : ''}
+
+My raw thoughts:
+${entry.thoughts}
+
+Please give me:
+1. A polished one-paragraph review for my records (authentic, opinionated, no spoilers)
+2. An Instagram carousel caption (strong hook · body · CTA · 5 hashtags, thriller-niche tone)
+3. A TikTok hook for the first 5 seconds (punchy, scroll-stopping, makes people stop)
+4. Three content angle ideas tailored to The Husband's Corner (dark, literary, husband-perspective)
+
+Voice: passionate, slightly obsessed — a husband who reads every thriller his wife is too scared to pick up alone.`;
+}
+
+function openWithClaude(idx) {
+  const entry = getJournal()[idx];
+  if (!entry) return;
+  const prompt = buildClaudePrompt(entry);
+  const doOpen = () => window.open('https://claude.ai', '_blank', 'noopener');
+  const fallback = () => { showPromptModal(prompt); doOpen(); };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(prompt)
+      .then(() => { showJnlToast('Prompt copied! Paste it into Claude ↗'); doOpen(); })
+      .catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+function showJnlToast(msg) {
+  let t = document.getElementById('jnl-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'jnl-toast';
+    t.className = 'jnl-toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(t._tmr);
+  t._tmr = setTimeout(() => t.classList.remove('visible'), 4000);
+}
+
+function showPromptModal(prompt) {
+  let ov = document.getElementById('jnl-modal');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'jnl-modal';
+    ov.className = 'jnl-modal-overlay';
+    ov.innerHTML = `<div class="jnl-modal">
+      <div class="jnl-modal-hd">Copy this prompt and paste into Claude</div>
+      <textarea class="jnl-modal-ta" id="jnl-modal-ta" readonly></textarea>
+      <div class="jnl-modal-ft">
+        <button class="jnl-modal-copy" onclick="var ta=document.getElementById('jnl-modal-ta');ta.select();document.execCommand('copy');showJnlToast('Copied!')">Copy all</button>
+        <button class="jnl-modal-close" onclick="document.getElementById('jnl-modal').style.display='none'">Close</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.style.display = 'none'; });
+  }
+  document.getElementById('jnl-modal-ta').value = prompt;
+  ov.style.display = 'flex';
+}
+
+function renderJnlStars(n) {
+  n = Math.min(Math.max(parseInt(n) || 0, 0), 5);
+  return [1,2,3,4,5].map(i => `<span class="jnl-star${i <= n ? ' on' : ''}">★</span>`).join('');
+}
+
+function sortJournal(by) {
+  document.querySelectorAll('.jnl-sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === by));
+  const j = getJournal();
+  const sorted = [...j];
+  if (by === 'rating') sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0) || b.addedAt - a.addedAt);
+  renderJournalGrid(sorted, j);
+}
+
+function renderJournalGrid(display, all) {
+  const grid = document.getElementById('jnl-grid');
+  if (!grid) return;
+  if (!display.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-dash">—</div>
+      <div class="empty-title">No entries yet</div>
+      <div class="empty-desc">Log the first book above. Your raw thoughts become polished content.</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = display.map(e => {
+    const idx     = all.indexOf(e);
+    const initial = e.title.charAt(0).toUpperCase();
+    const stars   = renderJnlStars(e.rating);
+    const dt      = e.dateRead
+      ? new Date(e.dateRead + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '';
+    const preview = e.thoughts.length > 220 ? e.thoughts.slice(0, 220) : e.thoughts;
+    const hasMore = e.thoughts.length > 220;
+    return `<div class="jnl-card">
+      <div class="jnl-card-top">
+        <div class="jnl-initial">${esc(initial)}</div>
+        <div class="jnl-meta">
+          <div class="jnl-ttl">${esc(e.title)}</div>
+          ${e.author ? `<div class="jnl-auth">${esc(e.author)}</div>` : ''}
+          <div class="jnl-stars-row">${stars}</div>
+          ${dt ? `<div class="jnl-dt">${dt}</div>` : ''}
+        </div>
+        <button class="jnl-del" onclick="removeJournalEntry(${idx})" title="Delete">×</button>
+      </div>
+      <div class="jnl-body" id="jnl-body-${idx}" data-expanded="0">${esc(preview + (hasMore ? '…' : '')).replace(/\n/g, '<br>')}</div>
+      ${hasMore ? `<button class="jnl-more-btn" onclick="toggleJournalExpand(this,${idx})">Read more ↓</button>` : ''}
+      <div class="jnl-footer">
+        <button class="claude-btn" onclick="openWithClaude(${idx})"><span class="claude-icon">✦</span> Ask Claude</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderJournalView() {
+  const j = getJournal();
+  let html = `<div class="journal-view">
+    <div class="view-header">
+      <div class="view-header-title">Reading Journal</div>
+      <div class="view-header-sub">Your private reading log — raw thoughts, ratings, and one click to turn them into content.</div>
+    </div>
+    <div class="jnl-add-panel">
+      <div class="jnl-panel-title">+ Log a book you've read</div>
+      <datalist id="global-authors-list"></datalist>
+      <div class="jnl-form">
+        <div class="jnl-row">
+          <input id="jnl-title"  type="text" class="jnl-input" placeholder="Book title *"
+            onkeydown="if(event.key==='Enter')document.getElementById('jnl-author').focus()">
+          <input id="jnl-author" type="text" class="jnl-input" placeholder="Author"
+            list="global-authors-list"
+            onkeydown="if(event.key==='Enter')document.getElementById('jnl-date').focus()">
+          <input id="jnl-date" type="date" class="jnl-input jnl-date-fld">
+        </div>
+        <div class="jnl-rating-row">
+          <span class="jnl-label">Rating:</span>
+          <div class="jnl-star-picker">
+            ${[1,2,3,4,5].map(n => `<span class="jnl-star-pick" data-val="${n}" onclick="setJournalRating(${n})">★</span>`).join('')}
+          </div>
+          <input type="hidden" id="jnl-rating-val" value="0">
+        </div>
+        <textarea id="jnl-thoughts" class="jnl-input jnl-ta" rows="5"
+          placeholder="Your raw thoughts — what worked, what didn't, what haunted you, what you'd tell a friend picking this up…"></textarea>
+        <div class="jnl-form-footer">
+          <span class="jnl-hint">After logging, hit <strong>Ask Claude</strong> on the entry to get a polished review, Instagram caption &amp; TikTok hook.</span>
+          <button class="jnl-save-btn" onclick="addJournalEntry()">Log book</button>
+        </div>
+      </div>
+    </div>`;
+
+  if (j.length) {
+    html += `<div class="jnl-toolbar">
+      <span class="jnl-count">${j.length} book${j.length !== 1 ? 's' : ''} logged</span>
+      <div class="jnl-sort-group">
+        <button class="jnl-sort-btn active" data-sort="date"   onclick="sortJournal('date')">Latest</button>
+        <button class="jnl-sort-btn"        data-sort="rating" onclick="sortJournal('rating')">Top rated</button>
+      </div>
+    </div>`;
+  }
+
+  html += `<div id="jnl-grid" class="journal-grid"></div></div>`;
+  document.getElementById('main-content').innerHTML = html;
+  refreshAuthorsList();
+  renderJournalGrid(j, j);
+}
+
 // ─── Navigation ───────────────────────────────────────────────────
 function renderMonthNav() {
   document.getElementById('month-nav').innerHTML = months.map((m, i) =>
@@ -443,6 +670,7 @@ function setView(view) {
   if (view === 'calendar')        { renderMonthNav(); renderCalendar(); }
   else if (view === 'books')      renderBooksView();
   else if (view === 'resources')  renderResourcesView();
+  else if (view === 'journal')    renderJournalView();
 }
 
 function setMonth(i) {
