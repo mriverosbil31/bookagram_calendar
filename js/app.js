@@ -440,6 +440,45 @@ function getJournal() {
 }
 function saveJournal(arr) { localStorage.setItem(JOURNAL_KEY, JSON.stringify(arr)); }
 
+// ─── Supabase cloud sync ───────────────────────────────────────────
+const _supa = supabase.createClient(
+  'https://zuzpfvpbvmpkegfbjpdh.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1enBmdnBidm1wa2VnZmJqcGRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDIxOTEsImV4cCI6MjA5Mjc3ODE5MX0.5pds87uuuX7aZ0sgYQhjFi3WQ3eeHGxGlGogL45yrJ0'
+);
+
+async function pushToSupabase(entries) {
+  try {
+    await _supa.from('journal').upsert({ id: 'main', entries, updated_at: new Date().toISOString() });
+  } catch (e) {
+    console.warn('[sync] push failed', e);
+  }
+}
+
+async function syncJournalFromCloud() {
+  try {
+    const { data, error } = await _supa.from('journal').select('entries').eq('id', 'main').single();
+    if (error) throw error;
+    const remote = data?.entries || [];
+    const local  = getJournal();
+    if (remote.length === 0 && local.length > 0) {
+      // First-time migration: push local entries up to the cloud
+      await pushToSupabase(local);
+      return;
+    }
+    if (JSON.stringify(remote) !== JSON.stringify(local)) {
+      saveJournal(remote);
+      applyJournalFilters();
+    }
+  } catch (e) {
+    console.warn('[sync] fetch failed, using local cache', e);
+  }
+}
+
+function saveAndSync(arr) {
+  saveJournal(arr);
+  pushToSupabase(arr);
+}
+
 function sagaInitials(name) {
   return name.split(/\s+/).filter(Boolean).map(w => w.charAt(0).toUpperCase()).join('');
 }
@@ -498,14 +537,14 @@ function addJournalEntry() {
   if (!thoughts) { document.getElementById('jnl-thoughts').focus(); return; }
   const j = getJournal();
   j.unshift({ title, author, rating, dateRead, thoughts, sagaName, addedAt: Date.now() });
-  saveJournal(j);
+  saveAndSync(j);
   renderJournalView();
 }
 
 function removeJournalEntry(idx) {
   const j = getJournal();
   j.splice(idx, 1);
-  saveJournal(j);
+  saveAndSync(j);
   renderJournalView();
 }
 
@@ -584,7 +623,7 @@ function saveEditModal() {
   const j = getJournal();
   if (!j[_jnlEditIdx]) return;
   Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, sagaName });
-  saveJournal(j);
+  saveAndSync(j);
   closeEditModal();
   renderJournalView();
 }
@@ -885,6 +924,7 @@ function renderJournalView() {
   document.getElementById('main-content').innerHTML = html;
   refreshAuthorsList();
   applyJournalFilters();
+  syncJournalFromCloud();
 }
 
 // ─── Navigation ───────────────────────────────────────────────────
