@@ -510,47 +510,48 @@ function openEditModal(idx) {
   if (!entry) return;
   _jnlEditIdx = idx;
 
-  let ov = document.getElementById('jnl-edit-ov');
-  if (!ov) {
-    ov = document.createElement('div');
-    ov.id = 'jnl-edit-ov';
-    ov.className = 'jnl-modal-overlay';
-    ov.innerHTML = `<div class="jnl-modal jnl-edit-modal">
-      <div class="jnl-modal-hd">Edit entry</div>
-      <div class="jnl-form" style="gap:10px">
-        <div class="jnl-row">
-          <input id="edit-title"  type="text" class="jnl-input" placeholder="Book title *">
-          <input id="edit-author" type="text" class="jnl-input" placeholder="Author" list="global-authors-list">
-          <input id="edit-date"   type="date" class="jnl-input jnl-date-fld">
-        </div>
-        <div class="jnl-rating-row">
-          <span class="jnl-label">Rating:</span>
-          ${starPickerHtml('edit-picker','edit-rating-val')}
-          <span class="jnl-rating-hint" id="edit-picker-hint"></span>
-        </div>
-        <div class="jnl-saga-row">
-          <label class="jnl-saga-label">
-            <input type="checkbox" id="edit-is-saga" onchange="toggleSagaInput('edit-saga-name',this.checked)">
-            <span>Part of a saga / trilogy</span>
-          </label>
-          <input id="edit-saga-name" type="text" class="jnl-input" placeholder="Saga name…" style="display:none">
-        </div>
-        <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="6" placeholder="Raw thoughts…"></textarea>
-      </div>
-      <div class="jnl-modal-ft">
-        <button class="jnl-modal-close" onclick="closeEditModal()">Cancel</button>
-        <button class="jnl-modal-save"  onclick="saveEditModal()">Save changes</button>
-      </div>
-    </div>`;
-    document.body.appendChild(ov);
-    ov.addEventListener('click', e => { if (e.target === ov) closeEditModal(); });
-  }
+  // Always remove & recreate to guarantee clean state
+  document.getElementById('jnl-edit-ov')?.remove();
 
-  document.getElementById('edit-title').value    = entry.title;
-  document.getElementById('edit-author').value   = entry.author   || '';
-  document.getElementById('edit-date').value     = entry.dateRead || '';
-  document.getElementById('edit-thoughts').value = entry.thoughts;
-  document.getElementById('edit-rating-val').value = entry.rating || 0;
+  const ov = document.createElement('div');
+  ov.id = 'jnl-edit-ov';
+  ov.className = 'jnl-modal-overlay';
+  ov.innerHTML = `<div class="jnl-modal jnl-edit-modal">
+    <div class="jnl-modal-hd">Edit entry</div>
+    <div class="jnl-form" style="gap:10px">
+      <div class="jnl-row">
+        <input id="edit-title"  type="text" class="jnl-input" placeholder="Book title *">
+        <input id="edit-author" type="text" class="jnl-input" placeholder="Author" list="global-authors-list">
+        <input id="edit-date"   type="date" class="jnl-input jnl-date-fld">
+      </div>
+      <div class="jnl-rating-row">
+        <span class="jnl-label">Rating:</span>
+        ${starPickerHtml('edit-picker','edit-rating-val')}
+        <span class="jnl-rating-hint" id="edit-picker-hint"></span>
+      </div>
+      <div class="jnl-saga-row">
+        <label class="jnl-saga-label">
+          <input type="checkbox" id="edit-is-saga" onchange="toggleSagaInput('edit-saga-name',this.checked)">
+          <span>Part of a saga / trilogy</span>
+        </label>
+        <input id="edit-saga-name" type="text" class="jnl-input" placeholder="Saga name…" style="display:none">
+      </div>
+      <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="6" placeholder="Raw thoughts…"></textarea>
+    </div>
+    <div class="jnl-modal-ft">
+      <button class="jnl-modal-close" onclick="closeEditModal()">Cancel</button>
+      <button class="jnl-modal-save"  onclick="saveEditModal()">Save changes</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => { if (e.target === ov) closeEditModal(); });
+
+  // Pre-fill (elements guaranteed to exist since we just created them)
+  document.getElementById('edit-title').value      = entry.title;
+  document.getElementById('edit-author').value     = entry.author   || '';
+  document.getElementById('edit-date').value       = entry.dateRead || '';
+  document.getElementById('edit-thoughts').value   = entry.thoughts;
+  document.getElementById('edit-rating-val').value = entry.rating   || 0;
   document.getElementById('edit-is-saga').checked  = !!entry.sagaName;
   const sn = document.getElementById('edit-saga-name');
   sn.value = entry.sagaName || '';
@@ -694,36 +695,41 @@ function applyJournalFilters() {
   renderJournalGrid(filtered, all);
 }
 
-// ── Card toggle ───────────────────────────────────────────────────
-function toggleCard(idx) {
-  document.getElementById('jnl-card-' + idx)?.classList.toggle('open');
+// ── Toggle helpers ────────────────────────────────────────────────
+function toggleEntry(idx) {
+  document.getElementById('jnl-e-' + idx)?.classList.toggle('open');
 }
 
-function toggleSagaStack(id) {
+function toggleSagaGroup(id) {
   document.getElementById(id)?.classList.toggle('open');
 }
 
-// ── Standalone card ───────────────────────────────────────────────
-function renderStandaloneCard(e, all) {
+// ── Single entry row (used standalone and inside sagas) ───────────
+function renderEntryRow(e, all) {
   const idx     = all.indexOf(e);
   const initial = e.title.charAt(0).toUpperCase();
   const dt      = e.dateRead ? jnlFormatDate(e.dateRead) : '';
-  return `<div class="jnl-card" id="jnl-card-${idx}">
-    <div class="jnl-card-hd" onclick="toggleCard(${idx})">
+  return `<div class="jnl-entry" id="jnl-e-${idx}">
+    <div class="jnl-entry-hd" onclick="toggleEntry(${idx})">
       <div class="jnl-initial">${esc(initial)}</div>
-      <div class="jnl-meta">
-        <div class="jnl-ttl">${esc(e.title)}</div>
-        ${e.author ? `<span class="jnl-auth" onclick="filterJournalByAuthor(this.dataset.author);event.stopPropagation()" data-author="${esc(e.author)}" title="Filter by author">${esc(e.author)}</span>` : ''}
-        <div class="jnl-stars-row">${renderJnlStars(e.rating)}${dt ? `<span class="jnl-dt">· ${dt}</span>` : ''}${e.sagaName ? `<span class="jnl-saga-tag">📚 ${esc(e.sagaName)}</span>` : ''}</div>
+      <div class="jnl-entry-info">
+        <div class="jnl-entry-title">${esc(e.title)}</div>
+        <div class="jnl-entry-meta">
+          ${e.author ? `<span class="jnl-entry-author" data-author="${esc(e.author)}" onclick="filterJournalByAuthor(this.dataset.author);event.stopPropagation()" title="Filter by this author">${esc(e.author)}</span><span class="jnl-meta-sep">·</span>` : ''}
+          <span class="jnl-stars-inline">${renderJnlStars(e.rating)}</span>
+          ${dt ? `<span class="jnl-meta-sep">·</span><span class="jnl-entry-date">${dt}</span>` : ''}
+        </div>
       </div>
-      <span class="jnl-chevron">▾</span>
+      <div class="jnl-entry-acts" onclick="event.stopPropagation()">
+        <button class="jnl-act-btn" onclick="openEditModal(${idx})" title="Edit">✎</button>
+        <button class="jnl-act-btn danger" onclick="removeJournalEntry(${idx})" title="Delete">×</button>
+      </div>
+      <span class="jnl-caret">›</span>
     </div>
-    <div class="jnl-card-body">
-      <div class="jnl-thoughts">${esc(e.thoughts).replace(/\n/g, '<br>')}</div>
-      <div class="jnl-footer">
-        <button class="jnl-del-btn" onclick="removeJournalEntry(${idx});event.stopPropagation()" title="Delete">Delete</button>
-        <button class="jnl-edit-btn" onclick="openEditModal(${idx});event.stopPropagation()">Edit</button>
-        <button class="claude-btn" onclick="openWithClaude(${idx});event.stopPropagation()">
+    <div class="jnl-entry-body">
+      <p class="jnl-thoughts">${esc(e.thoughts).replace(/\n/g, '<br>')}</p>
+      <div class="jnl-entry-footer">
+        <button class="claude-btn" onclick="openWithClaude(${idx})">
           <span class="claude-icon">✦</span> Ask Claude
         </button>
       </div>
@@ -731,65 +737,34 @@ function renderStandaloneCard(e, all) {
   </div>`;
 }
 
-// ── Saga stack card ───────────────────────────────────────────────
-function renderSagaStack(sagaName, entries, all) {
-  const sorted   = [...entries].sort((a, b) => b.addedAt - a.addedAt);
-  const front    = sorted[0];
-  const count    = entries.length;
-  const stackId  = 'saga-' + all.indexOf(front);
-  const initial  = front.title.charAt(0).toUpperCase();
-  const dt       = front.dateRead ? jnlFormatDate(front.dateRead) : '';
-
-  return `<div class="saga-stack${count >= 2 ? ' has-bg2' : ''}${count >= 3 ? ' has-bg3' : ''}" id="${stackId}">
-    ${count >= 3 ? '<div class="saga-bg saga-bg3"></div>' : ''}
-    ${count >= 2 ? '<div class="saga-bg saga-bg2"></div>' : ''}
-    <div class="jnl-card saga-front">
-      <div class="jnl-card-hd" onclick="toggleSagaStack('${stackId}')">
-        <div class="jnl-initial">${esc(initial)}</div>
-        <div class="jnl-meta">
-          <div class="jnl-saga-label-row">
-            <span class="saga-name-badge">📚 ${esc(sagaName)}</span>
-            <span class="saga-count-badge">${count} book${count !== 1 ? 's' : ''}</span>
-          </div>
-          <div class="jnl-ttl">${esc(front.title)}</div>
-          ${front.author ? `<span class="jnl-auth" onclick="filterJournalByAuthor(this.dataset.author);event.stopPropagation()" data-author="${esc(front.author)}" title="Filter by author">${esc(front.author)}</span>` : ''}
-          <div class="jnl-stars-row">${renderJnlStars(front.rating)}${dt ? `<span class="jnl-dt">· ${dt}</span>` : ''}</div>
-        </div>
-        <span class="jnl-chevron">▾</span>
-      </div>
-      <div class="saga-expanded">
-        ${sorted.map(e => {
-          const idx = all.indexOf(e);
-          const edt = e.dateRead ? jnlFormatDate(e.dateRead) : '';
-          return `<div class="saga-book-row">
-            <div class="saga-book-info">
-              <div class="jnl-ttl" style="font-size:13px">${esc(e.title)}</div>
-              <div class="jnl-stars-row">${renderJnlStars(e.rating)}${edt ? `<span class="jnl-dt">· ${edt}</span>` : ''}</div>
-              ${e.thoughts ? `<div class="saga-book-thoughts">${esc(e.thoughts.length > 120 ? e.thoughts.slice(0,120)+'…' : e.thoughts).replace(/\n/g,'<br>')}</div>` : ''}
-            </div>
-            <div class="saga-book-actions">
-              <button class="jnl-edit-btn sm" onclick="openEditModal(${idx})">Edit</button>
-              <button class="claude-btn sm" onclick="openWithClaude(${idx})"><span class="claude-icon">✦</span></button>
-              <button class="jnl-del-btn sm" onclick="removeJournalEntry(${idx})" title="Delete">×</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
+// ── Saga group (stacked visual + expandable list) ─────────────────
+function renderSagaGroup(sagaName, entries, all) {
+  const sorted  = [...entries].sort((a, b) => b.addedAt - a.addedAt);
+  const count   = entries.length;
+  const groupId = 'sg-' + all.indexOf(sorted[0]);
+  return `<div class="jnl-saga-group${count >= 3 ? ' stack3' : count >= 2 ? ' stack2' : ''}" id="${groupId}">
+    <div class="jnl-saga-hd" onclick="toggleSagaGroup('${groupId}')">
+      <span class="jnl-saga-title">📚 ${esc(sagaName)}</span>
+      <span class="jnl-saga-cnt">${count} book${count !== 1 ? 's' : ''}</span>
+      <span class="jnl-caret saga-caret">›</span>
+    </div>
+    <div class="jnl-saga-books">
+      ${sorted.map(e => renderEntryRow(e, all)).join('')}
     </div>
   </div>`;
 }
 
-// ── Grid renderer ─────────────────────────────────────────────────
+// ── List renderer ─────────────────────────────────────────────────
 function renderJournalGrid(filtered, all) {
-  const grid = document.getElementById('jnl-grid');
-  if (!grid) return;
+  const list = document.getElementById('jnl-list');
+  if (!list) return;
   if (!filtered.length) {
     const isFiltered = jnlState.author !== 'all';
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+    list.innerHTML = `<div class="empty-state">
       <div class="empty-dash">—</div>
       <div class="empty-title">${isFiltered ? 'No entries for this author' : 'No entries yet'}</div>
       <div class="empty-desc">${isFiltered
-        ? `Showing only books by <strong>${esc(jnlState.author)}</strong>. <a href="#" onclick="filterJournalByAuthor('all');return false">Clear filter</a>`
+        ? `Filtered by <strong>${esc(jnlState.author)}</strong>. <a href="#" onclick="filterJournalByAuthor('all');return false">Clear</a>`
         : 'Log the first book above. Your raw thoughts become polished content.'}</div>
     </div>`;
     return;
@@ -806,10 +781,10 @@ function renderJournalGrid(filtered, all) {
       items.push({ type: 'standalone', entry: e });
     }
   });
-  grid.innerHTML = items.map(item =>
+  list.innerHTML = items.map(item =>
     item.type === 'saga'
-      ? renderSagaStack(item.sagaName, item.entries, all)
-      : renderStandaloneCard(item.entry, all)
+      ? renderSagaGroup(item.sagaName, item.entries, all)
+      : renderEntryRow(item.entry, all)
   ).join('');
 }
 
@@ -850,7 +825,7 @@ function renderJournalView() {
         <textarea id="jnl-thoughts" class="jnl-input jnl-ta" rows="5"
           placeholder="Your raw thoughts — what worked, what didn't, what haunted you, what you'd tell a friend picking this up…"></textarea>
         <div class="jnl-form-footer">
-          <span class="jnl-hint">After logging, hit <strong>Ask Claude</strong> on the card to get a polished review, caption &amp; TikTok hook.</span>
+          <span class="jnl-hint">After logging, hit <strong>Ask Claude</strong> on the entry for a review, caption &amp; TikTok hook.</span>
           <button class="jnl-save-btn" onclick="addJournalEntry()">Log book</button>
         </div>
       </div>
@@ -875,7 +850,7 @@ function renderJournalView() {
     </div>`;
   }
 
-  html += `<div id="jnl-grid" class="journal-grid"></div></div>`;
+  html += `<div id="jnl-list" class="jnl-list"></div></div>`;
   document.getElementById('main-content').innerHTML = html;
   refreshAuthorsList();
   applyJournalFilters();
