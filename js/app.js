@@ -430,7 +430,8 @@ function renderResourcesView() {
 
 // ─── Reading Journal ──────────────────────────────────────────────
 const JOURNAL_KEY = 'thc_journal';
-let jnlState = { sort: 'date', author: 'all' };
+let jnlState = { sort: 'date', author: 'all', page: 1 };
+const ITEMS_PER_PAGE = 15;
 let _jnlEditIdx = -1;
 
 function getJournal() {
@@ -438,6 +439,10 @@ function getJournal() {
   catch { return []; }
 }
 function saveJournal(arr) { localStorage.setItem(JOURNAL_KEY, JSON.stringify(arr)); }
+
+function sagaInitials(name) {
+  return name.split(/\s+/).filter(Boolean).map(w => w.charAt(0).toUpperCase()).join('');
+}
 
 // ── Half-star picker ──────────────────────────────────────────────
 function clickStarPicker(event, hiddenId, pickerId) {
@@ -672,11 +677,13 @@ function jnlFormatDate(d) {
 // ── Filter / sort ─────────────────────────────────────────────────
 function filterJournalByAuthor(author) {
   jnlState.author = author;
+  jnlState.page = 1;
   applyJournalFilters();
 }
 
 function sortJournal(by) {
   jnlState.sort = by;
+  jnlState.page = 1;
   applyJournalFilters();
 }
 
@@ -744,7 +751,8 @@ function renderSagaGroup(sagaName, entries, all) {
   const groupId = 'sg-' + all.indexOf(sorted[0]);
   return `<div class="jnl-saga-group${count >= 3 ? ' stack3' : count >= 2 ? ' stack2' : ''}" id="${groupId}">
     <div class="jnl-saga-hd" onclick="toggleSagaGroup('${groupId}')">
-      <span class="jnl-saga-title">📚 ${esc(sagaName)}</span>
+      <div class="saga-initial">${sagaInitials(sagaName)}</div>
+      <span class="jnl-saga-title">${esc(sagaName)}</span>
       <span class="jnl-saga-cnt">${count} book${count !== 1 ? 's' : ''}</span>
       <span class="jnl-caret saga-caret">›</span>
     </div>
@@ -781,11 +789,34 @@ function renderJournalGrid(filtered, all) {
       items.push({ type: 'standalone', entry: e });
     }
   });
-  list.innerHTML = items.map(item =>
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const page = Math.max(1, Math.min(jnlState.page || 1, totalPages));
+  jnlState.page = page;
+  const pageItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  list.innerHTML = pageItems.map(item =>
     item.type === 'saga'
       ? renderSagaGroup(item.sagaName, item.entries, all)
       : renderEntryRow(item.entry, all)
-  ).join('');
+  ).join('') + (totalPages > 1 ? renderJournalPagination(page, totalPages) : '');
+}
+
+function renderJournalPagination(page, totalPages) {
+  let btns = `<button class="jpag-btn" onclick="setJournalPage(${page - 1})"${page === 1 ? ' disabled' : ''}>‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - page) > 1) {
+      if (i === 3 || i === totalPages - 2) btns += `<span class="jpag-ellipsis">…</span>`;
+      continue;
+    }
+    btns += `<button class="jpag-btn${i === page ? ' active' : ''}" onclick="setJournalPage(${i})">${i}</button>`;
+  }
+  btns += `<button class="jpag-btn" onclick="setJournalPage(${page + 1})"${page === totalPages ? ' disabled' : ''}>›</button>`;
+  return `<div class="jnl-pagination">${btns}</div>`;
+}
+
+function setJournalPage(n) {
+  jnlState.page = n;
+  applyJournalFilters();
+  document.getElementById('jnl-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── Main view ─────────────────────────────────────────────────────
@@ -872,7 +903,7 @@ function setView(view) {
   if (view === 'calendar')        { renderMonthNav(); renderCalendar(); }
   else if (view === 'books')      renderBooksView();
   else if (view === 'resources')  renderResourcesView();
-  else if (view === 'journal')    { jnlState = { sort: 'date', author: 'all' }; renderJournalView(); }
+  else if (view === 'journal')    { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }
 }
 
 function setMonth(i) {
