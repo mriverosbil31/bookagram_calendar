@@ -12,8 +12,24 @@
 </head>
 <body>
 
+  <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+  <nav class="side-drawer" id="side-drawer">
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+    <div class="drawer-logo">The Husband's <span>Corner</span></div>
+    <div class="drawer-nav">
+      <button onclick="setView('calendar')">Calendar</button>
+      <button onclick="setView('books')">Books</button>
+      <button onclick="setView('journal')">Journal</button>
+      <button onclick="setView('library')">My Library</button>
+      <button onclick="setView('resources')">Reading Lists</button>
+    </div>
+  </nav>
+
   <header class="site-header">
     <div class="header-inner">
+      <button class="hamburger-btn" onclick="toggleDrawer()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
       <div class="logo">The Husband's <span>Corner</span></div>
       <div class="legend">
         <div class="leg"><div class="leg-dot" style="background:#6B3FA0;"></div>Instagram</div>
@@ -42,6 +58,7 @@
       <button class="vnav active" id="vnav-calendar" onclick="setView('calendar')">Calendar</button>
       <button class="vnav" id="vnav-books" onclick="setView('books')">Books</button>
       <button class="vnav" id="vnav-journal" onclick="setView('journal')">Journal</button>
+      <button class="vnav" id="vnav-library" onclick="setView('library')">My Library</button>
       <button class="vnav" id="vnav-resources" onclick="setView('resources')">Reading Lists</button>
     </div>
   </nav>
