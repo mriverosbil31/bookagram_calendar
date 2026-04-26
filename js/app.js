@@ -152,6 +152,8 @@ function buildCard(item, id, isStory, isArchived) {
       <div id="bchips-${id}" class="book-chips">${chips}</div>
       <div class="book-inputs">
         <input id="binput-${id}" type="text" class="book-input" placeholder="Book title…"
+          list="lib-cal-titles"
+          oninput="calBookAutoFill('${id}',this.value)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('bauthor-${id}').focus();}">
         <div class="book-author-row">
           <input id="bauthor-${id}" type="text" class="book-input book-author-input" placeholder="Author…"
@@ -172,6 +174,7 @@ function renderCalendar() {
 
   let html = `
     <datalist id="global-authors-list"></datalist>
+    <datalist id="lib-cal-titles"></datalist>
     <div class="month-title-block">
       <div>
         <div class="month-title">${m.fullName}: ${m.label}</div>
@@ -226,6 +229,21 @@ function renderCalendar() {
 
   document.getElementById('main-content').innerHTML = html;
   refreshAuthorsList();
+  refreshCalLibraryList();
+}
+
+function refreshCalLibraryList() {
+  const dl = document.getElementById('lib-cal-titles');
+  if (!dl) return;
+  dl.innerHTML = getLibrary().map(b => `<option value="${esc(b.title)}">`).join('');
+}
+
+function calBookAutoFill(postId, title) {
+  const match = getLibrary().find(b => b.title.toLowerCase() === title.toLowerCase());
+  if (match) {
+    const a = document.getElementById('bauthor-' + postId);
+    if (a && !a.value) a.value = match.author || '';
+  }
 }
 
 function toggleArchivedPanel(btn) {
@@ -534,6 +552,11 @@ function toggleSagaInput(inputId, show) {
   if (!show) el.value = '';
 }
 
+function toggleOwnedInput(show) {
+  const el = document.getElementById('jnl-own-format');
+  if (el) el.style.display = show ? '' : 'none';
+}
+
 // ── CRUD ──────────────────────────────────────────────────────────
 function addJournalEntry() {
   const title    = document.getElementById('jnl-title').value.trim();
@@ -548,6 +571,18 @@ function addJournalEntry() {
   const j = getJournal();
   j.unshift({ title, author, rating, dateRead, thoughts, sagaName, addedAt: Date.now() });
   saveAndSync(j);
+
+  const ownsBook  = document.getElementById('jnl-owns-book')?.checked;
+  const ownFormat = document.getElementById('jnl-own-format')?.value || 'physical';
+  if (ownsBook) {
+    const lib = getLibrary();
+    const already = lib.some(b => b.title.toLowerCase() === title.toLowerCase());
+    if (!already) {
+      lib.unshift({ addedAt: Date.now() + 1, title, author: author || '', format: ownFormat, read: true });
+      saveAndSyncLibrary(lib);
+    }
+  }
+
   renderJournalView();
 }
 
@@ -904,6 +939,16 @@ function renderJournalView() {
             <span>Part of a saga / trilogy</span>
           </label>
           <input id="jnl-saga-name" type="text" class="jnl-input" placeholder="Saga name (e.g. Millennium Trilogy)…" style="display:none">
+        </div>
+        <div class="jnl-saga-row">
+          <label class="jnl-saga-label">
+            <input type="checkbox" id="jnl-owns-book" onchange="toggleOwnedInput(this.checked)">
+            <span>I own this book</span>
+          </label>
+          <select id="jnl-own-format" class="jnl-input lib-select" style="display:none;color-scheme:dark">
+            <option value="physical">Physical copy</option>
+            <option value="ebook">eBook</option>
+          </select>
         </div>
         <textarea id="jnl-thoughts" class="jnl-input jnl-ta" rows="5"
           placeholder="Your raw thoughts — what worked, what didn't, what haunted you, what you'd tell a friend picking this up…"></textarea>
