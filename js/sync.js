@@ -63,3 +63,26 @@ function saveAndSyncLibrary(arr) {
   saveLibrary(arr);
   pushLibraryToSupabase(arr);
 }
+
+// ─── Todos sync ───────────────────────────────────────────────────
+async function pushTodosToSupabase(entries) {
+  try {
+    await _supa.from('journal').upsert({ id: 'todos', entries, updated_at: new Date().toISOString() });
+  } catch (e) { console.warn('[sync] todos push failed', e); }
+}
+
+async function syncTodosFromCloud() {
+  try {
+    const { data, error } = await _supa.from('journal').select('entries').eq('id', 'todos').single();
+    if (error) throw error;
+    const remote = data?.entries || [];
+    const local  = getTodos();
+    if (remote.length === 0 && local.length > 0) { await pushTodosToSupabase(local); return; }
+    if (JSON.stringify(remote) !== JSON.stringify(local)) { saveTodos(remote); renderTodosView(); }
+  } catch (e) { console.warn('[sync] todos fetch failed, using local cache', e); }
+}
+
+function saveAndSyncTodos(arr) {
+  saveTodos(arr);
+  pushTodosToSupabase(arr);
+}

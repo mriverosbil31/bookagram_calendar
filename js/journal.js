@@ -60,6 +60,11 @@ function toggleOwnedInput(show) {
   if (el) el.style.display = show ? '' : 'none';
 }
 
+function toggleEditOwnedInput(show) {
+  const el = document.getElementById('edit-own-format');
+  if (el) el.style.display = show ? '' : 'none';
+}
+
 // ── CRUD ──────────────────────────────────────────────────────────
 function addJournalEntry() {
   const title    = document.getElementById('jnl-title').value.trim();
@@ -127,6 +132,16 @@ function openEditModal(idx) {
         </label>
         <input id="edit-saga-name" type="text" class="jnl-input" placeholder="Saga name…" style="display:none">
       </div>
+      <div class="jnl-saga-row">
+        <label class="jnl-saga-label">
+          <input type="checkbox" id="edit-owns-book" onchange="toggleEditOwnedInput(this.checked)">
+          <span>I own this book</span>
+        </label>
+        <select id="edit-own-format" class="jnl-input lib-select" style="display:none;color-scheme:dark">
+          <option value="physical">Physical copy</option>
+          <option value="ebook">eBook</option>
+        </select>
+      </div>
       <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="6" placeholder="Raw thoughts…"></textarea>
     </div>
     <div class="jnl-modal-ft">
@@ -147,6 +162,12 @@ function openEditModal(idx) {
   sn.value = entry.sagaName || '';
   sn.style.display = entry.sagaName ? '' : 'none';
   updatePickerDisplay('edit-picker', entry.rating || 0);
+
+  const inLib = getLibrary().find(b => b.title.toLowerCase() === entry.title.toLowerCase());
+  document.getElementById('edit-owns-book').checked = !!inLib;
+  const editFmt = document.getElementById('edit-own-format');
+  if (inLib) { editFmt.value = inLib.format || 'physical'; editFmt.style.display = ''; }
+
   ov.style.display = 'flex';
 }
 
@@ -170,6 +191,20 @@ function saveEditModal() {
   if (!j[_jnlEditIdx]) return;
   Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, sagaName });
   saveAndSync(j);
+
+  const ownsBook  = document.getElementById('edit-owns-book')?.checked;
+  const ownFormat = document.getElementById('edit-own-format')?.value || 'physical';
+  if (ownsBook) {
+    const lib = getLibrary();
+    const existingIdx = lib.findIndex(b => b.title.toLowerCase() === title.toLowerCase());
+    if (existingIdx === -1) {
+      lib.unshift({ addedAt: Date.now() + 1, title, author: author || '', format: ownFormat, read: true });
+    } else {
+      lib[existingIdx].format = ownFormat;
+    }
+    saveAndSyncLibrary(lib);
+  }
+
   closeEditModal();
   renderJournalView();
 }
