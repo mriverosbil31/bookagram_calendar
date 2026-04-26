@@ -430,6 +430,8 @@ function renderResourcesView() {
 
 // ─── Reading Journal ──────────────────────────────────────────────
 const JOURNAL_KEY = 'thc_journal';
+let jnlState = { sort: 'date', author: 'all' };
+let _jnlEditIdx = -1;
 
 function getJournal() {
   try { return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || []; }
@@ -437,21 +439,60 @@ function getJournal() {
 }
 function saveJournal(arr) { localStorage.setItem(JOURNAL_KEY, JSON.stringify(arr)); }
 
-function setJournalRating(val) {
-  document.getElementById('jnl-rating-val').value = val;
-  document.querySelectorAll('.jnl-star-pick').forEach((s, i) => s.classList.toggle('on', i < val));
+// ── Half-star picker ──────────────────────────────────────────────
+function clickStarPicker(event, hiddenId, pickerId) {
+  const slot = event.target.closest('.star-slot');
+  if (!slot) return;
+  const n   = parseFloat(slot.dataset.n);
+  const rect = slot.getBoundingClientRect();
+  const val  = (event.clientX - rect.left) < rect.width / 2 ? n - 0.5 : n;
+  const final = Math.max(0.5, val);
+  document.getElementById(hiddenId).value = final;
+  updatePickerDisplay(pickerId, final);
 }
 
+function updatePickerDisplay(pickerId, val) {
+  val = parseFloat(val) || 0;
+  const picker = document.getElementById(pickerId);
+  if (!picker) return;
+  picker.querySelectorAll('.star-slot').forEach((s, i) => {
+    const n = i + 1;
+    s.dataset.fill = val >= n ? 'full' : val >= n - 0.5 ? 'half' : 'empty';
+  });
+  const hint = document.getElementById(pickerId + '-hint');
+  if (hint) hint.textContent = val > 0 ? `${val} / 5` : '';
+}
+
+function starPickerHtml(pickerId, hiddenId) {
+  return `<div class="jnl-star-picker" id="${pickerId}"
+      onclick="clickStarPicker(event,'${hiddenId}','${pickerId}')">${
+    [1,2,3,4,5].map(n =>
+      `<span class="star-slot" data-n="${n}" data-fill="empty">★</span>`
+    ).join('')
+  }</div><input type="hidden" id="${hiddenId}" value="0">`;
+}
+
+// ── Saga input toggle ─────────────────────────────────────────────
+function toggleSagaInput(inputId, show) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  el.style.display = show ? '' : 'none';
+  if (!show) el.value = '';
+}
+
+// ── CRUD ──────────────────────────────────────────────────────────
 function addJournalEntry() {
   const title    = document.getElementById('jnl-title').value.trim();
   const author   = document.getElementById('jnl-author').value.trim();
-  const rating   = parseInt(document.getElementById('jnl-rating-val')?.value) || 0;
+  const rating   = parseFloat(document.getElementById('jnl-rating-val')?.value) || 0;
   const dateRead = document.getElementById('jnl-date').value;
   const thoughts = document.getElementById('jnl-thoughts').value.trim();
+  const isSaga   = document.getElementById('jnl-is-saga')?.checked;
+  const sagaName = isSaga ? (document.getElementById('jnl-saga-name')?.value.trim() || null) : null;
   if (!title)    { document.getElementById('jnl-title').focus(); return; }
   if (!thoughts) { document.getElementById('jnl-thoughts').focus(); return; }
   const j = getJournal();
-  j.unshift({ title, author, rating, dateRead, thoughts, addedAt: Date.now() });
+  j.unshift({ title, author, rating, dateRead, thoughts, sagaName, addedAt: Date.now() });
   saveJournal(j);
   renderJournalView();
 }
@@ -463,30 +504,95 @@ function removeJournalEntry(idx) {
   renderJournalView();
 }
 
-function toggleJournalExpand(btn, idx) {
-  const el = document.getElementById('jnl-body-' + idx);
-  if (!el) return;
-  const expanded = el.dataset.expanded === '1';
+// ── Edit modal ────────────────────────────────────────────────────
+function openEditModal(idx) {
   const entry = getJournal()[idx];
   if (!entry) return;
-  if (expanded) {
-    el.innerHTML = esc(entry.thoughts.slice(0, 220) + '…').replace(/\n/g, '<br>');
-    el.dataset.expanded = '0';
-    btn.textContent = 'Read more ↓';
-  } else {
-    el.innerHTML = esc(entry.thoughts).replace(/\n/g, '<br>');
-    el.dataset.expanded = '1';
-    btn.textContent = 'Show less ↑';
+  _jnlEditIdx = idx;
+
+  let ov = document.getElementById('jnl-edit-ov');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'jnl-edit-ov';
+    ov.className = 'jnl-modal-overlay';
+    ov.innerHTML = `<div class="jnl-modal jnl-edit-modal">
+      <div class="jnl-modal-hd">Edit entry</div>
+      <div class="jnl-form" style="gap:10px">
+        <div class="jnl-row">
+          <input id="edit-title"  type="text" class="jnl-input" placeholder="Book title *">
+          <input id="edit-author" type="text" class="jnl-input" placeholder="Author" list="global-authors-list">
+          <input id="edit-date"   type="date" class="jnl-input jnl-date-fld">
+        </div>
+        <div class="jnl-rating-row">
+          <span class="jnl-label">Rating:</span>
+          ${starPickerHtml('edit-picker','edit-rating-val')}
+          <span class="jnl-rating-hint" id="edit-picker-hint"></span>
+        </div>
+        <div class="jnl-saga-row">
+          <label class="jnl-saga-label">
+            <input type="checkbox" id="edit-is-saga" onchange="toggleSagaInput('edit-saga-name',this.checked)">
+            <span>Part of a saga / trilogy</span>
+          </label>
+          <input id="edit-saga-name" type="text" class="jnl-input" placeholder="Saga name…" style="display:none">
+        </div>
+        <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="6" placeholder="Raw thoughts…"></textarea>
+      </div>
+      <div class="jnl-modal-ft">
+        <button class="jnl-modal-close" onclick="closeEditModal()">Cancel</button>
+        <button class="jnl-modal-save"  onclick="saveEditModal()">Save changes</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) closeEditModal(); });
   }
+
+  document.getElementById('edit-title').value    = entry.title;
+  document.getElementById('edit-author').value   = entry.author   || '';
+  document.getElementById('edit-date').value     = entry.dateRead || '';
+  document.getElementById('edit-thoughts').value = entry.thoughts;
+  document.getElementById('edit-rating-val').value = entry.rating || 0;
+  document.getElementById('edit-is-saga').checked  = !!entry.sagaName;
+  const sn = document.getElementById('edit-saga-name');
+  sn.value = entry.sagaName || '';
+  sn.style.display = entry.sagaName ? '' : 'none';
+  updatePickerDisplay('edit-picker', entry.rating || 0);
+  ov.style.display = 'flex';
 }
 
+function closeEditModal() {
+  const ov = document.getElementById('jnl-edit-ov');
+  if (ov) ov.style.display = 'none';
+}
+
+function saveEditModal() {
+  if (_jnlEditIdx < 0) return;
+  const title    = document.getElementById('edit-title').value.trim();
+  const author   = document.getElementById('edit-author').value.trim();
+  const rating   = parseFloat(document.getElementById('edit-rating-val').value) || 0;
+  const dateRead = document.getElementById('edit-date').value;
+  const thoughts = document.getElementById('edit-thoughts').value.trim();
+  const isSaga   = document.getElementById('edit-is-saga').checked;
+  const sagaName = isSaga ? (document.getElementById('edit-saga-name').value.trim() || null) : null;
+  if (!title)    { document.getElementById('edit-title').focus(); return; }
+  if (!thoughts) { document.getElementById('edit-thoughts').focus(); return; }
+  const j = getJournal();
+  if (!j[_jnlEditIdx]) return;
+  Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, sagaName });
+  saveJournal(j);
+  closeEditModal();
+  renderJournalView();
+}
+
+// ── Claude ────────────────────────────────────────────────────────
 function buildClaudePrompt(entry) {
-  const filled = Math.min(Math.max(parseInt(entry.rating) || 0, 0), 5);
-  const stars  = '★'.repeat(filled) + '☆'.repeat(5 - filled);
+  const r    = Math.min(Math.max(parseFloat(entry.rating) || 0, 0), 5);
+  const full = Math.floor(r);
+  const half = r % 1 >= 0.5;
+  const stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
   return `You are helping The Husband's Corner — a Bookstagram & BookTok account focused on thriller, mystery and suspense.
 
 Book: "${entry.title}"${entry.author ? ` by ${entry.author}` : ''}
-My rating: ${stars} (${filled}/5)${entry.dateRead ? `\nDate read: ${entry.dateRead}` : ''}
+My rating: ${stars} (${r}/5)${entry.dateRead ? `\nDate read: ${entry.dateRead}` : ''}${entry.sagaName ? `\nSaga / Trilogy: ${entry.sagaName}` : ''}
 
 My raw thoughts:
 ${entry.thoughts}
@@ -510,9 +616,7 @@ function openWithClaude(idx) {
     navigator.clipboard.writeText(prompt)
       .then(() => { showJnlToast('Prompt copied! Paste it into Claude ↗'); doOpen(); })
       .catch(fallback);
-  } else {
-    fallback();
-  }
+  } else { fallback(); }
 }
 
 function showJnlToast(msg) {
@@ -530,81 +634,190 @@ function showJnlToast(msg) {
 }
 
 function showPromptModal(prompt) {
-  let ov = document.getElementById('jnl-modal');
+  let ov = document.getElementById('jnl-prompt-ov');
   if (!ov) {
     ov = document.createElement('div');
-    ov.id = 'jnl-modal';
+    ov.id = 'jnl-prompt-ov';
     ov.className = 'jnl-modal-overlay';
     ov.innerHTML = `<div class="jnl-modal">
       <div class="jnl-modal-hd">Copy this prompt and paste into Claude</div>
-      <textarea class="jnl-modal-ta" id="jnl-modal-ta" readonly></textarea>
+      <textarea class="jnl-modal-ta" id="jnl-prompt-ta" readonly></textarea>
       <div class="jnl-modal-ft">
-        <button class="jnl-modal-copy" onclick="var ta=document.getElementById('jnl-modal-ta');ta.select();document.execCommand('copy');showJnlToast('Copied!')">Copy all</button>
-        <button class="jnl-modal-close" onclick="document.getElementById('jnl-modal').style.display='none'">Close</button>
+        <button class="jnl-modal-close" onclick="document.getElementById('jnl-prompt-ov').style.display='none'">Close</button>
+        <button class="jnl-modal-save" onclick="var ta=document.getElementById('jnl-prompt-ta');ta.select();document.execCommand('copy');showJnlToast('Copied!')">Copy all</button>
       </div>
     </div>`;
     document.body.appendChild(ov);
     ov.addEventListener('click', e => { if (e.target === ov) ov.style.display = 'none'; });
   }
-  document.getElementById('jnl-modal-ta').value = prompt;
+  document.getElementById('jnl-prompt-ta').value = prompt;
   ov.style.display = 'flex';
 }
 
+// ── Display helpers ───────────────────────────────────────────────
 function renderJnlStars(n) {
-  n = Math.min(Math.max(parseInt(n) || 0, 0), 5);
-  return [1,2,3,4,5].map(i => `<span class="jnl-star${i <= n ? ' on' : ''}">★</span>`).join('');
-}
-
-function sortJournal(by) {
-  document.querySelectorAll('.jnl-sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === by));
-  const j = getJournal();
-  const sorted = [...j];
-  if (by === 'rating') sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0) || b.addedAt - a.addedAt);
-  renderJournalGrid(sorted, j);
-}
-
-function renderJournalGrid(display, all) {
-  const grid = document.getElementById('jnl-grid');
-  if (!grid) return;
-  if (!display.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-      <div class="empty-dash">—</div>
-      <div class="empty-title">No entries yet</div>
-      <div class="empty-desc">Log the first book above. Your raw thoughts become polished content.</div>
-    </div>`;
-    return;
-  }
-  grid.innerHTML = display.map(e => {
-    const idx     = all.indexOf(e);
-    const initial = e.title.charAt(0).toUpperCase();
-    const stars   = renderJnlStars(e.rating);
-    const dt      = e.dateRead
-      ? new Date(e.dateRead + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-      : '';
-    const preview = e.thoughts.length > 220 ? e.thoughts.slice(0, 220) : e.thoughts;
-    const hasMore = e.thoughts.length > 220;
-    return `<div class="jnl-card">
-      <div class="jnl-card-top">
-        <div class="jnl-initial">${esc(initial)}</div>
-        <div class="jnl-meta">
-          <div class="jnl-ttl">${esc(e.title)}</div>
-          ${e.author ? `<div class="jnl-auth">${esc(e.author)}</div>` : ''}
-          <div class="jnl-stars-row">${stars}</div>
-          ${dt ? `<div class="jnl-dt">${dt}</div>` : ''}
-        </div>
-        <button class="jnl-del" onclick="removeJournalEntry(${idx})" title="Delete">×</button>
-      </div>
-      <div class="jnl-body" id="jnl-body-${idx}" data-expanded="0">${esc(preview + (hasMore ? '…' : '')).replace(/\n/g, '<br>')}</div>
-      ${hasMore ? `<button class="jnl-more-btn" onclick="toggleJournalExpand(this,${idx})">Read more ↓</button>` : ''}
-      <div class="jnl-footer">
-        <button class="claude-btn" onclick="openWithClaude(${idx})"><span class="claude-icon">✦</span> Ask Claude</button>
-      </div>
-    </div>`;
+  n = Math.min(Math.max(parseFloat(n) || 0, 0), 5);
+  return [1,2,3,4,5].map(i => {
+    if (n >= i)       return '<span class="jnl-star full">★</span>';
+    if (n >= i - 0.5) return '<span class="jnl-star half">★</span>';
+    return '<span class="jnl-star empty">★</span>';
   }).join('');
 }
 
+function jnlFormatDate(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ── Filter / sort ─────────────────────────────────────────────────
+function filterJournalByAuthor(author) {
+  jnlState.author = author;
+  applyJournalFilters();
+}
+
+function sortJournal(by) {
+  jnlState.sort = by;
+  applyJournalFilters();
+}
+
+function applyJournalFilters() {
+  const all = getJournal();
+  let filtered = jnlState.author === 'all'
+    ? [...all]
+    : all.filter(e => (e.author || '') === jnlState.author);
+  if (jnlState.sort === 'rating') {
+    filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0) || b.addedAt - a.addedAt);
+  }
+  document.querySelectorAll('.jnl-sort-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.sort === jnlState.sort));
+  document.querySelectorAll('.jnl-apill').forEach(p =>
+    p.classList.toggle('active', p.dataset.author === jnlState.author));
+  renderJournalGrid(filtered, all);
+}
+
+// ── Card toggle ───────────────────────────────────────────────────
+function toggleCard(idx) {
+  document.getElementById('jnl-card-' + idx)?.classList.toggle('open');
+}
+
+function toggleSagaStack(id) {
+  document.getElementById(id)?.classList.toggle('open');
+}
+
+// ── Standalone card ───────────────────────────────────────────────
+function renderStandaloneCard(e, all) {
+  const idx     = all.indexOf(e);
+  const initial = e.title.charAt(0).toUpperCase();
+  const dt      = e.dateRead ? jnlFormatDate(e.dateRead) : '';
+  return `<div class="jnl-card" id="jnl-card-${idx}">
+    <div class="jnl-card-hd" onclick="toggleCard(${idx})">
+      <div class="jnl-initial">${esc(initial)}</div>
+      <div class="jnl-meta">
+        <div class="jnl-ttl">${esc(e.title)}</div>
+        ${e.author ? `<span class="jnl-auth" onclick="filterJournalByAuthor(this.dataset.author);event.stopPropagation()" data-author="${esc(e.author)}" title="Filter by author">${esc(e.author)}</span>` : ''}
+        <div class="jnl-stars-row">${renderJnlStars(e.rating)}${dt ? `<span class="jnl-dt">· ${dt}</span>` : ''}${e.sagaName ? `<span class="jnl-saga-tag">📚 ${esc(e.sagaName)}</span>` : ''}</div>
+      </div>
+      <span class="jnl-chevron">▾</span>
+    </div>
+    <div class="jnl-card-body">
+      <div class="jnl-thoughts">${esc(e.thoughts).replace(/\n/g, '<br>')}</div>
+      <div class="jnl-footer">
+        <button class="jnl-del-btn" onclick="removeJournalEntry(${idx});event.stopPropagation()" title="Delete">Delete</button>
+        <button class="jnl-edit-btn" onclick="openEditModal(${idx});event.stopPropagation()">Edit</button>
+        <button class="claude-btn" onclick="openWithClaude(${idx});event.stopPropagation()">
+          <span class="claude-icon">✦</span> Ask Claude
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Saga stack card ───────────────────────────────────────────────
+function renderSagaStack(sagaName, entries, all) {
+  const sorted   = [...entries].sort((a, b) => b.addedAt - a.addedAt);
+  const front    = sorted[0];
+  const count    = entries.length;
+  const stackId  = 'saga-' + all.indexOf(front);
+  const initial  = front.title.charAt(0).toUpperCase();
+  const dt       = front.dateRead ? jnlFormatDate(front.dateRead) : '';
+
+  return `<div class="saga-stack${count >= 2 ? ' has-bg2' : ''}${count >= 3 ? ' has-bg3' : ''}" id="${stackId}">
+    ${count >= 3 ? '<div class="saga-bg saga-bg3"></div>' : ''}
+    ${count >= 2 ? '<div class="saga-bg saga-bg2"></div>' : ''}
+    <div class="jnl-card saga-front">
+      <div class="jnl-card-hd" onclick="toggleSagaStack('${stackId}')">
+        <div class="jnl-initial">${esc(initial)}</div>
+        <div class="jnl-meta">
+          <div class="jnl-saga-label-row">
+            <span class="saga-name-badge">📚 ${esc(sagaName)}</span>
+            <span class="saga-count-badge">${count} book${count !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="jnl-ttl">${esc(front.title)}</div>
+          ${front.author ? `<span class="jnl-auth" onclick="filterJournalByAuthor(this.dataset.author);event.stopPropagation()" data-author="${esc(front.author)}" title="Filter by author">${esc(front.author)}</span>` : ''}
+          <div class="jnl-stars-row">${renderJnlStars(front.rating)}${dt ? `<span class="jnl-dt">· ${dt}</span>` : ''}</div>
+        </div>
+        <span class="jnl-chevron">▾</span>
+      </div>
+      <div class="saga-expanded">
+        ${sorted.map(e => {
+          const idx = all.indexOf(e);
+          const edt = e.dateRead ? jnlFormatDate(e.dateRead) : '';
+          return `<div class="saga-book-row">
+            <div class="saga-book-info">
+              <div class="jnl-ttl" style="font-size:13px">${esc(e.title)}</div>
+              <div class="jnl-stars-row">${renderJnlStars(e.rating)}${edt ? `<span class="jnl-dt">· ${edt}</span>` : ''}</div>
+              ${e.thoughts ? `<div class="saga-book-thoughts">${esc(e.thoughts.length > 120 ? e.thoughts.slice(0,120)+'…' : e.thoughts).replace(/\n/g,'<br>')}</div>` : ''}
+            </div>
+            <div class="saga-book-actions">
+              <button class="jnl-edit-btn sm" onclick="openEditModal(${idx})">Edit</button>
+              <button class="claude-btn sm" onclick="openWithClaude(${idx})"><span class="claude-icon">✦</span></button>
+              <button class="jnl-del-btn sm" onclick="removeJournalEntry(${idx})" title="Delete">×</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Grid renderer ─────────────────────────────────────────────────
+function renderJournalGrid(filtered, all) {
+  const grid = document.getElementById('jnl-grid');
+  if (!grid) return;
+  if (!filtered.length) {
+    const isFiltered = jnlState.author !== 'all';
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-dash">—</div>
+      <div class="empty-title">${isFiltered ? 'No entries for this author' : 'No entries yet'}</div>
+      <div class="empty-desc">${isFiltered
+        ? `Showing only books by <strong>${esc(jnlState.author)}</strong>. <a href="#" onclick="filterJournalByAuthor('all');return false">Clear filter</a>`
+        : 'Log the first book above. Your raw thoughts become polished content.'}</div>
+    </div>`;
+    return;
+  }
+  const items = [];
+  const sagaSeen = new Set();
+  filtered.forEach(e => {
+    if (e.sagaName) {
+      if (!sagaSeen.has(e.sagaName)) {
+        sagaSeen.add(e.sagaName);
+        items.push({ type: 'saga', sagaName: e.sagaName, entries: filtered.filter(x => x.sagaName === e.sagaName) });
+      }
+    } else {
+      items.push({ type: 'standalone', entry: e });
+    }
+  });
+  grid.innerHTML = items.map(item =>
+    item.type === 'saga'
+      ? renderSagaStack(item.sagaName, item.entries, all)
+      : renderStandaloneCard(item.entry, all)
+  ).join('');
+}
+
+// ── Main view ─────────────────────────────────────────────────────
 function renderJournalView() {
   const j = getJournal();
+  const uniqueAuthors = [...new Set(j.map(e => e.author).filter(Boolean))].sort();
+
   let html = `<div class="journal-view">
     <div class="view-header">
       <div class="view-header-title">Reading Journal</div>
@@ -624,21 +837,35 @@ function renderJournalView() {
         </div>
         <div class="jnl-rating-row">
           <span class="jnl-label">Rating:</span>
-          <div class="jnl-star-picker">
-            ${[1,2,3,4,5].map(n => `<span class="jnl-star-pick" data-val="${n}" onclick="setJournalRating(${n})">★</span>`).join('')}
-          </div>
-          <input type="hidden" id="jnl-rating-val" value="0">
+          ${starPickerHtml('jnl-star-picker', 'jnl-rating-val')}
+          <span class="jnl-rating-hint" id="jnl-star-picker-hint"></span>
+        </div>
+        <div class="jnl-saga-row">
+          <label class="jnl-saga-label">
+            <input type="checkbox" id="jnl-is-saga" onchange="toggleSagaInput('jnl-saga-name',this.checked)">
+            <span>Part of a saga / trilogy</span>
+          </label>
+          <input id="jnl-saga-name" type="text" class="jnl-input" placeholder="Saga name (e.g. Millennium Trilogy)…" style="display:none">
         </div>
         <textarea id="jnl-thoughts" class="jnl-input jnl-ta" rows="5"
           placeholder="Your raw thoughts — what worked, what didn't, what haunted you, what you'd tell a friend picking this up…"></textarea>
         <div class="jnl-form-footer">
-          <span class="jnl-hint">After logging, hit <strong>Ask Claude</strong> on the entry to get a polished review, Instagram caption &amp; TikTok hook.</span>
+          <span class="jnl-hint">After logging, hit <strong>Ask Claude</strong> on the card to get a polished review, caption &amp; TikTok hook.</span>
           <button class="jnl-save-btn" onclick="addJournalEntry()">Log book</button>
         </div>
       </div>
     </div>`;
 
   if (j.length) {
+    if (uniqueAuthors.length) {
+      html += `<div class="jnl-filter-bar">
+        <button class="jnl-apill active" data-author="all" onclick="filterJournalByAuthor(this.dataset.author)">All <span class="pill-count">${j.length}</span></button>
+        ${uniqueAuthors.map(a => {
+          const cnt = j.filter(e => e.author === a).length;
+          return `<button class="jnl-apill" data-author="${esc(a)}" onclick="filterJournalByAuthor(this.dataset.author)">${esc(a)} <span class="pill-count">${cnt}</span></button>`;
+        }).join('')}
+      </div>`;
+    }
     html += `<div class="jnl-toolbar">
       <span class="jnl-count">${j.length} book${j.length !== 1 ? 's' : ''} logged</span>
       <div class="jnl-sort-group">
@@ -651,7 +878,7 @@ function renderJournalView() {
   html += `<div id="jnl-grid" class="journal-grid"></div></div>`;
   document.getElementById('main-content').innerHTML = html;
   refreshAuthorsList();
-  renderJournalGrid(j, j);
+  applyJournalFilters();
 }
 
 // ─── Navigation ───────────────────────────────────────────────────
@@ -670,7 +897,7 @@ function setView(view) {
   if (view === 'calendar')        { renderMonthNav(); renderCalendar(); }
   else if (view === 'books')      renderBooksView();
   else if (view === 'resources')  renderResourcesView();
-  else if (view === 'journal')    renderJournalView();
+  else if (view === 'journal')    { jnlState = { sort: 'date', author: 'all' }; renderJournalView(); }
 }
 
 function setMonth(i) {
