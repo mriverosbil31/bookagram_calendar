@@ -171,26 +171,41 @@ function libFmtBadges(b) {
   return out;
 }
 
-// ─── Row HTML (table view) ────────────────────────────────────────
-function libRowHTML(b, isSagaBook) {
-  const tagPills = (b.tags || []).map(t => {
-    const c = tagColor(t);
-    return `<span class="lib-tag-pill" style="background:${c.bg};color:${c.color};border-color:${c.border}">${esc(t)}<button class="lib-tag-del" onclick="removeLibTag(${b.addedAt},this.dataset.tag)" data-tag="${esc(t)}" title="Remove tag">×</button></span>`;
-  }).join('');
+// ─── Row HTML ─────────────────────────────────────────────────────
+// context: 'saga' (inside a saga group) | 'book' (standalone books panel)
+function libRowHTML(b, context) {
+  if (context === 'saga') {
+    return `<div class="lib-row lib-row--saga" data-lib-id="${b.addedAt}">
+      <div class="lib-cell lib-cell-num">
+        <input class="lib-order-in" type="number" min="1" value="${b.sagaOrder ?? ''}" placeholder="—"
+          onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">
+      </div>
+      <div class="lib-cell lib-cell-title">
+        <input class="lib-title-in" value="${esc(b.title)}" placeholder="Title"
+          onblur="updateLibField(${b.addedAt},'title',this.value)">
+        <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
+          list="global-authors-list"
+          onblur="updateLibField(${b.addedAt},'author',this.value)">
+      </div>
+      <div class="lib-cell lib-cell-format">${libFmtBadges(b)}</div>
+      <div class="lib-cell lib-cell-status">
+        <button class="lib-read-badge" data-read="${b.read}" onclick="toggleLibRead(${b.addedAt})">
+          ${b.read ? '✓ Read' : 'Unread'}
+        </button>
+      </div>
+      <div class="lib-cell lib-cell-del">
+        <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
+      </div>
+    </div>`;
+  }
 
-  const seriesField = isSagaBook ? '' :
-    `<input class="lib-saga-in lib-saga-in--row" value="${esc(b.sagaName || '')}" placeholder="Series…"
-      onblur="updateLibField(${b.addedAt},'sagaName',this.value)">`;
-
-  return `<div class="lib-row${isSagaBook ? ' lib-row--saga' : ''}" data-lib-id="${b.addedAt}">
-    <div class="lib-cell lib-cell-num">
-      ${isSagaBook ? `<input class="lib-order-in" type="number" min="1" value="${b.sagaOrder ?? ''}" placeholder="—"
-        onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">` : ''}
-    </div>
+  // standalone 'book' context
+  return `<div class="lib-row" data-lib-id="${b.addedAt}">
     <div class="lib-cell lib-cell-title">
       <input class="lib-title-in" value="${esc(b.title)}" placeholder="Title"
         onblur="updateLibField(${b.addedAt},'title',this.value)">
-      ${seriesField}
+      <input class="lib-saga-in--row" value="${esc(b.sagaName || '')}" placeholder="Move to series…"
+        onblur="updateLibField(${b.addedAt},'sagaName',this.value)">
     </div>
     <div class="lib-cell lib-cell-author">
       <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
@@ -202,10 +217,6 @@ function libRowHTML(b, isSagaBook) {
       <button class="lib-read-badge" data-read="${b.read}" onclick="toggleLibRead(${b.addedAt})">
         ${b.read ? '✓ Read' : 'Unread'}
       </button>
-    </div>
-    <div class="lib-cell lib-cell-tags">
-      ${tagPills}
-      <button class="lib-tag-add" onclick="showLibTagInput(${b.addedAt},this)" title="Add tag">+ tag</button>
     </div>
     <div class="lib-cell lib-cell-del">
       <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
@@ -298,7 +309,7 @@ function sagaGroupHTML(name, books) {
   layers += `<div class="lib-stk-sq lib-stk-sq--1"><span class="lib-stk-initial">${esc(initials)}</span></div>`;
 
   const authStr = [...new Set(books.map(b => b.author).filter(Boolean))].slice(0, 2).join(', ');
-  const bookRows = books.map(b => libRowHTML(b, true)).join('');
+  const bookRows = books.map(b => libRowHTML(b, 'saga')).join('');
 
   return `<div class="lib-saga-group${isOpen ? ' open' : ''}" data-saga-name="${esc(name)}">
     <div class="lib-saga-hdr-row" onclick="toggleLibSaga(this)">
@@ -472,35 +483,58 @@ function renderLibGrid() {
   const countLabel = `${totalLib} book${totalLib !== 1 ? 's' : ''} in your library` +
     (filtered !== totalLib ? ` · ${filtered} matching` : '');
 
-  let html = `<div class="lib-count">${countLabel}</div>
-  <div class="lib-table">
-    <div class="lib-table-head">
-      <div class="lib-th">#</div>
-      <div class="lib-th">Title</div>
-      <div class="lib-th">Author</div>
-      <div class="lib-th">Format</div>
-      <div class="lib-th">Status</div>
-      <div class="lib-th">Tags</div>
-      <div class="lib-th"></div>
+  // ── Sagas panel ──────────────────────────────────────────────────
+  const sagasPanel = sagaNames.length
+    ? `<div class="lib-table lib-table--sagas">${sagaNames.map(name => sagaGroupHTML(name, sagaMap[name])).join('')}</div>`
+    : `<p class="lib-panel-empty">No series yet — type a series name on any book and it will appear here.</p>`;
+
+  // ── Books panel ───────────────────────────────────────────────────
+  let booksTable = '';
+  if (standalone.length) {
+    booksTable = `<div class="lib-table lib-table--books">
+      <div class="lib-table-head">
+        <div class="lib-th">Title</div>
+        <div class="lib-th">Author</div>
+        <div class="lib-th">Format</div>
+        <div class="lib-th">Status</div>
+        <div class="lib-th"></div>
+      </div>
+      ${pageStandalone.map(b => libRowHTML(b, 'book')).join('')}
     </div>`;
-
-  sagaNames.forEach(name => { html += sagaGroupHTML(name, sagaMap[name]); });
-  html += pageStandalone.map(b => libRowHTML(b, false)).join('');
-  html += `</div>`;
-
-  // Pagination for standalone
-  if (standalone.length > ITEMS_PER_PAGE) {
-    html += `<div class="jnl-pagination">
-      <button class="jpag-btn" onclick="setLibPage(${page - 1})"${page === 1 ? ' disabled' : ''}>‹</button>`;
-    for (let i = 1; i <= totalPages; i++) {
-      if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - page) > 1) {
-        if (i === 3 || i === totalPages - 2) html += `<span class="jpag-ellipsis">…</span>`;
-        continue;
+    if (standalone.length > ITEMS_PER_PAGE) {
+      booksTable += `<div class="jnl-pagination">
+        <button class="jpag-btn" onclick="setLibPage(${page - 1})"${page === 1 ? ' disabled' : ''}>‹</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - page) > 1) {
+          if (i === 3 || i === totalPages - 2) booksTable += `<span class="jpag-ellipsis">…</span>`;
+          continue;
+        }
+        booksTable += `<button class="jpag-btn${i === page ? ' active' : ''}" onclick="setLibPage(${i})">${i}</button>`;
       }
-      html += `<button class="jpag-btn${i === page ? ' active' : ''}" onclick="setLibPage(${i})">${i}</button>`;
+      booksTable += `<button class="jpag-btn" onclick="setLibPage(${page + 1})"${page === totalPages ? ' disabled' : ''}>›</button></div>`;
     }
-    html += `<button class="jpag-btn" onclick="setLibPage(${page + 1})"${page === totalPages ? ' disabled' : ''}>›</button></div>`;
+  } else {
+    booksTable = `<p class="lib-panel-empty">All your books are in a series!</p>`;
   }
+
+  const sagaBookCount = items.filter(b => b.sagaName).length;
+  const html = `<div class="lib-count">${countLabel}</div>
+  <div class="lib-split">
+    <div class="lib-panel lib-panel--sagas">
+      <div class="lib-panel-hd">
+        <span class="lib-panel-title">Sagas & Series</span>
+        ${sagaNames.length ? `<span class="lib-panel-count">${sagaNames.length} series · ${sagaBookCount} book${sagaBookCount !== 1 ? 's' : ''}</span>` : ''}
+      </div>
+      ${sagasPanel}
+    </div>
+    <div class="lib-panel lib-panel--books">
+      <div class="lib-panel-hd">
+        <span class="lib-panel-title">Books</span>
+        ${standalone.length ? `<span class="lib-panel-count">${standalone.length} book${standalone.length !== 1 ? 's' : ''}</span>` : ''}
+      </div>
+      ${booksTable}
+    </div>
+  </div>`;
 
   container.innerHTML = html;
 }

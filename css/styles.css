@@ -1889,21 +1889,57 @@ button, a { -webkit-tap-highlight-color: transparent; }
   font-weight: 500;
 }
 
+/* ── Split layout ── */
+.lib-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.lib-panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.lib-panel-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 2px;
+}
+.lib-panel-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--ink);
+}
+.lib-panel-count {
+  font-size: 11px;
+  color: var(--ash);
+  white-space: nowrap;
+}
+.lib-panel-empty {
+  font-size: 12px;
+  color: var(--ash);
+  font-style: italic;
+  padding: 20px 0;
+  text-align: center;
+}
+
 /* ── Table ── */
 .lib-table {
-  --lib-cols: 40px minmax(0, 2fr) minmax(0, 1.2fr) 116px 90px minmax(0, 1fr) 34px;
   width: 100%;
   border: 1px solid var(--fog);
   border-radius: 12px;
   background: white;
   overflow: hidden;
-  margin-bottom: 12px;
 }
+.lib-table--sagas { --lib-cols: 26px minmax(0,1fr) 88px 76px 28px; }
+.lib-table--books { --lib-cols: minmax(0,1fr) minmax(0,1fr) 88px 76px 28px; }
+
 .lib-table-head {
   display: grid;
   grid-template-columns: var(--lib-cols);
-  gap: 0 12px;
-  padding: 9px 14px;
+  gap: 0 10px;
+  padding: 8px 12px;
   background: var(--parchment);
   border-bottom: 1px solid var(--fog);
 }
@@ -1919,8 +1955,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .lib-row {
   display: grid;
   grid-template-columns: var(--lib-cols);
-  gap: 0 12px;
-  padding: 10px 14px;
+  gap: 0 10px;
+  padding: 9px 12px;
   align-items: center;
   border-bottom: 1px solid var(--fog);
   transition: background 0.1s;
@@ -1935,7 +1971,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .lib-cell-title { display: flex; flex-direction: column; gap: 3px; }
 .lib-cell-format { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .lib-cell-status { display: flex; align-items: center; }
-.lib-cell-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .lib-cell-del { display: flex; justify-content: center; }
 
 /* ── Inputs (table context) ── */
@@ -2209,16 +2244,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 /* ── Responsive ── */
 @media (max-width: 860px) {
-  .lib-table { --lib-cols: 36px minmax(0,2fr) minmax(0,1fr) 100px 80px 34px; }
-  .lib-table-head .lib-th:nth-child(6),
-  .lib-cell-tags { display: none; }
+  .lib-split { grid-template-columns: 1fr; }
 }
 @media (max-width: 580px) {
-  .lib-table { --lib-cols: minmax(0,1fr) 90px 80px 34px; }
-  .lib-table-head .lib-th:nth-child(1),
-  .lib-table-head .lib-th:nth-child(3),
-  .lib-cell-num,
-  .lib-cell-author { display: none; }
+  .lib-table--sagas { --lib-cols: 22px minmax(0,1fr) 76px 28px; }
+  .lib-table--sagas .lib-cell-format,
+  .lib-table--sagas .lib-th:nth-child(3) { display: none; }
+  .lib-table--books { --lib-cols: minmax(0,1fr) 76px 76px 28px; }
+  .lib-table--books .lib-cell-author,
+  .lib-table--books .lib-th:nth-child(2) { display: none; }
   .lib-add-form, .lib-add-form-row2 { flex-direction: column; }
   .lib-select, .lib-order-fld { flex: 1 !important; }
   .lib-read-chk-label { width: 100%; }
