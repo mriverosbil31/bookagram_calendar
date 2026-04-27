@@ -288,8 +288,17 @@ function sagaCardHTML(name, books) {
   const bookItems = books.map(b => `
     <div class="lib-saga-book-row">
       <div class="lib-saga-book-info">
-        <span class="lib-saga-book-title">${esc(b.title)}</span>
-        ${b.author ? `<span class="lib-saga-book-auth">${esc(b.author)}</span>` : ''}
+        <input class="lib-title-in" value="${esc(b.title)}" placeholder="Title"
+          onblur="updateLibField(${b.addedAt},'title',this.value)">
+        <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
+          list="global-authors-list"
+          onblur="updateLibField(${b.addedAt},'author',this.value)">
+        <div class="lib-card-saga">
+          <input class="lib-saga-in" value="${esc(b.sagaName || '')}" placeholder="Saga / series"
+            onblur="updateLibField(${b.addedAt},'sagaName',this.value)">
+          <input class="lib-order-in" type="number" min="1" value="${b.sagaOrder ?? ''}" placeholder="#"
+            onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">
+        </div>
         <div class="lib-badges">${libFmtBadges(b)}<button class="lib-read-badge" data-read="${b.read}" onclick="toggleLibRead(${b.addedAt})">${b.read ? 'Read' : 'Unread'}</button></div>
       </div>
       <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
