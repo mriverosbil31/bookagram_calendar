@@ -92,7 +92,7 @@ function setView(view) {
   else if (view === 'books')     renderBooksView();
   else if (view === 'resources') renderResourcesView();
   else if (view === 'journal')   { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }
-  else if (view === 'library')   { libState = { page: 1, format: 'all', read: 'all' }; renderLibraryView(); }
+  else if (view === 'library')   { libState = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' }; renderLibraryView(); }
   else if (view === 'todos')     renderTodosView();
 }
 
