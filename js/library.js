@@ -464,11 +464,17 @@ function renderLibGrid() {
 
   let html = `<div class="lib-count">${countLabel}</div>`;
 
-  // Saga cards + paginated standalones all in one grid
-  html += `<div class="lib-grid">`;
-  sagaNames.forEach(name => { html += sagaCardHTML(name, sagaMap[name]); });
-  pageStandalone.forEach(b => { html += libCardHTML(b); });
-  html += `</div>`;
+  // Saga cards in their own grid so expansion spans only that section
+  if (sagaNames.length) {
+    html += `<div class="lib-sagas-section">`;
+    sagaNames.forEach(name => { html += sagaCardHTML(name, sagaMap[name]); });
+    html += `</div>`;
+  }
+
+  // Standalone books in their own grid below
+  if (pageStandalone.length) {
+    html += `<div class="lib-grid">${pageStandalone.map(libCardHTML).join('')}</div>`;
+  }
 
   // Pagination for standalone
   if (standalone.length > ITEMS_PER_PAGE) {
