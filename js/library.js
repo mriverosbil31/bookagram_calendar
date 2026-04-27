@@ -1,6 +1,7 @@
 // ─── My Library ───────────────────────────────────────────────────
 const LIBRARY_KEY = 'thc_library';
-let libState = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' };
+let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' };
+let libExpandedSagas = new Set();
 
 const TAG_PALETTE = [
   { bg: '#fde8e8', color: '#8b1a1a', border: '#f5c0c0' },
@@ -255,8 +256,55 @@ function syncLibFilterPills() {
     p.classList.toggle('active', p.dataset.fval === libState[p.dataset.ftype]));
 }
 
+// ─── Saga toggle (DOM-only, no re-render) ─────────────────────────
+function toggleLibSaga(hdEl) {
+  const wrap = hdEl.parentElement;
+  const body = wrap.querySelector('.lib-saga-body');
+  const name = hdEl.dataset.sagaName;
+  if (libExpandedSagas.has(name)) {
+    libExpandedSagas.delete(name);
+    wrap.classList.remove('open');
+    body.classList.remove('open');
+  } else {
+    libExpandedSagas.add(name);
+    wrap.classList.add('open');
+    body.classList.add('open');
+  }
+}
+
+// ─── Saga group HTML ──────────────────────────────────────────────
+function sagaGroupHTML(name, books) {
+  const isOpen = libExpandedSagas.has(name);
+  const count  = books.length;
+  let layers   = '';
+  if (count >= 3) layers += '<div class="lib-stk-sq lib-stk-sq--3"></div>';
+  if (count >= 2) layers += '<div class="lib-stk-sq lib-stk-sq--2"></div>';
+  layers += '<div class="lib-stk-sq lib-stk-sq--1"></div>';
+
+  const authors = [...new Set(books.map(b => b.author).filter(Boolean))];
+  const authStr = authors.length ? authors.slice(0, 2).join(', ') + (authors.length > 2 ? ' …' : '') : '';
+
+  return `<div class="lib-saga-wrap${isOpen ? ' open' : ''}">
+    <div class="lib-saga-hd" onclick="toggleLibSaga(this)" data-saga-name="${esc(name)}">
+      <div class="lib-saga-stk-vis">${layers}</div>
+      <div class="lib-saga-hd-info">
+        <span class="lib-saga-hd-name">${esc(name)}</span>
+        ${authStr ? `<span class="lib-saga-hd-auth">${esc(authStr)}</span>` : ''}
+      </div>
+      <span class="lib-saga-hd-count">${count} book${count !== 1 ? 's' : ''}</span>
+      <span class="lib-saga-chevron">▾</span>
+    </div>
+    <div class="lib-saga-body${isOpen ? ' open' : ''}">
+      <div class="lib-saga-body-inner">
+        <div class="lib-grid lib-saga-grid">${books.map(libCardHTML).join('')}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ─── Views ────────────────────────────────────────────────────────
 function renderLibraryView() {
+  libExpandedSagas = new Set();
   const allAuthors = getAllAuthors();
 
   document.getElementById('main-content').innerHTML = `<div class="library-view">
@@ -354,24 +402,20 @@ function renderLibGrid() {
   if (libState.format === 'ebook')    items = items.filter(b => b.format === 'ebook'    || b.format === 'both');
   if (libState.format === 'both')     items = items.filter(b => b.format === 'both');
 
-  // Read filter
-  if (libState.read === 'read')   items = items.filter(b => b.read);
-  if (libState.read === 'unread') items = items.filter(b => !b.read);
+  // Read / author / tag filters
+  if (libState.read === 'read')      items = items.filter(b => b.read);
+  if (libState.read === 'unread')    items = items.filter(b => !b.read);
+  if (libState.author !== 'all')     items = items.filter(b => b.author === libState.author);
+  if (libState.tag    !== 'all')     items = items.filter(b => b.tags.includes(libState.tag));
 
-  // Author filter
-  if (libState.author !== 'all') items = items.filter(b => b.author === libState.author);
-
-  // Tag filter
-  if (libState.tag !== 'all') items = items.filter(b => b.tags.includes(libState.tag));
-
-  // Sync filter UI without full rebuild
+  // Sync filter UI
   renderLibTagFilters(allBooks);
   syncLibFilterPills();
   const libAuthors = [...new Set(allBooks.map(b => b.author).filter(Boolean))].sort();
   updateLibAuthorSelect(libAuthors);
 
-  const filtered  = items.length;
-  const totalLib  = allBooks.length;
+  const filtered = items.length;
+  const totalLib = allBooks.length;
 
   if (!filtered) {
     container.innerHTML = `<div class="empty-state">
@@ -382,56 +426,50 @@ function renderLibGrid() {
     return;
   }
 
-  // Paginate
-  const totalPages = Math.ceil(filtered / ITEMS_PER_PAGE);
-  const page = Math.max(1, Math.min(libState.page, totalPages));
-  libState.page = page;
-  const pageItems = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-  // Separate sagas and standalone from page slice
+  // ── Split ALL filtered items into saga groups + standalone (before paginating) ──
   const sagaMap   = {};
-  const sagaOrder = [];
+  const sagaNames = [];
   const standalone = [];
 
-  pageItems.forEach(b => {
+  items.forEach(b => {
     if (b.sagaName) {
-      if (!sagaMap[b.sagaName]) { sagaMap[b.sagaName] = []; sagaOrder.push(b.sagaName); }
+      if (!sagaMap[b.sagaName]) { sagaMap[b.sagaName] = []; sagaNames.push(b.sagaName); }
       sagaMap[b.sagaName].push(b);
     } else {
       standalone.push(b);
     }
   });
 
-  // Sort books within each saga
-  sagaOrder.forEach(name =>
+  // Sort each saga by sagaOrder
+  sagaNames.forEach(name =>
     sagaMap[name].sort((a, b) => (a.sagaOrder ?? 999) - (b.sagaOrder ?? 999))
   );
+
+  // Paginate standalone books only
+  const totalPages = standalone.length ? Math.ceil(standalone.length / ITEMS_PER_PAGE) : 1;
+  const page = Math.max(1, Math.min(libState.page, totalPages));
+  libState.page = page;
+  const pageStandalone = standalone.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const countLabel = `${totalLib} book${totalLib !== 1 ? 's' : ''} in your library` +
     (filtered !== totalLib ? ` · ${filtered} matching` : '');
 
   let html = `<div class="lib-count">${countLabel}</div>`;
 
-  // Render saga groups
-  sagaOrder.forEach(name => {
-    const books = sagaMap[name];
-    html += `<div class="lib-saga-group">
-      <div class="lib-saga-hd">
-        <span class="lib-saga-icon">&#128218;</span>
-        <span class="lib-saga-title">${esc(name)}</span>
-        <span class="lib-saga-count">${books.length} book${books.length !== 1 ? 's' : ''}</span>
-      </div>
-      <div class="lib-grid lib-saga-grid">${books.map(libCardHTML).join('')}</div>
-    </div>`;
-  });
-
-  // Render standalone books
-  if (standalone.length) {
-    html += `<div class="lib-grid">${standalone.map(libCardHTML).join('')}</div>`;
+  // Render ALL saga groups (always together, no pagination)
+  if (sagaNames.length) {
+    html += `<div class="lib-sagas-section">`;
+    sagaNames.forEach(name => { html += sagaGroupHTML(name, sagaMap[name]); });
+    html += `</div>`;
   }
 
-  // Pagination
-  if (totalPages > 1) {
+  // Render paginated standalone books
+  if (pageStandalone.length) {
+    html += `<div class="lib-grid">${pageStandalone.map(libCardHTML).join('')}</div>`;
+  }
+
+  // Pagination for standalone
+  if (standalone.length > ITEMS_PER_PAGE) {
     html += `<div class="jnl-pagination">
       <button class="jpag-btn" onclick="setLibPage(${page - 1})"${page === 1 ? ' disabled' : ''}>‹</button>`;
     for (let i = 1; i <= totalPages; i++) {
