@@ -285,24 +285,7 @@ function sagaCardHTML(name, books) {
 
   const authStr = [...new Set(books.map(b => b.author).filter(Boolean))].slice(0, 2).join(', ');
 
-  const bookItems = books.map(b => `
-    <div class="lib-saga-book-row">
-      <div class="lib-saga-book-info">
-        <input class="lib-title-in" value="${esc(b.title)}" placeholder="Title"
-          onblur="updateLibField(${b.addedAt},'title',this.value)">
-        <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
-          list="global-authors-list"
-          onblur="updateLibField(${b.addedAt},'author',this.value)">
-        <div class="lib-card-saga">
-          <input class="lib-saga-in" value="${esc(b.sagaName || '')}" placeholder="Saga / series"
-            onblur="updateLibField(${b.addedAt},'sagaName',this.value)">
-          <input class="lib-order-in" type="number" min="1" value="${b.sagaOrder ?? ''}" placeholder="#"
-            onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">
-        </div>
-        <div class="lib-badges">${libFmtBadges(b)}<button class="lib-read-badge" data-read="${b.read}" onclick="toggleLibRead(${b.addedAt})">${b.read ? 'Read' : 'Unread'}</button></div>
-      </div>
-      <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
-    </div>`).join('');
+  const bookItems = `<div class="lib-grid lib-saga-inner-grid">${books.map(libCardHTML).join('')}</div>`;
 
   const previewTitles = books.map(b =>
     `<span class="lib-saga-preview-title">${esc(b.title)}</span>`
