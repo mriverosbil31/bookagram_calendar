@@ -258,46 +258,57 @@ function syncLibFilterPills() {
 
 // ─── Saga toggle (DOM-only, no re-render) ─────────────────────────
 function toggleLibSaga(hdEl) {
-  const wrap = hdEl.parentElement;
-  const body = wrap.querySelector('.lib-saga-body');
-  const name = hdEl.dataset.sagaName;
+  const card = hdEl.closest('.lib-saga-card');
+  const body = card?.querySelector('.lib-saga-body');
+  const name = card?.dataset.sagaName;
+  if (!card || !body || !name) return;
   if (libExpandedSagas.has(name)) {
     libExpandedSagas.delete(name);
-    wrap.classList.remove('open');
+    card.classList.remove('open');
     body.classList.remove('open');
   } else {
     libExpandedSagas.add(name);
-    wrap.classList.add('open');
+    card.classList.add('open');
     body.classList.add('open');
   }
 }
 
-// ─── Saga group HTML ──────────────────────────────────────────────
-function sagaGroupHTML(name, books) {
-  const isOpen = libExpandedSagas.has(name);
-  const count  = books.length;
-  let layers   = '';
+// ─── Saga card HTML (grid item) ───────────────────────────────────
+function sagaCardHTML(name, books) {
+  const isOpen   = libExpandedSagas.has(name);
+  const count    = books.length;
+  const initials = sagaInitials(name);
+  let layers = '';
   if (count >= 3) layers += '<div class="lib-stk-sq lib-stk-sq--3"></div>';
   if (count >= 2) layers += '<div class="lib-stk-sq lib-stk-sq--2"></div>';
-  layers += '<div class="lib-stk-sq lib-stk-sq--1"></div>';
+  layers += `<div class="lib-stk-sq lib-stk-sq--1"><span class="lib-stk-initial">${esc(initials)}</span></div>`;
 
-  const authors = [...new Set(books.map(b => b.author).filter(Boolean))];
-  const authStr = authors.length ? authors.slice(0, 2).join(', ') + (authors.length > 2 ? ' …' : '') : '';
+  const authStr = [...new Set(books.map(b => b.author).filter(Boolean))].slice(0, 2).join(', ');
 
-  return `<div class="lib-saga-wrap${isOpen ? ' open' : ''}">
-    <div class="lib-saga-hd" onclick="toggleLibSaga(this)" data-saga-name="${esc(name)}">
+  const bookItems = books.map(b => `
+    <div class="lib-saga-book-row">
+      <div class="lib-saga-book-info">
+        <span class="lib-saga-book-title">${esc(b.title)}</span>
+        ${b.author ? `<span class="lib-saga-book-auth">${esc(b.author)}</span>` : ''}
+        <div class="lib-badges">${libFmtBadges(b)}<button class="lib-read-badge" data-read="${b.read}" onclick="toggleLibRead(${b.addedAt})">${b.read ? 'Read' : 'Unread'}</button></div>
+      </div>
+      <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
+    </div>`).join('');
+
+  return `<div class="lib-saga-card${isOpen ? ' open' : ''}${count >= 3 ? ' stack3' : count >= 2 ? ' stack2' : ''}" data-saga-name="${esc(name)}">
+    <div class="lib-saga-card-hd" onclick="toggleLibSaga(this)">
       <div class="lib-saga-stk-vis">${layers}</div>
       <div class="lib-saga-hd-info">
         <span class="lib-saga-hd-name">${esc(name)}</span>
         ${authStr ? `<span class="lib-saga-hd-auth">${esc(authStr)}</span>` : ''}
       </div>
-      <span class="lib-saga-hd-count">${count} book${count !== 1 ? 's' : ''}</span>
-      <span class="lib-saga-chevron">▾</span>
+      <div class="lib-saga-hd-right">
+        <span class="lib-saga-hd-count">${count} book${count !== 1 ? 's' : ''}</span>
+        <span class="lib-saga-chevron">▾</span>
+      </div>
     </div>
     <div class="lib-saga-body${isOpen ? ' open' : ''}">
-      <div class="lib-saga-body-inner">
-        <div class="lib-grid lib-saga-grid">${books.map(libCardHTML).join('')}</div>
-      </div>
+      <div class="lib-saga-body-inner">${bookItems}</div>
     </div>
   </div>`;
 }
@@ -456,17 +467,11 @@ function renderLibGrid() {
 
   let html = `<div class="lib-count">${countLabel}</div>`;
 
-  // Render ALL saga groups (always together, no pagination)
-  if (sagaNames.length) {
-    html += `<div class="lib-sagas-section">`;
-    sagaNames.forEach(name => { html += sagaGroupHTML(name, sagaMap[name]); });
-    html += `</div>`;
-  }
-
-  // Render paginated standalone books
-  if (pageStandalone.length) {
-    html += `<div class="lib-grid">${pageStandalone.map(libCardHTML).join('')}</div>`;
-  }
+  // Saga cards + paginated standalones all in one grid
+  html += `<div class="lib-grid">`;
+  sagaNames.forEach(name => { html += sagaCardHTML(name, sagaMap[name]); });
+  pageStandalone.forEach(b => { html += libCardHTML(b); });
+  html += `</div>`;
 
   // Pagination for standalone
   if (standalone.length > ITEMS_PER_PAGE) {
