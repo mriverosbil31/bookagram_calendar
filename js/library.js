@@ -295,6 +295,10 @@ function sagaCardHTML(name, books) {
       <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
     </div>`).join('');
 
+  const previewTitles = books.map(b =>
+    `<span class="lib-saga-preview-title">${esc(b.title)}</span>`
+  ).join('');
+
   return `<div class="lib-saga-card${isOpen ? ' open' : ''}${count >= 3 ? ' stack3' : count >= 2 ? ' stack2' : ''}" data-saga-name="${esc(name)}">
     <div class="lib-saga-card-hd" onclick="toggleLibSaga(this)">
       <div class="lib-saga-stk-vis">${layers}</div>
@@ -307,6 +311,7 @@ function sagaCardHTML(name, books) {
         <span class="lib-saga-chevron">▾</span>
       </div>
     </div>
+    <div class="lib-saga-preview">${previewTitles}</div>
     <div class="lib-saga-body${isOpen ? ' open' : ''}">
       <div class="lib-saga-body-inner">${bookItems}</div>
     </div>

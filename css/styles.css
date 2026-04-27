@@ -1896,6 +1896,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   border-radius: 12px;
   background: white;
   overflow: visible;
+  align-self: start;
 }
 .lib-saga-card.stack2::before,
 .lib-saga-card.stack3::before {
@@ -2025,6 +2026,29 @@ button, a { -webkit-tap-highlight-color: transparent; }
   transition: transform 0.3s ease;
 }
 .lib-saga-card.open .lib-saga-chevron { transform: rotate(180deg); }
+
+/* Preview strip (visible when collapsed, hidden when open) */
+.lib-saga-preview {
+  padding: 10px 14px 12px;
+  background: linear-gradient(to bottom, #f5f0e8, #ece6d8);
+  border-left: 1px solid var(--mist);
+  border-right: 1px solid var(--mist);
+  border-bottom: 1px solid var(--mist);
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.lib-saga-card.open .lib-saga-preview { display: none; }
+.lib-saga-preview-title {
+  font-size: 11px;
+  font-style: italic;
+  color: #7a6a55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 2px;
+}
 
 /* Accordion body */
 .lib-saga-body {
