@@ -171,37 +171,44 @@ function libFmtBadges(b) {
   return out;
 }
 
-// ─── Card HTML ────────────────────────────────────────────────────
-function libCardHTML(b) {
+// ─── Row HTML (table view) ────────────────────────────────────────
+function libRowHTML(b, isSagaBook) {
   const tagPills = (b.tags || []).map(t => {
     const c = tagColor(t);
     return `<span class="lib-tag-pill" style="background:${c.bg};color:${c.color};border-color:${c.border}">${esc(t)}<button class="lib-tag-del" onclick="removeLibTag(${b.addedAt},this.dataset.tag)" data-tag="${esc(t)}" title="Remove tag">×</button></span>`;
   }).join('');
 
-  return `<div class="lib-card" data-lib-id="${b.addedAt}">
-    <div class="lib-card-top">
+  const seriesField = isSagaBook ? '' :
+    `<input class="lib-saga-in lib-saga-in--row" value="${esc(b.sagaName || '')}" placeholder="Series…"
+      onblur="updateLibField(${b.addedAt},'sagaName',this.value)">`;
+
+  return `<div class="lib-row${isSagaBook ? ' lib-row--saga' : ''}" data-lib-id="${b.addedAt}">
+    <div class="lib-cell lib-cell-num">
+      ${isSagaBook ? `<input class="lib-order-in" type="number" min="1" value="${b.sagaOrder ?? ''}" placeholder="—"
+        onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">` : ''}
+    </div>
+    <div class="lib-cell lib-cell-title">
       <input class="lib-title-in" value="${esc(b.title)}" placeholder="Title"
         onblur="updateLibField(${b.addedAt},'title',this.value)">
-      <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
+      ${seriesField}
     </div>
-    <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
-      list="global-authors-list"
-      onblur="updateLibField(${b.addedAt},'author',this.value)">
-    <div class="lib-card-saga">
-      <input class="lib-saga-in" value="${esc(b.sagaName || '')}" placeholder="Saga / series"
-        onblur="updateLibField(${b.addedAt},'sagaName',this.value)">
-      <input class="lib-order-in" type="number" min="1" value="${b.sagaOrder ?? ''}" placeholder="#"
-        onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">
+    <div class="lib-cell lib-cell-author">
+      <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
+        list="global-authors-list"
+        onblur="updateLibField(${b.addedAt},'author',this.value)">
     </div>
-    <div class="lib-badges">
-      ${libFmtBadges(b)}
+    <div class="lib-cell lib-cell-format">${libFmtBadges(b)}</div>
+    <div class="lib-cell lib-cell-status">
       <button class="lib-read-badge" data-read="${b.read}" onclick="toggleLibRead(${b.addedAt})">
-        ${b.read ? 'Read' : 'Unread'}
+        ${b.read ? '✓ Read' : 'Unread'}
       </button>
     </div>
-    <div class="lib-tags-row">
+    <div class="lib-cell lib-cell-tags">
       ${tagPills}
       <button class="lib-tag-add" onclick="showLibTagInput(${b.addedAt},this)" title="Add tag">+ tag</button>
+    </div>
+    <div class="lib-cell lib-cell-del">
+      <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
     </div>
   </div>`;
 }
@@ -256,25 +263,32 @@ function syncLibFilterPills() {
     p.classList.toggle('active', p.dataset.fval === libState[p.dataset.ftype]));
 }
 
-// ─── Saga toggle (DOM-only, no re-render) ─────────────────────────
+// ─── Saga toggle (proper height animation) ────────────────────────
 function toggleLibSaga(hdEl) {
-  const card = hdEl.closest('.lib-saga-card');
-  const body = card?.querySelector('.lib-saga-body');
-  const name = card?.dataset.sagaName;
-  if (!card || !body || !name) return;
+  const group = hdEl.closest('.lib-saga-group');
+  const rows  = group?.querySelector('.lib-saga-rows');
+  const name  = group?.dataset.sagaName;
+  if (!group || !rows || !name) return;
+
   if (libExpandedSagas.has(name)) {
     libExpandedSagas.delete(name);
-    card.classList.remove('open');
-    body.classList.remove('open');
+    group.classList.remove('open');
+    rows.style.height = rows.scrollHeight + 'px';
+    rows.offsetHeight; // force reflow
+    rows.style.height = '0';
   } else {
     libExpandedSagas.add(name);
-    card.classList.add('open');
-    body.classList.add('open');
+    group.classList.add('open');
+    rows.style.height = rows.scrollHeight + 'px';
+    rows.addEventListener('transitionend', function onEnd() {
+      rows.removeEventListener('transitionend', onEnd);
+      if (libExpandedSagas.has(name)) rows.style.height = 'auto';
+    });
   }
 }
 
-// ─── Saga card HTML (grid item) ───────────────────────────────────
-function sagaCardHTML(name, books) {
+// ─── Saga group HTML (table section) ─────────────────────────────
+function sagaGroupHTML(name, books) {
   const isOpen   = libExpandedSagas.has(name);
   const count    = books.length;
   const initials = sagaInitials(name);
@@ -284,28 +298,24 @@ function sagaCardHTML(name, books) {
   layers += `<div class="lib-stk-sq lib-stk-sq--1"><span class="lib-stk-initial">${esc(initials)}</span></div>`;
 
   const authStr = [...new Set(books.map(b => b.author).filter(Boolean))].slice(0, 2).join(', ');
+  const bookRows = books.map(b => libRowHTML(b, true)).join('');
 
-  const bookItems = `<div class="lib-grid lib-saga-inner-grid">${books.map(libCardHTML).join('')}</div>`;
-
-  const previewTitles = books.map(b =>
-    `<span class="lib-saga-preview-title">${esc(b.title)}</span>`
-  ).join('');
-
-  return `<div class="lib-saga-card${isOpen ? ' open' : ''}${count >= 3 ? ' stack3' : count >= 2 ? ' stack2' : ''}" data-saga-name="${esc(name)}">
-    <div class="lib-saga-card-hd" onclick="toggleLibSaga(this)">
-      <div class="lib-saga-stk-vis">${layers}</div>
-      <div class="lib-saga-hd-info">
-        <span class="lib-saga-hd-name">${esc(name)}</span>
-        ${authStr ? `<span class="lib-saga-hd-auth">${esc(authStr)}</span>` : ''}
+  return `<div class="lib-saga-group${isOpen ? ' open' : ''}" data-saga-name="${esc(name)}">
+    <div class="lib-saga-hdr-row" onclick="toggleLibSaga(this)">
+      <div class="lib-saga-hdr-left">
+        <div class="lib-saga-stk-vis">${layers}</div>
+        <div class="lib-saga-hdr-text">
+          <span class="lib-saga-hdr-name">${esc(name)}</span>
+          ${authStr ? `<span class="lib-saga-hdr-meta">${esc(authStr)}</span>` : ''}
+        </div>
       </div>
-      <div class="lib-saga-hd-right">
-        <span class="lib-saga-hd-count">${count} book${count !== 1 ? 's' : ''}</span>
+      <div class="lib-saga-hdr-right">
+        <span class="lib-saga-hdr-count">${count} book${count !== 1 ? 's' : ''}</span>
         <span class="lib-saga-chevron">▾</span>
       </div>
     </div>
-    <div class="lib-saga-preview">${previewTitles}</div>
-    <div class="lib-saga-body${isOpen ? ' open' : ''}">
-      <div class="lib-saga-body-inner">${bookItems}</div>
+    <div class="lib-saga-rows" style="${isOpen ? 'height:auto' : 'height:0'}">
+      ${bookRows}
     </div>
   </div>`;
 }
@@ -462,19 +472,21 @@ function renderLibGrid() {
   const countLabel = `${totalLib} book${totalLib !== 1 ? 's' : ''} in your library` +
     (filtered !== totalLib ? ` · ${filtered} matching` : '');
 
-  let html = `<div class="lib-count">${countLabel}</div>`;
+  let html = `<div class="lib-count">${countLabel}</div>
+  <div class="lib-table">
+    <div class="lib-table-head">
+      <div class="lib-th">#</div>
+      <div class="lib-th">Title</div>
+      <div class="lib-th">Author</div>
+      <div class="lib-th">Format</div>
+      <div class="lib-th">Status</div>
+      <div class="lib-th">Tags</div>
+      <div class="lib-th"></div>
+    </div>`;
 
-  // Saga cards in their own grid so expansion spans only that section
-  if (sagaNames.length) {
-    html += `<div class="lib-sagas-section">`;
-    sagaNames.forEach(name => { html += sagaCardHTML(name, sagaMap[name]); });
-    html += `</div>`;
-  }
-
-  // Standalone books in their own grid below
-  if (pageStandalone.length) {
-    html += `<div class="lib-grid">${pageStandalone.map(libCardHTML).join('')}</div>`;
-  }
+  sagaNames.forEach(name => { html += sagaGroupHTML(name, sagaMap[name]); });
+  html += pageStandalone.map(b => libRowHTML(b, false)).join('');
+  html += `</div>`;
 
   // Pagination for standalone
   if (standalone.length > ITEMS_PER_PAGE) {
