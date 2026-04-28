@@ -332,10 +332,16 @@ function toggleSagaGroup(id) {
 }
 
 // ── Entry renderers ───────────────────────────────────────────────
-function renderEntryRow(e, all) {
-  const idx     = all.indexOf(e);
-  const initial = e.title.charAt(0).toUpperCase();
-  const dt      = e.dateRead ? jnlFormatDate(e.dateRead) : '';
+function renderEntryRow(e, all, libTagMap) {
+  const idx      = all.indexOf(e);
+  const initial  = e.title.charAt(0).toUpperCase();
+  const dt       = e.dateRead ? jnlFormatDate(e.dateRead) : '';
+  const tags     = libTagMap?.get(e.title.toLowerCase()) || [];
+  const tagPills = tags.map(t => {
+    const c = tagColor(t);
+    return `<span class="lib-tag-pill jnl-lib-tag" style="background:${c.bg};color:${c.color};border-color:${c.border}">${esc(t)}</span>`;
+  }).join('');
+
   return `<div class="jnl-entry" id="jnl-e-${idx}">
     <div class="jnl-entry-hd" onclick="toggleEntry(${idx})">
       <div class="jnl-initial">${esc(initial)}</div>
@@ -346,6 +352,7 @@ function renderEntryRow(e, all) {
           <span class="jnl-stars-inline">${renderJnlStars(e.rating)}</span>
           ${dt ? `<span class="jnl-meta-sep">·</span><span class="jnl-entry-date">${dt}</span>` : ''}
         </div>
+        ${tagPills ? `<div class="jnl-lib-tags">${tagPills}</div>` : ''}
       </div>
       <div class="jnl-entry-acts" onclick="event.stopPropagation()">
         <button class="jnl-act-btn" onclick="openEditModal(${idx})" title="Edit">✎</button>
@@ -364,7 +371,7 @@ function renderEntryRow(e, all) {
   </div>`;
 }
 
-function renderSagaGroup(sagaName, entries, all) {
+function renderSagaGroup(sagaName, entries, all, libTagMap) {
   const sorted  = [...entries].sort((a, b) => b.addedAt - a.addedAt);
   const count   = entries.length;
   const groupId = 'sg-' + all.indexOf(sorted[0]);
@@ -376,7 +383,7 @@ function renderSagaGroup(sagaName, entries, all) {
       <span class="jnl-caret saga-caret">›</span>
     </div>
     <div class="jnl-saga-books">
-      ${sorted.map(e => renderEntryRow(e, all)).join('')}
+      ${sorted.map(e => renderEntryRow(e, all, libTagMap)).join('')}
     </div>
   </div>`;
 }
@@ -395,6 +402,12 @@ function renderJournalGrid(filtered, all) {
     </div>`;
     return;
   }
+
+  // Build a title → tags lookup from the library (matched case-insensitively)
+  const libTagMap = new Map(
+    getLibrary().map(b => [b.title.toLowerCase(), b.tags || []])
+  );
+
   const items = [];
   const sagaSeen = new Set();
   filtered.forEach(e => {
@@ -413,8 +426,8 @@ function renderJournalGrid(filtered, all) {
   const pageItems  = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   list.innerHTML   = pageItems.map(item =>
     item.type === 'saga'
-      ? renderSagaGroup(item.sagaName, item.entries, all)
-      : renderEntryRow(item.entry, all)
+      ? renderSagaGroup(item.sagaName, item.entries, all, libTagMap)
+      : renderEntryRow(item.entry, all, libTagMap)
   ).join('') + (totalPages > 1 ? renderJournalPagination(page, totalPages) : '');
 }
 

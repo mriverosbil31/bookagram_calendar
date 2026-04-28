@@ -1325,6 +1325,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .jnl-meta-sep { font-size: 10px; color: var(--mist); }
 .jnl-entry-date { font-size: 10px; color: var(--ash); opacity: 0.7; }
 
+/* Library tags mirrored into journal entries */
+.jnl-lib-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.jnl-lib-tag {
+  pointer-events: none;
+  font-size: 9px;
+  padding: 1px 6px;
+  opacity: 0.9;
+}
+
 /* inline star display */
 .jnl-stars-inline { display: flex; gap: 1px; }
 .jnl-star      { font-size: 11px; }
