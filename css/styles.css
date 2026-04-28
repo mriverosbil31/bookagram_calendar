@@ -1932,8 +1932,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   background: white;
   overflow: hidden;
 }
-.lib-table--sagas { --lib-cols: 26px minmax(0,1fr) 88px 76px 28px; }
-.lib-table--books { --lib-cols: minmax(0,1fr) minmax(0,1fr) 88px 76px 28px; }
+.lib-table--sagas { --lib-cols: 26px minmax(0,2fr) 88px 76px 28px; }
+.lib-table--books { --lib-cols: minmax(0,2fr) minmax(0,1fr) 88px 76px 28px; }
 
 .lib-table-head {
   display: grid;
@@ -1984,12 +1984,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
   background: transparent;
   padding: 0;
   width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .lib-title-in:focus {
   background: var(--parchment);
   border-radius: 4px;
   padding: 2px 4px;
   margin: -2px -4px;
+  text-overflow: clip;
 }
 .lib-author-in {
   border: none;

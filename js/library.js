@@ -174,6 +174,12 @@ function libFmtBadges(b) {
 // ─── Row HTML ─────────────────────────────────────────────────────
 // context: 'saga' (inside a saga group) | 'book' (standalone books panel)
 function libRowHTML(b, context) {
+  const tagPills = (b.tags || []).map(t => {
+    const c = tagColor(t);
+    return `<span class="lib-tag-pill" style="background:${c.bg};color:${c.color};border-color:${c.border}">${esc(t)}<button class="lib-tag-del" onclick="removeLibTag(${b.addedAt},this.dataset.tag)" data-tag="${esc(t)}" title="Remove tag">×</button></span>`;
+  }).join('');
+  const tagsRow = `<div class="lib-tags-row">${tagPills}<button class="lib-tag-add" onclick="showLibTagInput(${b.addedAt},this)" title="Add tag">+ tag</button></div>`;
+
   if (context === 'saga') {
     return `<div class="lib-row lib-row--saga" data-lib-id="${b.addedAt}">
       <div class="lib-cell lib-cell-num">
@@ -181,11 +187,12 @@ function libRowHTML(b, context) {
           onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">
       </div>
       <div class="lib-cell lib-cell-title">
-        <input class="lib-title-in" value="${esc(b.title)}" placeholder="Title"
+        <input class="lib-title-in" value="${esc(b.title)}" title="${esc(b.title)}" placeholder="Title"
           onblur="updateLibField(${b.addedAt},'title',this.value)">
         <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
           list="global-authors-list"
           onblur="updateLibField(${b.addedAt},'author',this.value)">
+        ${tagsRow}
       </div>
       <div class="lib-cell lib-cell-format">${libFmtBadges(b)}</div>
       <div class="lib-cell lib-cell-status">
@@ -202,10 +209,11 @@ function libRowHTML(b, context) {
   // standalone 'book' context
   return `<div class="lib-row" data-lib-id="${b.addedAt}">
     <div class="lib-cell lib-cell-title">
-      <input class="lib-title-in" value="${esc(b.title)}" placeholder="Title"
+      <input class="lib-title-in" value="${esc(b.title)}" title="${esc(b.title)}" placeholder="Title"
         onblur="updateLibField(${b.addedAt},'title',this.value)">
       <input class="lib-saga-in--row" value="${esc(b.sagaName || '')}" placeholder="Move to series…"
         onblur="updateLibField(${b.addedAt},'sagaName',this.value)">
+      ${tagsRow}
     </div>
     <div class="lib-cell lib-cell-author">
       <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
