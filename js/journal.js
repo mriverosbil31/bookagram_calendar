@@ -211,6 +211,52 @@ function saveEditModal() {
 }
 
 // ── Claude integration ────────────────────────────────────────────
+// Keyed by groupId so saga names with special chars never need inline escaping
+const _jnlSagaRef = {};
+
+function buildSagaClaudePrompt(sagaName, entries) {
+  const sorted = [...entries].sort((a, b) => (a.sagaOrder ?? 999) - (b.sagaOrder ?? 999) || a.addedAt - b.addedAt);
+  const booksText = sorted.map((e, i) => {
+    const r    = Math.min(Math.max(parseFloat(e.rating) || 0, 0), 5);
+    const full = Math.floor(r);
+    const half = r % 1 >= 0.5;
+    const stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
+    return `Book ${i + 1}: "${e.title}" — ${stars} (${r}/5)${e.dateRead ? ` · Read: ${e.dateRead}` : ''}
+${e.thoughts}`;
+  }).join('\n\n---\n\n');
+
+  const author = [...new Set(entries.map(e => e.author).filter(Boolean))].join(', ');
+  return `You are helping The Husband's Corner — a Bookstagram & BookTok account focused on thriller, mystery and suspense.
+
+Series: ${sagaName}${author ? `\nAuthor: ${author}` : ''}
+Total books: ${entries.length}
+
+${booksText}
+
+Please give me:
+1. A series overview paragraph — ideal for a "should you binge this series?" carousel (no spoilers, opinionated)
+2. A book-by-book ranking caption with one punchy line per book and a final verdict
+3. A TikTok hook for "is this series worth it?" — 5 seconds, scroll-stopping
+4. Three series-level content angle ideas for The Husband's Corner (e.g. re-read order, darkest moment, who to recommend it to)
+
+Voice: passionate, slightly obsessed — a husband who reads every thriller his wife is too scared to pick up alone.`;
+}
+
+function openSagaWithClaude(groupId) {
+  const sagaName = _jnlSagaRef[groupId];
+  if (!sagaName) return;
+  const entries = getJournal().filter(e => e.sagaName === sagaName);
+  if (!entries.length) return;
+  const prompt  = buildSagaClaudePrompt(sagaName, entries);
+  const doOpen  = () => window.open('https://claude.ai', '_blank', 'noopener');
+  const fallback = () => { showPromptModal(prompt); doOpen(); };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(prompt)
+      .then(() => { showJnlToast('Series prompt copied! Paste it into Claude ↗'); doOpen(); })
+      .catch(fallback);
+  } else { fallback(); }
+}
+
 function buildClaudePrompt(entry) {
   const r    = Math.min(Math.max(parseFloat(entry.rating) || 0, 0), 5);
   const full = Math.floor(r);
@@ -408,6 +454,7 @@ function renderSagaGroup(sagaName, entries, all, libTagMap) {
   const sorted  = [...entries].sort((a, b) => b.addedAt - a.addedAt);
   const count   = entries.length;
   const groupId = 'sg-' + all.indexOf(sorted[0]);
+  _jnlSagaRef[groupId] = sagaName; // store for openSagaWithClaude lookup
   return `<div class="jnl-saga-group${count >= 3 ? ' stack3' : count >= 2 ? ' stack2' : ''}" id="${groupId}">
     <div class="jnl-saga-hd" onclick="toggleSagaGroup('${groupId}')">
       <div class="saga-initial">${sagaInitials(sagaName)}</div>
@@ -417,6 +464,11 @@ function renderSagaGroup(sagaName, entries, all, libTagMap) {
     </div>
     <div class="jnl-saga-books">
       ${sorted.map(e => renderEntryRow(e, all, libTagMap)).join('')}
+      <div class="jnl-saga-footer">
+        <button class="claude-btn claude-btn--series" onclick="openSagaWithClaude('${groupId}')">
+          <span class="claude-icon">✦</span> Ask Claude — Full Series
+        </button>
+      </div>
     </div>
   </div>`;
 }
