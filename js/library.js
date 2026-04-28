@@ -1,6 +1,5 @@
 // ─── My Library ───────────────────────────────────────────────────
-const LIBRARY_KEY    = 'thc_library';
-const SAGA_ORDER_KEY = 'thc_saga_order';
+const LIBRARY_KEY = 'thc_library';
 let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' };
 let libExpandedSagas = new Set();
 
@@ -25,19 +24,6 @@ function getLibrary() {
   catch { return []; }
 }
 function saveLibrary(arr) { localStorage.setItem(LIBRARY_KEY, JSON.stringify(arr)); }
-
-function getSagaOrder() {
-  try { return JSON.parse(localStorage.getItem(SAGA_ORDER_KEY)) || []; }
-  catch { return []; }
-}
-function saveSagaOrder(arr) { localStorage.setItem(SAGA_ORDER_KEY, JSON.stringify(arr)); }
-
-function sortedSagaNames(nameSet) {
-  const stored = getSagaOrder();
-  const ordered = stored.filter(n => nameSet.has(n));
-  const fresh   = [...nameSet].filter(n => !stored.includes(n));
-  return [...ordered, ...fresh];
-}
 
 // ─── Normalize (backward compat) ──────────────────────────────────
 function normLibBook(b) {
@@ -196,6 +182,9 @@ function libRowHTML(b, context) {
 
   if (context === 'saga') {
     return `<div class="lib-row lib-row--saga" data-lib-id="${b.addedAt}">
+      <div class="lib-cell lib-cell-drag">
+        <span class="lib-row-drag-handle" title="Drag to reorder">⠿</span>
+      </div>
       <div class="lib-cell lib-cell-num">
         <input class="lib-order-in" type="number" min="1" value="${b.sagaOrder ?? ''}" placeholder="—"
           onblur="updateLibField(${b.addedAt},'sagaOrder',this.value)">
@@ -336,7 +325,6 @@ function sagaGroupHTML(name, books) {
   return `<div class="lib-saga-group${isOpen ? ' open' : ''}" data-saga-name="${esc(name)}">
     <div class="lib-saga-hdr-row" onclick="toggleLibSaga(this)">
       <div class="lib-saga-hdr-left">
-        <span class="lib-saga-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⠿</span>
         <div class="lib-saga-stk-vis">${layers}</div>
         <div class="lib-saga-hdr-text">
           <span class="lib-saga-hdr-name">${esc(name)}</span>
@@ -479,21 +467,18 @@ function renderLibGrid() {
   }
 
   // ── Split ALL filtered items into saga groups + standalone (before paginating) ──
-  const sagaMap    = {};
-  const sagaNameSet = new Set();
+  const sagaMap   = {};
+  const sagaNames = [];
   const standalone = [];
 
   items.forEach(b => {
     if (b.sagaName) {
-      if (!sagaMap[b.sagaName]) sagaMap[b.sagaName] = [];
+      if (!sagaMap[b.sagaName]) { sagaMap[b.sagaName] = []; sagaNames.push(b.sagaName); }
       sagaMap[b.sagaName].push(b);
-      sagaNameSet.add(b.sagaName);
     } else {
       standalone.push(b);
     }
   });
-
-  const sagaNames = sortedSagaNames(sagaNameSet);
 
   // Sort each saga by sagaOrder
   sagaNames.forEach(name =>
@@ -563,59 +548,62 @@ function renderLibGrid() {
   </div>`;
 
   container.innerHTML = html;
-  initLibSagaDrag();
+  initLibSagaBooksDrag();
 }
 
-// ─── Saga drag-to-reorder ─────────────────────────────────────────
-function initLibSagaDrag() {
-  const table = document.querySelector('.lib-table--sagas');
-  if (!table) return;
+// ─── Drag books within a saga to reorder ─────────────────────────
+function initLibSagaBooksDrag() {
+  document.querySelectorAll('.lib-saga-rows').forEach(rows => {
+    let dragSrc = null;
+    const getRows = () => [...rows.querySelectorAll('.lib-row--saga')];
 
-  let dragSrc = null;
+    getRows().forEach(row => {
+      const handle = row.querySelector('.lib-row-drag-handle');
+      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
 
-  table.querySelectorAll('.lib-saga-group').forEach(group => {
-    const handle = group.querySelector('.lib-saga-drag-handle');
-    if (handle) {
-      handle.addEventListener('mousedown', () => { group.draggable = true; });
-    }
+      row.addEventListener('dragstart', e => {
+        dragSrc = row;
+        row.classList.add('lib-row-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
 
-    group.addEventListener('dragstart', e => {
-      dragSrc = group;
-      group.classList.add('lib-saga-dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
+      row.addEventListener('dragend', () => {
+        row.draggable = false;
+        row.classList.remove('lib-row-dragging');
+        getRows().forEach(r => r.classList.remove('lib-row-over'));
+        dragSrc = null;
+      });
 
-    group.addEventListener('dragend', () => {
-      group.draggable = false;
-      group.classList.remove('lib-saga-dragging');
-      table.querySelectorAll('.lib-saga-group').forEach(g => g.classList.remove('lib-saga-over'));
-      dragSrc = null;
-    });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (dragSrc && row !== dragSrc) {
+          getRows().forEach(r => r.classList.remove('lib-row-over'));
+          row.classList.add('lib-row-over');
+        }
+      });
 
-    group.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (dragSrc && group !== dragSrc) {
-        table.querySelectorAll('.lib-saga-group').forEach(g => g.classList.remove('lib-saga-over'));
-        group.classList.add('lib-saga-over');
-      }
-    });
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        row.classList.remove('lib-row-over');
+        if (!dragSrc || dragSrc === row) return;
 
-    group.addEventListener('drop', e => {
-      e.preventDefault();
-      group.classList.remove('lib-saga-over');
-      if (!dragSrc || dragSrc === group) return;
+        const current = getRows();
+        if (current.indexOf(dragSrc) < current.indexOf(row)) row.after(dragSrc);
+        else row.before(dragSrc);
 
-      const all = [...table.querySelectorAll('.lib-saga-group')];
-      const srcIdx = all.indexOf(dragSrc);
-      const tgtIdx = all.indexOf(group);
-      if (srcIdx < tgtIdx) {
-        group.after(dragSrc);
-      } else {
-        group.before(dragSrc);
-      }
-
-      const newOrder = [...table.querySelectorAll('.lib-saga-group')].map(g => g.dataset.sagaName);
-      saveSagaOrder(newOrder);
+        // Reassign sagaOrder (1, 2, 3…) based on new DOM order and persist
+        const lib = getLibrary();
+        getRows().forEach((r, i) => {
+          const book = lib.find(b => b.addedAt === parseInt(r.dataset.libId, 10));
+          if (book) book.sagaOrder = i + 1;
+        });
+        saveAndSyncLibrary(lib);
+        // Sync the visible order-number inputs without re-rendering
+        getRows().forEach((r, i) => {
+          const inp = r.querySelector('.lib-order-in');
+          if (inp) inp.value = i + 1;
+        });
+      });
     });
   });
 }

@@ -1,6 +1,6 @@
 // ─── Reading Journal ──────────────────────────────────────────────
-const JOURNAL_KEY       = 'thc_journal';
-const JNL_SAGA_ORDER_KEY = 'thc_jnl_saga_order';
+const JOURNAL_KEY        = 'thc_journal';
+const JNL_SAGA_BOOKS_KEY = 'thc_jnl_saga_books';
 let jnlState = { sort: 'date', author: 'all', tag: 'all', page: 1 };
 let _jnlEditIdx = -1;
 let _jnlAuthExpanded = false;
@@ -11,11 +11,11 @@ function getJournal() {
 }
 function saveJournal(arr) { localStorage.setItem(JOURNAL_KEY, JSON.stringify(arr)); }
 
-function getJnlSagaOrder() {
-  try { return JSON.parse(localStorage.getItem(JNL_SAGA_ORDER_KEY)) || []; }
-  catch { return []; }
+function getJnlSagaBooks() {
+  try { return JSON.parse(localStorage.getItem(JNL_SAGA_BOOKS_KEY)) || {}; }
+  catch { return {}; }
 }
-function saveJnlSagaOrder(arr) { localStorage.setItem(JNL_SAGA_ORDER_KEY, JSON.stringify(arr)); }
+function saveJnlSagaBooks(obj) { localStorage.setItem(JNL_SAGA_BOOKS_KEY, JSON.stringify(obj)); }
 
 // ── Helpers ───────────────────────────────────────────────────────
 function sagaInitials(name) {
@@ -418,7 +418,7 @@ function toggleSagaGroup(id) {
 }
 
 // ── Entry renderers ───────────────────────────────────────────────
-function renderEntryRow(e, all, libDataMap) {
+function renderEntryRow(e, all, libDataMap, inSaga = false) {
   const idx        = all.indexOf(e);
   const initial    = e.title.charAt(0).toUpperCase();
   const dt         = e.dateRead ? jnlFormatDate(e.dateRead) : '';
@@ -431,9 +431,13 @@ function renderEntryRow(e, all, libDataMap) {
   }).join('');
   const numBadge   = e.sagaName && sagaOrder != null
     ? `<span class="jnl-saga-num">#${sagaOrder}</span>` : '';
+  const dragHandle = inSaga
+    ? `<span class="jnl-entry-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⠿</span>`
+    : '';
 
-  return `<div class="jnl-entry" id="jnl-e-${idx}">
+  return `<div class="jnl-entry" id="jnl-e-${idx}" data-added-at="${e.addedAt}">
     <div class="jnl-entry-hd" onclick="toggleEntry(${idx})">
+      ${dragHandle}
       <div class="jnl-initial">${esc(initial)}</div>
       <div class="jnl-entry-info">
         <div class="jnl-entry-title">${numBadge}${esc(e.title)}</div>
@@ -462,20 +466,30 @@ function renderEntryRow(e, all, libDataMap) {
 }
 
 function renderSagaGroup(sagaName, entries, all, libDataMap) {
-  const sorted  = [...entries].sort((a, b) => b.addedAt - a.addedAt);
+  // Sort by user-saved order, falling back to newest-first
+  const savedOrder = getJnlSagaBooks()[sagaName] || [];
+  const sorted = savedOrder.length
+    ? [...entries].sort((a, b) => {
+        const ai = savedOrder.indexOf(a.addedAt);
+        const bi = savedOrder.indexOf(b.addedAt);
+        if (ai === -1 && bi === -1) return b.addedAt - a.addedAt;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      })
+    : [...entries].sort((a, b) => b.addedAt - a.addedAt);
   const count   = entries.length;
   const groupId = 'sg-' + all.indexOf(sorted[0]);
   _jnlSagaRef[groupId] = sagaName; // store for openSagaWithClaude lookup
   return `<div class="jnl-saga-group${count >= 3 ? ' stack3' : count >= 2 ? ' stack2' : ''}" id="${groupId}" data-saga-name="${esc(sagaName)}">
     <div class="jnl-saga-hd" onclick="toggleSagaGroup('${groupId}')">
-      <span class="jnl-saga-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⠿</span>
       <div class="saga-initial">${sagaInitials(sagaName)}</div>
       <span class="jnl-saga-title">${esc(sagaName)}</span>
       <span class="jnl-saga-cnt">${count} book${count !== 1 ? 's' : ''}</span>
       <span class="jnl-caret saga-caret">›</span>
     </div>
     <div class="jnl-saga-books">
-      ${sorted.map(e => renderEntryRow(e, all, libDataMap)).join('')}
+      ${sorted.map(e => renderEntryRow(e, all, libDataMap, true)).join('')}
       <div class="jnl-saga-footer">
         <button class="claude-btn claude-btn--series" onclick="openSagaWithClaude('${groupId}')">
           <span class="claude-icon">✦</span> Ask Claude — Full Series
@@ -505,28 +519,18 @@ function renderJournalGrid(filtered, all) {
     getLibrary().map(b => [b.title.toLowerCase(), { tags: b.tags || [], sagaOrder: b.sagaOrder ?? null }])
   );
 
-  // Collect saga names and standalone entries separately
-  const sagaSeen   = new Set();
-  const standalones = [];
+  const items = [];
+  const sagaSeen = new Set();
   filtered.forEach(e => {
-    if (e.sagaName) sagaSeen.add(e.sagaName);
-    else standalones.push({ type: 'standalone', entry: e });
+    if (e.sagaName) {
+      if (!sagaSeen.has(e.sagaName)) {
+        sagaSeen.add(e.sagaName);
+        items.push({ type: 'saga', sagaName: e.sagaName, entries: filtered.filter(x => x.sagaName === e.sagaName) });
+      }
+    } else {
+      items.push({ type: 'standalone', entry: e });
+    }
   });
-
-  // Sort sagas by user-defined order, append any new ones at the end
-  const stored      = getJnlSagaOrder();
-  const orderedSagas = [
-    ...stored.filter(n => sagaSeen.has(n)),
-    ...[...sagaSeen].filter(n => !stored.includes(n)),
-  ];
-
-  const items = [
-    ...orderedSagas.map(name => ({
-      type: 'saga', sagaName: name,
-      entries: filtered.filter(e => e.sagaName === name),
-    })),
-    ...standalones,
-  ];
 
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   const page       = Math.max(1, Math.min(jnlState.page || 1, totalPages));
@@ -537,7 +541,7 @@ function renderJournalGrid(filtered, all) {
       ? renderSagaGroup(item.sagaName, item.entries, all, libDataMap)
       : renderEntryRow(item.entry, all, libDataMap)
   ).join('') + (totalPages > 1 ? renderJournalPagination(page, totalPages) : '');
-  initJnlSagaDrag();
+  initJnlSagaBooksDrag();
 }
 
 function renderJournalPagination(page, totalPages) {
@@ -678,56 +682,56 @@ function renderJournalView() {
   syncJournalFromCloud();
 }
 
-// ─── Journal saga drag-to-reorder ─────────────────────────────────
-function initJnlSagaDrag() {
-  const list = document.getElementById('jnl-list');
-  if (!list) return;
+// ─── Drag books within a journal saga to reorder ──────────────────
+function initJnlSagaBooksDrag() {
+  document.querySelectorAll('.jnl-saga-group').forEach(group => {
+    const sagaName = group.dataset.sagaName;
+    if (!sagaName) return;
+    const books = group.querySelector('.jnl-saga-books');
+    if (!books) return;
 
-  const groups = [...list.querySelectorAll('.jnl-saga-group')];
-  if (groups.length < 2) return;
+    let dragSrc = null;
+    const getEntries = () => [...books.querySelectorAll(':scope > .jnl-entry')];
 
-  let dragSrc = null;
+    getEntries().forEach(entry => {
+      const handle = entry.querySelector('.jnl-entry-drag-handle');
+      if (handle) handle.addEventListener('mousedown', () => { entry.draggable = true; });
 
-  groups.forEach(group => {
-    const handle = group.querySelector('.jnl-saga-drag-handle');
-    if (handle) {
-      handle.addEventListener('mousedown', () => { group.draggable = true; });
-    }
+      entry.addEventListener('dragstart', e => {
+        dragSrc = entry;
+        entry.classList.add('jnl-entry-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
 
-    group.addEventListener('dragstart', e => {
-      dragSrc = group;
-      group.classList.add('jnl-saga-dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
+      entry.addEventListener('dragend', () => {
+        entry.draggable = false;
+        entry.classList.remove('jnl-entry-dragging');
+        getEntries().forEach(r => r.classList.remove('jnl-entry-over'));
+        dragSrc = null;
+      });
 
-    group.addEventListener('dragend', () => {
-      group.draggable = false;
-      group.classList.remove('jnl-saga-dragging');
-      groups.forEach(g => g.classList.remove('jnl-saga-over'));
-      dragSrc = null;
-    });
+      entry.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (dragSrc && entry !== dragSrc) {
+          getEntries().forEach(r => r.classList.remove('jnl-entry-over'));
+          entry.classList.add('jnl-entry-over');
+        }
+      });
 
-    group.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (dragSrc && group !== dragSrc) {
-        groups.forEach(g => g.classList.remove('jnl-saga-over'));
-        group.classList.add('jnl-saga-over');
-      }
-    });
+      entry.addEventListener('drop', e => {
+        e.preventDefault();
+        entry.classList.remove('jnl-entry-over');
+        if (!dragSrc || dragSrc === entry) return;
 
-    group.addEventListener('drop', e => {
-      e.preventDefault();
-      group.classList.remove('jnl-saga-over');
-      if (!dragSrc || dragSrc === group) return;
+        const current = getEntries();
+        if (current.indexOf(dragSrc) < current.indexOf(entry)) entry.after(dragSrc);
+        else entry.before(dragSrc);
 
-      const current = [...list.querySelectorAll('.jnl-saga-group')];
-      const srcIdx  = current.indexOf(dragSrc);
-      const tgtIdx  = current.indexOf(group);
-      if (srcIdx < tgtIdx) group.after(dragSrc);
-      else group.before(dragSrc);
-
-      const newOrder = [...list.querySelectorAll('.jnl-saga-group')].map(g => g.dataset.sagaName);
-      saveJnlSagaOrder(newOrder);
+        const newOrder = getEntries().map(r => parseInt(r.dataset.addedAt, 10));
+        const sagaBooks = getJnlSagaBooks();
+        sagaBooks[sagaName] = newOrder;
+        saveJnlSagaBooks(sagaBooks);
+      });
     });
   });
 }
