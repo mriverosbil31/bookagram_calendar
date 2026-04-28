@@ -485,6 +485,12 @@ function setJournalPage(n) {
 
 // ── Main view ─────────────────────────────────────────────────────
 function renderJournalView() {
+  // Reset filters so navigating back always shows everything
+  jnlState.author = 'all';
+  jnlState.tag    = 'all';
+  jnlState.page   = 1;
+  _jnlAuthExpanded = false;
+
   const j = getJournal();
   const uniqueAuthors = [...new Set(j.map(e => e.author).filter(Boolean))].sort();
 
@@ -546,7 +552,7 @@ function renderJournalView() {
     j.forEach(e => (libTagMapForFilter.get(e.title.toLowerCase()) || []).forEach(t => journalTagsSet.add(t)));
     const journalTags = [...journalTagsSet];
 
-    const SHOW_N  = 6;
+    const SHOW_N   = 8;
     const hasExtra = uniqueAuthors.length > SHOW_N;
     const extraCnt = uniqueAuthors.length - SHOW_N;
 

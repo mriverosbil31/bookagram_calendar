@@ -1227,7 +1227,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   gap: 6px;
   flex: 1;
 }
-.jnl-pill-extra { display: none; }
+/* Two-class selector beats .jnl-apill's single-class display:inline-flex */
+.jnl-author-pills .jnl-pill-extra         { display: none; }
 .jnl-author-pills.expanded .jnl-pill-extra { display: inline-flex; }
 
 .jnl-apill {
@@ -2318,6 +2319,14 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .lib-select, .lib-order-fld { flex: 1 !important; }
   .lib-read-chk-label { width: 100%; }
   .lib-filter-row { flex-direction: column; align-items: flex-start; }
+
+  /* Journal filter bar */
+  .jnl-filter-section { flex-direction: column; gap: 6px; }
+  .jnl-filter-label   { padding-top: 0; }
+  .jnl-author-pills,
+  .jnl-tag-pills      { gap: 5px; }
+  .jnl-apill          { font-size: 11px; padding: 4px 10px; }
+  .jnl-pill-toggle    { font-size: 11px; padding: 4px 10px; }
 }
 
 /* ═══════════════════════════════════════════════════════════
