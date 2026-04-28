@@ -411,21 +411,25 @@ function toggleSagaGroup(id) {
 }
 
 // ── Entry renderers ───────────────────────────────────────────────
-function renderEntryRow(e, all, libTagMap) {
-  const idx      = all.indexOf(e);
-  const initial  = e.title.charAt(0).toUpperCase();
-  const dt       = e.dateRead ? jnlFormatDate(e.dateRead) : '';
-  const tags     = libTagMap?.get(e.title.toLowerCase()) || [];
-  const tagPills = tags.map(t => {
+function renderEntryRow(e, all, libDataMap) {
+  const idx        = all.indexOf(e);
+  const initial    = e.title.charAt(0).toUpperCase();
+  const dt         = e.dateRead ? jnlFormatDate(e.dateRead) : '';
+  const libData    = libDataMap?.get(e.title.toLowerCase()) || {};
+  const tags       = libData.tags || [];
+  const sagaOrder  = libData.sagaOrder;
+  const tagPills   = tags.map(t => {
     const c = tagColor(t);
     return `<span class="lib-tag-pill jnl-lib-tag" style="background:${c.bg};color:${c.color};border-color:${c.border}">${esc(t)}</span>`;
   }).join('');
+  const numBadge   = e.sagaName && sagaOrder != null
+    ? `<span class="jnl-saga-num">#${sagaOrder}</span>` : '';
 
   return `<div class="jnl-entry" id="jnl-e-${idx}">
     <div class="jnl-entry-hd" onclick="toggleEntry(${idx})">
       <div class="jnl-initial">${esc(initial)}</div>
       <div class="jnl-entry-info">
-        <div class="jnl-entry-title">${esc(e.title)}</div>
+        <div class="jnl-entry-title">${numBadge}${esc(e.title)}</div>
         <div class="jnl-entry-meta">
           ${e.author ? `<span class="jnl-entry-author" data-author="${esc(e.author)}" onclick="filterJournalByAuthor(this.dataset.author);event.stopPropagation()" title="Filter by this author">${esc(e.author)}</span><span class="jnl-meta-sep">·</span>` : ''}
           <span class="jnl-stars-inline">${renderJnlStars(e.rating)}</span>
@@ -450,7 +454,7 @@ function renderEntryRow(e, all, libTagMap) {
   </div>`;
 }
 
-function renderSagaGroup(sagaName, entries, all, libTagMap) {
+function renderSagaGroup(sagaName, entries, all, libDataMap) {
   const sorted  = [...entries].sort((a, b) => b.addedAt - a.addedAt);
   const count   = entries.length;
   const groupId = 'sg-' + all.indexOf(sorted[0]);
@@ -463,7 +467,7 @@ function renderSagaGroup(sagaName, entries, all, libTagMap) {
       <span class="jnl-caret saga-caret">›</span>
     </div>
     <div class="jnl-saga-books">
-      ${sorted.map(e => renderEntryRow(e, all, libTagMap)).join('')}
+      ${sorted.map(e => renderEntryRow(e, all, libDataMap)).join('')}
       <div class="jnl-saga-footer">
         <button class="claude-btn claude-btn--series" onclick="openSagaWithClaude('${groupId}')">
           <span class="claude-icon">✦</span> Ask Claude — Full Series
@@ -488,9 +492,9 @@ function renderJournalGrid(filtered, all) {
     return;
   }
 
-  // Build a title → tags lookup from the library (matched case-insensitively)
-  const libTagMap = new Map(
-    getLibrary().map(b => [b.title.toLowerCase(), b.tags || []])
+  // Build a title → { tags, sagaOrder } lookup from the library
+  const libDataMap = new Map(
+    getLibrary().map(b => [b.title.toLowerCase(), { tags: b.tags || [], sagaOrder: b.sagaOrder ?? null }])
   );
 
   const items = [];
@@ -511,8 +515,8 @@ function renderJournalGrid(filtered, all) {
   const pageItems  = items.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   list.innerHTML   = pageItems.map(item =>
     item.type === 'saga'
-      ? renderSagaGroup(item.sagaName, item.entries, all, libTagMap)
-      : renderEntryRow(item.entry, all, libTagMap)
+      ? renderSagaGroup(item.sagaName, item.entries, all, libDataMap)
+      : renderEntryRow(item.entry, all, libDataMap)
   ).join('') + (totalPages > 1 ? renderJournalPagination(page, totalPages) : '');
 }
 
