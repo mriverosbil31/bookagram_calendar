@@ -1,5 +1,6 @@
 // ─── My Library ───────────────────────────────────────────────────
-const LIBRARY_KEY = 'thc_library';
+const LIBRARY_KEY    = 'thc_library';
+const SAGA_ORDER_KEY = 'thc_saga_order';
 let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' };
 let libExpandedSagas = new Set();
 
@@ -24,6 +25,19 @@ function getLibrary() {
   catch { return []; }
 }
 function saveLibrary(arr) { localStorage.setItem(LIBRARY_KEY, JSON.stringify(arr)); }
+
+function getSagaOrder() {
+  try { return JSON.parse(localStorage.getItem(SAGA_ORDER_KEY)) || []; }
+  catch { return []; }
+}
+function saveSagaOrder(arr) { localStorage.setItem(SAGA_ORDER_KEY, JSON.stringify(arr)); }
+
+function sortedSagaNames(nameSet) {
+  const stored = getSagaOrder();
+  const ordered = stored.filter(n => nameSet.has(n));
+  const fresh   = [...nameSet].filter(n => !stored.includes(n));
+  return [...ordered, ...fresh];
+}
 
 // ─── Normalize (backward compat) ──────────────────────────────────
 function normLibBook(b) {
@@ -322,6 +336,7 @@ function sagaGroupHTML(name, books) {
   return `<div class="lib-saga-group${isOpen ? ' open' : ''}" data-saga-name="${esc(name)}">
     <div class="lib-saga-hdr-row" onclick="toggleLibSaga(this)">
       <div class="lib-saga-hdr-left">
+        <span class="lib-saga-drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⠿</span>
         <div class="lib-saga-stk-vis">${layers}</div>
         <div class="lib-saga-hdr-text">
           <span class="lib-saga-hdr-name">${esc(name)}</span>
@@ -464,18 +479,21 @@ function renderLibGrid() {
   }
 
   // ── Split ALL filtered items into saga groups + standalone (before paginating) ──
-  const sagaMap   = {};
-  const sagaNames = [];
+  const sagaMap    = {};
+  const sagaNameSet = new Set();
   const standalone = [];
 
   items.forEach(b => {
     if (b.sagaName) {
-      if (!sagaMap[b.sagaName]) { sagaMap[b.sagaName] = []; sagaNames.push(b.sagaName); }
+      if (!sagaMap[b.sagaName]) sagaMap[b.sagaName] = [];
       sagaMap[b.sagaName].push(b);
+      sagaNameSet.add(b.sagaName);
     } else {
       standalone.push(b);
     }
   });
+
+  const sagaNames = sortedSagaNames(sagaNameSet);
 
   // Sort each saga by sagaOrder
   sagaNames.forEach(name =>
@@ -545,4 +563,59 @@ function renderLibGrid() {
   </div>`;
 
   container.innerHTML = html;
+  initLibSagaDrag();
+}
+
+// ─── Saga drag-to-reorder ─────────────────────────────────────────
+function initLibSagaDrag() {
+  const table = document.querySelector('.lib-table--sagas');
+  if (!table) return;
+
+  let dragSrc = null;
+
+  table.querySelectorAll('.lib-saga-group').forEach(group => {
+    const handle = group.querySelector('.lib-saga-drag-handle');
+    if (handle) {
+      handle.addEventListener('mousedown', () => { group.draggable = true; });
+    }
+
+    group.addEventListener('dragstart', e => {
+      dragSrc = group;
+      group.classList.add('lib-saga-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    group.addEventListener('dragend', () => {
+      group.draggable = false;
+      group.classList.remove('lib-saga-dragging');
+      table.querySelectorAll('.lib-saga-group').forEach(g => g.classList.remove('lib-saga-over'));
+      dragSrc = null;
+    });
+
+    group.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (dragSrc && group !== dragSrc) {
+        table.querySelectorAll('.lib-saga-group').forEach(g => g.classList.remove('lib-saga-over'));
+        group.classList.add('lib-saga-over');
+      }
+    });
+
+    group.addEventListener('drop', e => {
+      e.preventDefault();
+      group.classList.remove('lib-saga-over');
+      if (!dragSrc || dragSrc === group) return;
+
+      const all = [...table.querySelectorAll('.lib-saga-group')];
+      const srcIdx = all.indexOf(dragSrc);
+      const tgtIdx = all.indexOf(group);
+      if (srcIdx < tgtIdx) {
+        group.after(dragSrc);
+      } else {
+        group.before(dragSrc);
+      }
+
+      const newOrder = [...table.querySelectorAll('.lib-saga-group')].map(g => g.dataset.sagaName);
+      saveSagaOrder(newOrder);
+    });
+  });
 }

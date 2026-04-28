@@ -1512,6 +1512,26 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .jnl-saga-hd:hover { background: #3a3530; }
 
+.jnl-saga-drag-handle {
+  cursor: grab;
+  color: var(--fog);
+  font-size: 14px;
+  padding: 2px 2px;
+  flex-shrink: 0;
+  user-select: none;
+  line-height: 1;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+.jnl-saga-hd:hover .jnl-saga-drag-handle { opacity: 0.9; }
+.jnl-saga-drag-handle:active { cursor: grabbing; }
+.jnl-saga-group.jnl-saga-dragging { opacity: 0.45; }
+.jnl-saga-group.jnl-saga-over {
+  outline: 2px dashed var(--blood);
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+
 .saga-initial {
   flex-shrink: 0;
   width: 30px;
@@ -2329,6 +2349,26 @@ button, a { -webkit-tap-highlight-color: transparent; }
   transition: transform 0.35s ease;
 }
 .lib-saga-group.open .lib-saga-chevron { transform: rotate(180deg); }
+
+.lib-saga-drag-handle {
+  cursor: grab;
+  color: #888;
+  font-size: 14px;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  user-select: none;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.lib-saga-hdr-row:hover .lib-saga-drag-handle { opacity: 1; }
+.lib-saga-drag-handle:active { cursor: grabbing; }
+.lib-saga-group.lib-saga-dragging { opacity: 0.45; }
+.lib-saga-group.lib-saga-over {
+  outline: 2px dashed var(--blood);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
 
 .lib-saga-rows {
   overflow: hidden;
