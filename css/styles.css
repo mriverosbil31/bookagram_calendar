@@ -1200,10 +1200,36 @@ button, a { -webkit-tap-highlight-color: transparent; }
 /* ── author filter bar ── */
 .jnl-filter-bar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 1rem;
 }
+.jnl-filter-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.jnl-filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ash);
+  padding-top: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.jnl-author-pills,
+.jnl-tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+.jnl-pill-extra { display: none; }
+.jnl-author-pills.expanded .jnl-pill-extra { display: inline-flex; }
+
 .jnl-apill {
   display: inline-flex;
   align-items: center;
@@ -1223,6 +1249,23 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .jnl-apill:hover  { background: var(--mist); color: var(--ink); }
 .jnl-apill.active { background: var(--ink); color: var(--parchment); border-color: var(--ink); }
 .jnl-apill.active .pill-count { background: rgba(255,255,255,0.18); color: var(--parchment); }
+
+.jnl-pill-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: none;
+  border: 1px dashed var(--mist);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ash);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.jnl-pill-toggle:hover { border-color: var(--ash); color: var(--ink); }
 
 /* ── toolbar ── */
 .jnl-toolbar {

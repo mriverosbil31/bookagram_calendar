@@ -1,7 +1,8 @@
 // ─── Reading Journal ──────────────────────────────────────────────
 const JOURNAL_KEY = 'thc_journal';
-let jnlState = { sort: 'date', author: 'all', page: 1 };
+let jnlState = { sort: 'date', author: 'all', tag: 'all', page: 1 };
 let _jnlEditIdx = -1;
+let _jnlAuthExpanded = false;
 
 function getJournal() {
   try { return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || []; }
@@ -301,6 +302,22 @@ function filterJournalByAuthor(author) {
   applyJournalFilters();
 }
 
+function filterJournalByTag(tag) {
+  jnlState.tag  = tag;
+  jnlState.page = 1;
+  applyJournalFilters();
+}
+
+function toggleJnlAuthors() {
+  _jnlAuthExpanded = !_jnlAuthExpanded;
+  const pills = document.getElementById('jnl-author-pills');
+  const btn   = document.getElementById('jnl-auth-toggle');
+  if (!pills || !btn) return;
+  pills.classList.toggle('expanded', _jnlAuthExpanded);
+  const extra = parseInt(btn.dataset.extra) || 0;
+  btn.textContent = _jnlAuthExpanded ? '↑ Less' : `+${extra} more`;
+}
+
 function sortJournal(by) {
   jnlState.sort = by;
   jnlState.page = 1;
@@ -312,13 +329,29 @@ function applyJournalFilters() {
   let filtered = jnlState.author === 'all'
     ? [...all]
     : all.filter(e => (e.author || '') === jnlState.author);
+
+  if (jnlState.tag !== 'all') {
+    const libTagMap = new Map(getLibrary().map(b => [b.title.toLowerCase(), b.tags || []]));
+    filtered = filtered.filter(e =>
+      (libTagMap.get(e.title.toLowerCase()) || []).includes(jnlState.tag)
+    );
+  }
+
   if (jnlState.sort === 'rating') {
     filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0) || b.addedAt - a.addedAt);
   }
   document.querySelectorAll('.jnl-sort-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.sort === jnlState.sort));
-  document.querySelectorAll('.jnl-apill').forEach(p =>
+  document.querySelectorAll('.jnl-apill[data-author]').forEach(p =>
     p.classList.toggle('active', p.dataset.author === jnlState.author));
+  document.querySelectorAll('.jnl-tag-fpill').forEach(p => {
+    const active = p.dataset.tag === jnlState.tag;
+    p.classList.toggle('active', active);
+    const c = active ? tagColor(p.dataset.tag) : null;
+    p.style.background  = c ? c.bg    : '';
+    p.style.color       = c ? c.color : '';
+    p.style.borderColor = c ? c.border : '';
+  });
   renderJournalGrid(filtered, all);
 }
 
@@ -507,15 +540,45 @@ function renderJournalView() {
     </div>`;
 
   if (j.length) {
-    if (uniqueAuthors.length) {
-      html += `<div class="jnl-filter-bar">
-        <button class="jnl-apill active" data-author="all" onclick="filterJournalByAuthor(this.dataset.author)">All <span class="pill-count">${j.length}</span></button>
-        ${uniqueAuthors.map(a => {
-          const cnt = j.filter(e => e.author === a).length;
-          return `<button class="jnl-apill" data-author="${esc(a)}" onclick="filterJournalByAuthor(this.dataset.author)">${esc(a)} <span class="pill-count">${cnt}</span></button>`;
-        }).join('')}
-      </div>`;
-    }
+    // Build tag list from library entries that match journal books
+    const libTagMapForFilter = new Map(getLibrary().map(b => [b.title.toLowerCase(), b.tags || []]));
+    const journalTagsSet = new Set();
+    j.forEach(e => (libTagMapForFilter.get(e.title.toLowerCase()) || []).forEach(t => journalTagsSet.add(t)));
+    const journalTags = [...journalTagsSet];
+
+    const SHOW_N  = 6;
+    const hasExtra = uniqueAuthors.length > SHOW_N;
+    const extraCnt = uniqueAuthors.length - SHOW_N;
+
+    html += `<div class="jnl-filter-bar">
+      <div class="jnl-filter-section">
+        <span class="jnl-filter-label">Author:</span>
+        <div class="jnl-author-pills${_jnlAuthExpanded ? ' expanded' : ''}" id="jnl-author-pills">
+          <button class="jnl-apill" data-author="all" onclick="filterJournalByAuthor('all')">All <span class="pill-count">${j.length}</span></button>
+          ${uniqueAuthors.map((a, i) => {
+            const cnt  = j.filter(e => e.author === a).length;
+            const xtra = i >= SHOW_N ? ' jnl-pill-extra' : '';
+            return `<button class="jnl-apill${xtra}" data-author="${esc(a)}" onclick="filterJournalByAuthor('${esc(a).replace(/'/g,"\\'")}')">
+              ${esc(a)} <span class="pill-count">${cnt}</span></button>`;
+          }).join('')}
+          ${hasExtra ? `<button class="jnl-pill-toggle" id="jnl-auth-toggle" data-extra="${extraCnt}" onclick="toggleJnlAuthors()">
+            ${_jnlAuthExpanded ? '↑ Less' : `+${extraCnt} more`}
+          </button>` : ''}
+        </div>
+      </div>
+      ${journalTags.length ? `<div class="jnl-filter-section">
+        <span class="jnl-filter-label">Tags:</span>
+        <div class="jnl-tag-pills">
+          <button class="jnl-apill" onclick="filterJournalByTag('all')">All</button>
+          ${journalTags.map(t => {
+            const c     = tagColor(t);
+            const tSafe = esc(t).replace(/'/g, '&#39;');
+            return `<button class="jnl-apill jnl-tag-fpill" data-tag="${esc(t)}"
+              onclick="filterJournalByTag('${tSafe}')">${esc(t)}</button>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+    </div>`;
     html += `<div class="jnl-toolbar">
       <span class="jnl-count">${j.length} book${j.length !== 1 ? 's' : ''} logged</span>
       <div class="jnl-sort-group">
