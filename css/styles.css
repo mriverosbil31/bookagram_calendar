@@ -1124,6 +1124,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   color: var(--parchment);
   outline: none;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   transition: border-color 0.15s;
 }
 .jnl-input:focus        { border-color: rgba(255,255,255,0.32); }
@@ -1526,6 +1528,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .jnl-entry-hd:hover .jnl-entry-drag-handle { opacity: 0.8; }
 .jnl-entry-drag-handle:active { cursor: grabbing; }
 .jnl-entry.jnl-entry-dragging { opacity: 0.4; }
+@media (hover: none) { .jnl-entry-drag-handle { opacity: 0.55; } }
 .jnl-entry.jnl-entry-over {
   outline: 2px dashed var(--blood);
   outline-offset: -2px;
@@ -2367,6 +2370,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .lib-row--saga:hover .lib-row-drag-handle { opacity: 1; }
 .lib-row-drag-handle:active { cursor: grabbing; }
 .lib-row--saga.lib-row-dragging { opacity: 0.4; }
+@media (hover: none) { .lib-row-drag-handle { opacity: 0.55; } }
 .lib-row--saga.lib-row-over {
   outline: 2px dashed var(--blood);
   outline-offset: -2px;

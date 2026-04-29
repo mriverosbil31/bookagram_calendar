@@ -557,23 +557,37 @@ function initLibSagaBooksDrag() {
     let dragSrc = null;
     const getRows = () => [...rows.querySelectorAll('.lib-row--saga')];
 
+    function commitOrder() {
+      const lib = getLibrary();
+      getRows().forEach((r, i) => {
+        const book = lib.find(b => b.addedAt === parseInt(r.dataset.libId, 10));
+        if (book) book.sagaOrder = i + 1;
+      });
+      saveAndSyncLibrary(lib);
+      getRows().forEach((r, i) => {
+        const inp = r.querySelector('.lib-order-in');
+        if (inp) inp.value = i + 1;
+      });
+    }
+
     getRows().forEach(row => {
       const handle = row.querySelector('.lib-row-drag-handle');
-      if (handle) handle.addEventListener('mousedown', () => { row.draggable = true; });
+      if (!handle) return;
+
+      // ── Desktop mouse drag ──────────────────────────────────────────
+      handle.addEventListener('mousedown', () => { row.draggable = true; });
 
       row.addEventListener('dragstart', e => {
         dragSrc = row;
         row.classList.add('lib-row-dragging');
         e.dataTransfer.effectAllowed = 'move';
       });
-
       row.addEventListener('dragend', () => {
         row.draggable = false;
         row.classList.remove('lib-row-dragging');
         getRows().forEach(r => r.classList.remove('lib-row-over'));
         dragSrc = null;
       });
-
       row.addEventListener('dragover', e => {
         e.preventDefault();
         if (dragSrc && row !== dragSrc) {
@@ -581,28 +595,47 @@ function initLibSagaBooksDrag() {
           row.classList.add('lib-row-over');
         }
       });
-
       row.addEventListener('drop', e => {
         e.preventDefault();
         row.classList.remove('lib-row-over');
         if (!dragSrc || dragSrc === row) return;
-
         const current = getRows();
         if (current.indexOf(dragSrc) < current.indexOf(row)) row.after(dragSrc);
         else row.before(dragSrc);
+        commitOrder();
+      });
 
-        // Reassign sagaOrder (1, 2, 3…) based on new DOM order and persist
-        const lib = getLibrary();
-        getRows().forEach((r, i) => {
-          const book = lib.find(b => b.addedAt === parseInt(r.dataset.libId, 10));
-          if (book) book.sagaOrder = i + 1;
-        });
-        saveAndSyncLibrary(lib);
-        // Sync the visible order-number inputs without re-rendering
-        getRows().forEach((r, i) => {
-          const inp = r.querySelector('.lib-order-in');
-          if (inp) inp.value = i + 1;
-        });
+      // ── Mobile touch drag ───────────────────────────────────────────
+      handle.addEventListener('touchstart', e => {
+        e.preventDefault();
+        dragSrc = row;
+        row.classList.add('lib-row-dragging');
+      }, { passive: false });
+
+      handle.addEventListener('touchmove', e => {
+        if (!dragSrc) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.lib-row--saga');
+        getRows().forEach(r => r.classList.remove('lib-row-over'));
+        if (target && target !== dragSrc && rows.contains(target)) {
+          target.classList.add('lib-row-over');
+        }
+      }, { passive: false });
+
+      handle.addEventListener('touchend', e => {
+        if (!dragSrc) return;
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.lib-row--saga');
+        dragSrc.classList.remove('lib-row-dragging');
+        getRows().forEach(r => r.classList.remove('lib-row-over'));
+        if (target && target !== dragSrc && rows.contains(target)) {
+          const current = getRows();
+          if (current.indexOf(dragSrc) < current.indexOf(target)) target.after(dragSrc);
+          else target.before(dragSrc);
+          commitOrder();
+        }
+        dragSrc = null;
       });
     });
   });

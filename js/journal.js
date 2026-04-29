@@ -693,23 +693,31 @@ function initJnlSagaBooksDrag() {
     let dragSrc = null;
     const getEntries = () => [...books.querySelectorAll(':scope > .jnl-entry')];
 
+    function commitOrder() {
+      const newOrder = getEntries().map(r => parseInt(r.dataset.addedAt, 10));
+      const sagaBooks = getJnlSagaBooks();
+      sagaBooks[sagaName] = newOrder;
+      saveJnlSagaBooks(sagaBooks);
+    }
+
     getEntries().forEach(entry => {
       const handle = entry.querySelector('.jnl-entry-drag-handle');
-      if (handle) handle.addEventListener('mousedown', () => { entry.draggable = true; });
+      if (!handle) return;
+
+      // ── Desktop mouse drag ──────────────────────────────────────────
+      handle.addEventListener('mousedown', () => { entry.draggable = true; });
 
       entry.addEventListener('dragstart', e => {
         dragSrc = entry;
         entry.classList.add('jnl-entry-dragging');
         e.dataTransfer.effectAllowed = 'move';
       });
-
       entry.addEventListener('dragend', () => {
         entry.draggable = false;
         entry.classList.remove('jnl-entry-dragging');
         getEntries().forEach(r => r.classList.remove('jnl-entry-over'));
         dragSrc = null;
       });
-
       entry.addEventListener('dragover', e => {
         e.preventDefault();
         if (dragSrc && entry !== dragSrc) {
@@ -717,20 +725,47 @@ function initJnlSagaBooksDrag() {
           entry.classList.add('jnl-entry-over');
         }
       });
-
       entry.addEventListener('drop', e => {
         e.preventDefault();
         entry.classList.remove('jnl-entry-over');
         if (!dragSrc || dragSrc === entry) return;
-
         const current = getEntries();
         if (current.indexOf(dragSrc) < current.indexOf(entry)) entry.after(dragSrc);
         else entry.before(dragSrc);
+        commitOrder();
+      });
 
-        const newOrder = getEntries().map(r => parseInt(r.dataset.addedAt, 10));
-        const sagaBooks = getJnlSagaBooks();
-        sagaBooks[sagaName] = newOrder;
-        saveJnlSagaBooks(sagaBooks);
+      // ── Mobile touch drag ───────────────────────────────────────────
+      handle.addEventListener('touchstart', e => {
+        e.preventDefault();
+        dragSrc = entry;
+        entry.classList.add('jnl-entry-dragging');
+      }, { passive: false });
+
+      handle.addEventListener('touchmove', e => {
+        if (!dragSrc) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.jnl-entry');
+        getEntries().forEach(r => r.classList.remove('jnl-entry-over'));
+        if (target && target !== dragSrc && books.contains(target)) {
+          target.classList.add('jnl-entry-over');
+        }
+      }, { passive: false });
+
+      handle.addEventListener('touchend', e => {
+        if (!dragSrc) return;
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.jnl-entry');
+        dragSrc.classList.remove('jnl-entry-dragging');
+        getEntries().forEach(r => r.classList.remove('jnl-entry-over'));
+        if (target && target !== dragSrc && books.contains(target)) {
+          const current = getEntries();
+          if (current.indexOf(dragSrc) < current.indexOf(target)) target.after(dragSrc);
+          else target.before(dragSrc);
+          commitOrder();
+        }
+        dragSrc = null;
       });
     });
   });
