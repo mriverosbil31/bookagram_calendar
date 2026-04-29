@@ -94,6 +94,7 @@ function setView(view) {
   else if (view === 'journal')   { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }
   else if (view === 'library')   { libState = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' }; renderLibraryView(); }
   else if (view === 'todos')     renderTodosView();
+  else if (view === 'sprint')    renderSprintView();
 }
 
 function setMonth(i) {
@@ -120,6 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initTodos();
   const hash  = window.location.hash.slice(1);
-  const valid = ['calendar', 'books', 'journal', 'resources', 'library', 'todos'];
+  const valid = ['calendar', 'books', 'journal', 'resources', 'library', 'todos', 'sprint'];
   setView(valid.includes(hash) ? hash : 'calendar');
 });
