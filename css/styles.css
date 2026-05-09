@@ -3070,36 +3070,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   gap: 12px;
 }
 
-.crp-panel-hd {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.crp-settings-btn {
-  flex-shrink: 0;
-  background: none;
-  border: 1px solid #3a342e;
-  color: var(--ash);
-  border-radius: 6px;
-  padding: 5px 10px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-  font-family: 'DM Sans', sans-serif;
-}
-.crp-settings-btn:hover { color: var(--parchment); border-color: #6B3FA0; }
-
-.crp-settings-desc {
-  font-size: 12.5px;
-  color: var(--ash);
-  line-height: 1.6;
-}
-.crp-link { color: #8b5fcf; text-decoration: none; }
-.crp-link:hover { text-decoration: underline; }
-
 /* Prompt collapsible */
 .crp-prompt-details {
   border: 1px solid #2e2a24;
@@ -3138,46 +3108,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   border-radius: 8px;
   padding: 14px;
 }
-.crp-loading {
-  color: var(--ash);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-}
-.crp-dots { animation: crp-pulse 1.4s ease-in-out infinite; }
-@keyframes crp-pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
-
-.crp-no-key {
-  font-size: 13px;
-  color: var(--ash);
-  line-height: 1.7;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .crp-project-btn { width: fit-content; }
-
-.crp-stream {
-  font-size: 13px;
-  color: var(--parchment);
-  line-height: 1.75;
-}
-.crp-stream .crp-p  { margin: 0 0 8px; }
-.crp-stream .crp-h2 { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; margin: 14px 0 6px; color: var(--parchment); }
-.crp-stream .crp-h3 { font-size: 14px; font-weight: 600; margin: 12px 0 4px; color: #e0d8cc; }
-.crp-stream .crp-h4 { font-size: 13px; font-weight: 600; margin: 10px 0 3px; color: #c9c0b0; }
-.crp-stream .crp-li { padding: 1px 0 1px 4px; }
-.crp-stream strong  { color: #e8d8b8; }
-.crp-stream em      { color: #c9a96e; font-style: italic; }
-
-.crp-error {
-  font-size: 12.5px;
-  color: var(--blood-light);
-  line-height: 1.6;
-}
-.crp-error small { color: var(--ash); font-size: 11px; }
 
 .crp-footer { flex-wrap: wrap; gap: 8px; }
 
