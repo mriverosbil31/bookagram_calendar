@@ -469,6 +469,10 @@ function renderEntryRow(e, all, libDataMap, inSaga = false) {
     </div>
     <div class="jnl-entry-body">
       <div class="jnl-content-sections">
+        ${e.songs ? `<div class="jnl-section">
+          <span class="jnl-section-label jnl-sl-songs">Songs</span>
+          <p class="jnl-section-body">${esc(e.songs).replace(/\n/g, '<br>')}</p>
+        </div>` : ''}
         <div class="jnl-section">
           <span class="jnl-section-label">Raw Thoughts</span>
           <p class="jnl-section-body">${esc(e.thoughts).replace(/\n/g, '<br>')}</p>
@@ -480,10 +484,6 @@ function renderEntryRow(e, all, libDataMap, inSaga = false) {
         ${e.captions ? `<div class="jnl-section">
           <span class="jnl-section-label jnl-sl-captions">Captions</span>
           <p class="jnl-section-body">${esc(e.captions).replace(/\n/g, '<br>')}</p>
-        </div>` : ''}
-        ${e.songs ? `<div class="jnl-section">
-          <span class="jnl-section-label jnl-sl-songs">Songs</span>
-          <p class="jnl-section-body">${esc(e.songs).replace(/\n/g, '<br>')}</p>
         </div>` : ''}
       </div>
       <div class="jnl-entry-footer">
