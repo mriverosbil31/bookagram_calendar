@@ -1,3 +1,259 @@
+// ─── Custom (spontaneous) posts ───────────────────────────────────
+const CUSTOM_POSTS_KEY = 'thc_custom_posts';
+
+function getCustomPosts() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_POSTS_KEY)) || []; }
+  catch { return []; }
+}
+function saveCustomPosts(arr) { localStorage.setItem(CUSTOM_POSTS_KEY, JSON.stringify(arr)); }
+
+function showAddPostModal() {
+  const monthIdx = currentMonth;
+  const m = months[monthIdx];
+  const weekOptions = m.weeks.map((w, i) =>
+    `<option value="${i}">${esc(w.label)}</option>`
+  ).join('');
+  const dayOptions = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    .map(d => `<option value="${d}">${d}</option>`).join('');
+
+  document.getElementById('cal-add-post-ov')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'cal-add-post-ov';
+  ov.className = 'jnl-modal-overlay';
+  ov.innerHTML = `
+    <div class="jnl-modal jnl-edit-modal">
+      <div class="jnl-modal-hd">+ Add Spontaneous Post</div>
+      <div class="jnl-form" style="gap:10px">
+        <div>
+          <div class="jnl-label" style="margin-bottom:6px">Platform</div>
+          <div class="cal-platform-picker" id="cal-pl-picker">
+            <button type="button" class="cal-pl-btn active" data-pl="ig"    onclick="calPickPl('ig')">Instagram</button>
+            <button type="button" class="cal-pl-btn"        data-pl="tt"    onclick="calPickPl('tt')">TikTok</button>
+            <button type="button" class="cal-pl-btn"        data-pl="both"  onclick="calPickPl('both')">Both</button>
+            <button type="button" class="cal-pl-btn"        data-pl="story" onclick="calPickPl('story')">Story</button>
+          </div>
+          <input type="hidden" id="cal-pl-val" value="ig">
+        </div>
+        <div class="jnl-row">
+          <input id="cal-book-title"  type="text" class="jnl-input" placeholder="Book title (optional)" list="library-titles-list">
+          <input id="cal-book-author" type="text" class="jnl-input" placeholder="Author" list="global-authors-list">
+          <select id="cal-post-day" class="jnl-input" style="color-scheme:dark">${dayOptions}</select>
+        </div>
+        <select id="cal-post-week" class="jnl-input" style="color-scheme:dark">${weekOptions}</select>
+        <input id="cal-post-title" type="text" class="jnl-input" placeholder="Post title (e.g. Book of the week carousel) *">
+        <textarea id="cal-post-desc" class="jnl-input jnl-ta" rows="3"
+          placeholder="Caption idea or content description (optional)…"></textarea>
+        <div class="cal-add-journal-section">
+          <div class="cal-add-journal-hd">Also log to Reading Journal?</div>
+          <div class="jnl-rating-row" style="margin:6px 0 4px">
+            <span class="jnl-label">Rating:</span>
+            ${starPickerHtml('cal-post-picker','cal-post-rating-val')}
+            <span class="jnl-rating-hint" id="cal-post-picker-hint"></span>
+          </div>
+          <textarea id="cal-post-thoughts" class="jnl-input jnl-ta" rows="2"
+            placeholder="Quick thoughts — fill this in to also log the book in your journal…"></textarea>
+        </div>
+      </div>
+      <div class="jnl-modal-ft">
+        <button class="jnl-modal-close" onclick="document.getElementById('cal-add-post-ov').remove()">Cancel</button>
+        <button class="jnl-modal-save" onclick="saveCustomPost(${monthIdx})">Add post</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+}
+
+function calPickPl(pl) {
+  document.getElementById('cal-pl-val').value = pl;
+  document.querySelectorAll('#cal-pl-picker .cal-pl-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.pl === pl)
+  );
+}
+
+function saveCustomPost(monthIdx) {
+  const title   = document.getElementById('cal-post-title')?.value.trim();
+  const desc    = document.getElementById('cal-post-desc')?.value.trim() || '';
+  const pl      = document.getElementById('cal-pl-val')?.value || 'ig';
+  const day     = document.getElementById('cal-post-day')?.value || 'Mon';
+  const weekIdx = parseInt(document.getElementById('cal-post-week')?.value ?? 0);
+  const bookTitle  = document.getElementById('cal-book-title')?.value.trim() || '';
+  const bookAuthor = document.getElementById('cal-book-author')?.value.trim() || '';
+
+  const finalTitle = title || (bookTitle
+    ? `${bookTitle} — ${pl === 'ig' ? 'IG Carousel' : pl === 'tt' ? 'TikTok' : pl === 'story' ? 'Story' : 'Post'}`
+    : null);
+  if (!finalTitle) { document.getElementById('cal-post-title')?.focus(); showJnlToast('Post title is required'); return; }
+
+  const id = `custom-m${monthIdx}-${Date.now()}`;
+  const post = { id, monthIdx, weekIdx, day, pl, title: finalTitle, desc, addedAt: Date.now() };
+  const customs = getCustomPosts();
+  customs.push(post);
+  saveCustomPosts(customs);
+
+  if (bookTitle) {
+    const all = getAllBooks();
+    if (!all[id]) all[id] = [];
+    all[id].push({ title: bookTitle, author: bookAuthor });
+    saveAllBooks(all);
+  }
+
+  const thoughts = document.getElementById('cal-post-thoughts')?.value.trim() || '';
+  if (bookTitle && thoughts) {
+    const rating = parseFloat(document.getElementById('cal-post-rating-val')?.value) || 0;
+    const j = getJournal();
+    if (!j.some(e => e.title.toLowerCase() === bookTitle.toLowerCase())) {
+      j.unshift({ title: bookTitle, author: bookAuthor, rating,
+        dateRead: new Date().toISOString().split('T')[0], thoughts, addedAt: Date.now() });
+      saveAndSync(j);
+      showJnlToast('Post added + book logged to journal!');
+    } else {
+      showJnlToast('Post added! (Book was already in journal)');
+    }
+  } else {
+    showJnlToast('Post added to calendar!');
+  }
+
+  document.getElementById('cal-add-post-ov')?.remove();
+  renderCalendar();
+}
+
+function deleteCustomPost(id) {
+  if (!confirm('Delete this post?')) return;
+  saveCustomPosts(getCustomPosts().filter(p => p.id !== id));
+  const archived = getArchived();
+  archived.delete(id);
+  saveArchived(archived);
+  const all = getAllBooks();
+  delete all[id];
+  saveAllBooks(all);
+  renderCalendar();
+}
+
+function showEditCustomPost(id) {
+  const post = getCustomPosts().find(p => p.id === id);
+  if (!post) return;
+  const m = months[post.monthIdx] || months[currentMonth];
+  const weekOptions = m.weeks.map((w, wi) =>
+    `<option value="${wi}"${wi === post.weekIdx ? ' selected' : ''}>${esc(w.label)}</option>`
+  ).join('');
+  const dayOptions = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    .map(d => `<option value="${d}"${d === post.day ? ' selected' : ''}>${d}</option>`).join('');
+  const plLabels = { ig: 'Instagram', tt: 'TikTok', both: 'Both', story: 'Story' };
+
+  document.getElementById('cal-edit-post-ov')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'cal-edit-post-ov';
+  ov.className = 'jnl-modal-overlay';
+  ov.innerHTML = `
+    <div class="jnl-modal jnl-edit-modal">
+      <div class="jnl-modal-hd">Edit Post</div>
+      <div class="jnl-form" style="gap:10px">
+        <div>
+          <div class="jnl-label" style="margin-bottom:6px">Platform</div>
+          <div class="cal-platform-picker" id="cal-edit-pl-picker">
+            ${['ig','tt','both','story'].map(pl => `
+              <button type="button" class="cal-pl-btn${post.pl === pl ? ' active' : ''}"
+                data-pl="${pl}" onclick="calEditPickPl('${pl}')">${plLabels[pl]}</button>`).join('')}
+          </div>
+          <input type="hidden" id="cal-edit-pl-val" value="${post.pl}">
+        </div>
+        <div class="jnl-row">
+          <select id="cal-edit-day"  class="jnl-input" style="color-scheme:dark">${dayOptions}</select>
+          <select id="cal-edit-week" class="jnl-input" style="color-scheme:dark">${weekOptions}</select>
+        </div>
+        <input id="cal-edit-title" type="text" class="jnl-input" placeholder="Post title *" value="${esc(post.title)}">
+        <textarea id="cal-edit-desc" class="jnl-input jnl-ta" rows="3"
+          placeholder="Caption idea or content description…">${esc(post.desc)}</textarea>
+      </div>
+      <div class="jnl-modal-ft">
+        <button class="jnl-modal-close" onclick="document.getElementById('cal-edit-post-ov').remove()">Cancel</button>
+        <button class="jnl-modal-save" onclick="saveEditCustomPost('${id}')">Save changes</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+}
+
+function calEditPickPl(pl) {
+  document.getElementById('cal-edit-pl-val').value = pl;
+  document.querySelectorAll('#cal-edit-pl-picker .cal-pl-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.pl === pl)
+  );
+}
+
+function saveEditCustomPost(id) {
+  const title   = document.getElementById('cal-edit-title')?.value.trim();
+  const desc    = document.getElementById('cal-edit-desc')?.value.trim() || '';
+  const pl      = document.getElementById('cal-edit-pl-val')?.value || 'ig';
+  const day     = document.getElementById('cal-edit-day')?.value || 'Mon';
+  const weekIdx = parseInt(document.getElementById('cal-edit-week')?.value ?? 0);
+  if (!title) { document.getElementById('cal-edit-title')?.focus(); return; }
+  const customs = getCustomPosts();
+  const idx = customs.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  Object.assign(customs[idx], { day, pl, title, desc, weekIdx });
+  saveCustomPosts(customs);
+  document.getElementById('cal-edit-post-ov')?.remove();
+  renderCalendar();
+  showJnlToast('Post updated!');
+}
+
+// ─── Calendar Ask Claude ──────────────────────────────────────────
+function openCalWithClaude(postId) {
+  const books = getBooksForPost(postId);
+  if (!books.length) { showJnlToast('Add a book above to use Ask Claude'); return; }
+
+  let post = getCustomPosts().find(p => p.id === postId);
+  if (!post) {
+    const match = postId.match(/^m(\d+)-w(\d+)-p(\d+)$/);
+    if (match) {
+      const w = months[+match[1]]?.weeks[+match[2]];
+      post = w?.posts[+match[3]];
+    }
+    if (!post) {
+      const sm = postId.match(/^m(\d+)-w(\d+)-s(\d+)$/);
+      if (sm) {
+        const w = months[+sm[1]]?.weeks[+sm[2]];
+        post = w?.stories?.[+sm[3]];
+      }
+    }
+  }
+
+  const pl = post?.pl || 'ig';
+  const prompt = buildCalClaudePrompt(post?.title || '', post?.desc || '', books, pl);
+  const first  = books[0];
+  showClaudePanel(post?.title || 'Post content', prompt, {
+    bookTitle:  first.title,
+    bookAuthor: first.author || ''
+  });
+}
+
+function buildCalClaudePrompt(postTitle, postDesc, books, platform) {
+  const bookList = books.map(b =>
+    `"${b.title}"${b.author ? ` by ${b.author}` : ''}`
+  ).join('\n');
+  const plLabel = platform === 'ig'    ? 'Instagram carousel'
+               : platform === 'tt'    ? 'TikTok video'
+               : platform === 'story' ? 'Instagram Story'
+               :                        'Instagram & TikTok post';
+  return `You are helping The Husband's Corner — a Bookstagram & BookTok account focused on thriller, mystery and suspense.
+
+Post type: ${plLabel}
+${postTitle ? `Post concept: ${postTitle}` : ''}
+${postDesc  ? `Content idea: ${postDesc}` : ''}
+Books to feature:
+${bookList}
+
+Please give me:
+1. A punchy ${plLabel} caption with a strong hook, body, CTA, and 5 thriller-niche hashtags
+2. ${platform !== 'tt'
+    ? 'An Instagram carousel breakdown (5–7 slides with slide-by-slide text)'
+    : 'A TikTok script with hook, body text, and on-screen text suggestions'}
+3. Three alternative headline / hook options for the opening slide or first 3 seconds
+
+Voice: passionate, slightly obsessed — a husband who reads every thriller his wife is too scared to pick up alone.`;
+}
+
 // ─── Book-in-post CRUD ────────────────────────────────────────────
 function addBook(postId) {
   const titleInput  = document.getElementById('binput-'  + postId);
@@ -76,7 +332,7 @@ function plBadge(pl) {
 }
 
 // ─── Card builder ─────────────────────────────────────────────────
-function buildCard(item, id, isStory, isArchived) {
+function buildCard(item, id, isStory, isArchived, isCustom = false) {
   const title = item.title;
   const desc  = item.desc;
   const day   = isStory ? 'Story' : item.day;
@@ -86,10 +342,24 @@ function buildCard(item, id, isStory, isArchived) {
     `<span class="book-chip">${esc(b.title)}${b.author ? `<span class="chip-author"> — ${esc(b.author)}</span>` : ''}<button class="chip-x" onclick="removeBook('${id}',${i})" title="Remove">×</button></span>`
   ).join('');
 
-  return `<div class="post-card${isStory ? ' story-card' : ''}${isArchived ? ' is-archived' : ''}" data-id="${id}">
+  const customActions = isCustom ? `
+    <div class="card-custom-actions">
+      <button class="card-edit-btn" onclick="showEditCustomPost('${id}');event.stopPropagation()" title="Edit">✎</button>
+      <button class="card-del-btn"  onclick="deleteCustomPost('${id}');event.stopPropagation()"  title="Delete">×</button>
+    </div>` : '';
+
+  const claudeRow = books.length ? `
+    <div class="cal-claude-row">
+      <button class="claude-btn claude-btn--cal" onclick="openCalWithClaude('${id}')">
+        <span class="claude-icon">✦</span> Ask Claude
+      </button>
+    </div>` : '';
+
+  return `<div class="post-card${isStory ? ' story-card' : ''}${isArchived ? ' is-archived' : ''}${isCustom ? ' custom-card' : ''}" data-id="${id}">
     <div class="card-top-row">
       <div class="pday">${day}</div>
       ${plBadge(pl)}
+      ${customActions}
       <button class="check-btn${isArchived ? ' checked' : ''}" onclick="toggleArchived('${id}')" title="${isArchived ? 'Unmark as posted' : 'Mark as posted'}">
         <span class="check-icon">${isArchived ? '✓' : ''}</span>
       </button>
@@ -113,6 +383,7 @@ function buildCard(item, id, isStory, isArchived) {
         </div>
       </div>
     </div>
+    ${claudeRow}
   </div>`;
 }
 
@@ -131,6 +402,11 @@ function renderCalendar() {
         <div class="month-label">${m.theme}</div>
       </div>
       <div class="focus-badges">${m.focus.map(f => `<span class="fbadge">${f}</span>`).join('')}</div>
+    </div>
+    <div class="cal-actions-bar">
+      <button class="cal-add-post-btn" onclick="showAddPostModal()">
+        <span>+</span> Add Spontaneous Post
+      </button>
     </div>`;
 
   m.weeks.forEach((w, wi) => {
@@ -145,6 +421,13 @@ function renderCalendar() {
       const id = `m${currentMonth}-w${wi}-s${si}`;
       (archived.has(id) ? archCards : activeStories).push(buildCard(s, id, true, archived.has(id)));
     });
+
+    getCustomPosts()
+      .filter(p => p.monthIdx === currentMonth && p.weekIdx === wi)
+      .forEach(cp => {
+        const isArch = archived.has(cp.id);
+        (isArch ? archCards : activePosts).push(buildCard(cp, cp.id, cp.pl === 'story', isArch, true));
+      });
 
     if (!activePosts.length && !activeStories.length) return;
 

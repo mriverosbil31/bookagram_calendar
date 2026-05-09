@@ -254,14 +254,8 @@ function openSagaWithClaude(groupId) {
   if (!sagaName) return;
   const entries = getJournal().filter(e => e.sagaName === sagaName);
   if (!entries.length) return;
-  const prompt  = buildSagaClaudePrompt(sagaName, entries);
-  const doOpen  = () => window.open('https://claude.ai', '_blank', 'noopener');
-  const fallback = () => { showPromptModal(prompt); doOpen(); };
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(prompt)
-      .then(() => { showJnlToast('Series prompt copied! Paste it into Claude ↗'); doOpen(); })
-      .catch(fallback);
-  } else { fallback(); }
+  const prompt = buildSagaClaudePrompt(sagaName, entries);
+  showClaudePanel(`${sagaName} — Full Series`, prompt, { skipLog: true });
 }
 
 function buildClaudePrompt(entry) {
@@ -289,14 +283,8 @@ Voice: passionate, slightly obsessed — a husband who reads every thriller his 
 function openWithClaude(idx) {
   const entry = getJournal()[idx];
   if (!entry) return;
-  const prompt  = buildClaudePrompt(entry);
-  const doOpen  = () => window.open('https://claude.ai', '_blank', 'noopener');
-  const fallback = () => { showPromptModal(prompt); doOpen(); };
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(prompt)
-      .then(() => { showJnlToast('Prompt copied! Paste it into Claude ↗'); doOpen(); })
-      .catch(fallback);
-  } else { fallback(); }
+  const prompt = buildClaudePrompt(entry);
+  showClaudePanel(entry.title, prompt, { skipLog: true });
 }
 
 function showJnlToast(msg) {

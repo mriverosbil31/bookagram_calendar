@@ -3056,3 +3056,303 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .sp-stat-grid   { grid-template-columns: 1fr 1fr; }
   .sprint-hero-stats { font-size: 11px; gap: 5px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CLAUDE INLINE RESPONSE PANEL
+   ═══════════════════════════════════════════════════════════════════ */
+
+.crp-modal {
+  max-width: 700px;
+  max-height: 88vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.crp-panel-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.crp-settings-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid #3a342e;
+  color: var(--ash);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+}
+.crp-settings-btn:hover { color: var(--parchment); border-color: #6B3FA0; }
+
+.crp-settings-desc {
+  font-size: 12.5px;
+  color: var(--ash);
+  line-height: 1.6;
+}
+.crp-link { color: #8b5fcf; text-decoration: none; }
+.crp-link:hover { text-decoration: underline; }
+
+/* Prompt collapsible */
+.crp-prompt-details {
+  border: 1px solid #2e2a24;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.crp-prompt-summary {
+  padding: 7px 12px;
+  font-size: 11px;
+  color: var(--ash);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.03em;
+  background: rgba(255,255,255,0.03);
+  user-select: none;
+  list-style: none;
+}
+.crp-prompt-summary:hover { color: var(--parchment); }
+.crp-prompt-pre {
+  margin: 0;
+  padding: 12px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #8a8070;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'DM Sans', sans-serif;
+  border-top: 1px solid #2e2a24;
+}
+
+/* Response area */
+.crp-response-area {
+  min-height: 120px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #2e2a24;
+  border-radius: 8px;
+  padding: 14px;
+}
+.crp-loading {
+  color: var(--ash);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.crp-dots { animation: crp-pulse 1.4s ease-in-out infinite; }
+@keyframes crp-pulse { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+.crp-no-key {
+  font-size: 13px;
+  color: var(--ash);
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.crp-project-btn { width: fit-content; }
+
+.crp-stream {
+  font-size: 13px;
+  color: var(--parchment);
+  line-height: 1.75;
+}
+.crp-stream .crp-p  { margin: 0 0 8px; }
+.crp-stream .crp-h2 { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; margin: 14px 0 6px; color: var(--parchment); }
+.crp-stream .crp-h3 { font-size: 14px; font-weight: 600; margin: 12px 0 4px; color: #e0d8cc; }
+.crp-stream .crp-h4 { font-size: 13px; font-weight: 600; margin: 10px 0 3px; color: #c9c0b0; }
+.crp-stream .crp-li { padding: 1px 0 1px 4px; }
+.crp-stream strong  { color: #e8d8b8; }
+.crp-stream em      { color: #c9a96e; font-style: italic; }
+
+.crp-error {
+  font-size: 12.5px;
+  color: var(--blood-light);
+  line-height: 1.6;
+}
+.crp-error small { color: var(--ash); font-size: 11px; }
+
+.crp-footer { flex-wrap: wrap; gap: 8px; }
+
+/* Quick-log to journal section */
+.crp-log-section {
+  background: rgba(107,63,160,0.08);
+  border: 1px solid rgba(107,63,160,0.28);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crp-log-hd {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b5fcf;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.crp-log-fields {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.crp-log-input { flex: 1; min-width: 140px; }
+.crp-log-btn {
+  align-self: flex-start;
+  padding: 6px 14px;
+  background: rgba(107,63,160,0.18);
+  color: #b08be0;
+  border: 1px solid rgba(107,63,160,0.4);
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 2px;
+}
+.crp-log-btn:hover { background: rgba(107,63,160,0.32); color: #d4b8ff; }
+
+.crp-logged {
+  font-size: 12px;
+  color: #8b5fcf;
+  padding: 4px 0;
+}
+.crp-link-btn {
+  background: none;
+  border: none;
+  color: #8b5fcf;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: underline;
+  padding: 0;
+}
+.crp-link-btn:hover { color: #b08be0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CALENDAR: ADD SPONTANEOUS POST
+   ═══════════════════════════════════════════════════════════════════ */
+
+.cal-actions-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 14px;
+}
+.cal-add-post-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #1a5c4a, #2a7a60);
+  color: #b8f0dc;
+  border: 1px solid #2a7a60;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cal-add-post-btn:hover {
+  background: linear-gradient(135deg, #205c4a, #348a6f);
+  box-shadow: 0 2px 12px rgba(26,92,74,0.35);
+}
+
+/* Platform picker inside modal */
+.cal-platform-picker {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cal-pl-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid #3a342e;
+  background: rgba(255,255,255,0.04);
+  color: var(--ash);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.13s;
+}
+.cal-pl-btn.active[data-pl="ig"]    { background: var(--ig-purple-bg);   border-color: var(--ig-purple);   color: var(--ig-purple); }
+.cal-pl-btn.active[data-pl="tt"]    { background: var(--tt-red-bg);       border-color: var(--tt-red);       color: var(--tt-red); }
+.cal-pl-btn.active[data-pl="both"]  { background: var(--both-teal-bg);    border-color: var(--both-teal);    color: var(--both-teal); }
+.cal-pl-btn.active[data-pl="story"] { background: var(--story-amber-bg);  border-color: var(--story-amber);  color: var(--story-amber); }
+
+/* "Also log to journal" section in Add Post modal */
+.cal-add-journal-section {
+  background: rgba(107,63,160,0.07);
+  border: 1px solid rgba(107,63,160,0.22);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cal-add-journal-hd {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b5fcf;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Custom card edit/delete actions */
+.card-custom-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+.card-edit-btn,
+.card-del-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #3a342e;
+  border-radius: 5px;
+  background: none;
+  color: var(--ash);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.13s;
+  padding: 0;
+}
+.card-edit-btn:hover { color: var(--parchment); border-color: var(--ash); }
+.card-del-btn:hover  { color: var(--blood-light); border-color: var(--blood); }
+
+/* Custom card indicator */
+.post-card.custom-card { border-left: 3px solid var(--both-teal); }
+
+/* Ask Claude row on calendar cards */
+.cal-claude-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--fog);
+}
+.claude-btn--cal {
+  font-size: 11px;
+  padding: 5px 12px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .crp-modal       { max-height: 95vh; }
+  .crp-log-fields  { flex-direction: column; }
+  .cal-platform-picker { gap: 4px; }
+  .cal-add-post-btn { font-size: 12px; padding: 7px 14px; }
+}
