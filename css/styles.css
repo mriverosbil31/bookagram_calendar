@@ -3287,3 +3287,84 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .cal-platform-picker { gap: 4px; }
   .cal-add-post-btn { font-size: 12px; padding: 7px 14px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   JOURNAL: CONTENT SECTIONS (Raw Thoughts / Script / Captions / Songs)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.jnl-content-sections {
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.jnl-section {
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.jnl-section:first-child { border-top: none; padding-top: 0; }
+
+.jnl-section-label {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 2px 7px;
+  margin-bottom: 8px;
+  font-family: 'DM Sans', sans-serif;
+}
+.jnl-sl-script   { color: #4db8a4; border-color: rgba(77,184,164,0.35);  background: rgba(77,184,164,0.08); }
+.jnl-sl-captions { color: #9b7fe8; border-color: rgba(155,127,232,0.35); background: rgba(155,127,232,0.08); }
+.jnl-sl-songs    { color: #c9a96e; border-color: rgba(201,169,110,0.35); background: rgba(201,169,110,0.08); }
+
+.jnl-section-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--ash);
+  word-break: break-word;
+}
+
+/* Edit modal: section field labels */
+.jnl-section-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.jnl-section-ta-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash);
+  font-family: 'DM Sans', sans-serif;
+}
+.jnl-sfl-script   { color: #4db8a4; }
+.jnl-sfl-captions { color: #9b7fe8; }
+.jnl-sfl-songs    { color: #c9a96e; }
+
+/* Edit modal: needs scroll room for 4 textareas */
+.jnl-edit-modal {
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+/* ── Claude panel: auto-fill section ─────────────────────────────── */
+.crp-autofill-section {
+  background: rgba(77,184,164,0.05);
+  border: 1px solid rgba(77,184,164,0.22);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.crp-af-hd   { color: #4db8a4 !important; }
+.crp-af-btn  { background: rgba(77,184,164,0.14) !important; color: #4db8a4 !important; border-color: rgba(77,184,164,0.35) !important; }
+.crp-af-btn:hover { background: rgba(77,184,164,0.26) !important; color: #7dd4c6 !important; }
+.crp-paste-ta { min-height: 110px; resize: vertical; }

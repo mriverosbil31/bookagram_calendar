@@ -150,7 +150,22 @@ function openEditModal(idx) {
           <option value="ebook">eBook</option>
         </select>
       </div>
-      <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="6" placeholder="Raw thoughts…"></textarea>
+      <div class="jnl-section-field">
+        <label class="jnl-section-ta-label">Raw Thoughts</label>
+        <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="4" placeholder="Your raw thoughts…"></textarea>
+      </div>
+      <div class="jnl-section-field">
+        <label class="jnl-section-ta-label jnl-sfl-script">Script</label>
+        <textarea id="edit-script" class="jnl-input jnl-ta" rows="4" placeholder="TikTok / Reel voiceover script…"></textarea>
+      </div>
+      <div class="jnl-section-field">
+        <label class="jnl-section-ta-label jnl-sfl-captions">Captions</label>
+        <textarea id="edit-captions" class="jnl-input jnl-ta" rows="4" placeholder="Instagram + TikTok captions…"></textarea>
+      </div>
+      <div class="jnl-section-field">
+        <label class="jnl-section-ta-label jnl-sfl-songs">Songs</label>
+        <textarea id="edit-songs" class="jnl-input jnl-ta" rows="3" placeholder="Song / audio suggestions…"></textarea>
+      </div>
     </div>
     <div class="jnl-modal-ft">
       <button class="jnl-modal-close" onclick="closeEditModal()">Cancel</button>
@@ -163,7 +178,10 @@ function openEditModal(idx) {
   document.getElementById('edit-title').value      = entry.title;
   document.getElementById('edit-author').value     = entry.author   || '';
   document.getElementById('edit-date').value       = entry.dateRead || '';
-  document.getElementById('edit-thoughts').value   = entry.thoughts;
+  document.getElementById('edit-thoughts').value  = entry.thoughts  || '';
+  document.getElementById('edit-script').value    = entry.script   || '';
+  document.getElementById('edit-captions').value  = entry.captions || '';
+  document.getElementById('edit-songs').value     = entry.songs    || '';
   document.getElementById('edit-rating-val').value = entry.rating   || 0;
   document.getElementById('edit-is-saga').checked  = !!entry.sagaName;
   const sn = document.getElementById('edit-saga-name');
@@ -191,13 +209,15 @@ function saveEditModal() {
   const rating   = parseFloat(document.getElementById('edit-rating-val').value) || 0;
   const dateRead = document.getElementById('edit-date').value;
   const thoughts = document.getElementById('edit-thoughts').value.trim();
+  const script   = document.getElementById('edit-script')?.value.trim()   || '';
+  const captions = document.getElementById('edit-captions')?.value.trim() || '';
+  const songs    = document.getElementById('edit-songs')?.value.trim()    || '';
   const isSaga   = document.getElementById('edit-is-saga').checked;
   const sagaName = isSaga ? (document.getElementById('edit-saga-name').value.trim() || null) : null;
-  if (!title)    { document.getElementById('edit-title').focus(); return; }
-  if (!thoughts) { document.getElementById('edit-thoughts').focus(); return; }
+  if (!title) { document.getElementById('edit-title').focus(); return; }
   const j = getJournal();
   if (!j[_jnlEditIdx]) return;
-  Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, sagaName });
+  Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, script, captions, songs, sagaName });
   saveAndSync(j);
 
   const ownsBook  = document.getElementById('edit-owns-book')?.checked;
@@ -271,11 +291,16 @@ My rating: ${stars} (${r}/5)${entry.dateRead ? `\nDate read: ${entry.dateRead}` 
 My raw thoughts:
 ${entry.thoughts}
 
-Please give me:
-1. A polished one-paragraph review for my records (authentic, opinionated, no spoilers)
-2. An Instagram carousel caption (strong hook · body · CTA · 5 hashtags, thriller-niche tone)
-3. A TikTok hook for the first 5 seconds (punchy, scroll-stopping, makes people stop)
-4. Three content angle ideas tailored to The Husband's Corner (dark, literary, husband-perspective)
+Please give me exactly three sections using these exact labels:
+
+SCRIPT:
+A TikTok / Reel voiceover — punchy hook for the first 3 seconds, then 30–45 seconds of content, then a CTA. No filler. Conversational but gripping.
+
+CAPTIONS:
+An Instagram carousel caption (strong hook · 3–4 body sentences · CTA · line break · 5–8 thriller hashtags). Then on a new line: a short TikTok caption (2 lines max + 3 hashtags).
+
+SONGS:
+Three song / audio suggestions. For each: song name, artist, and one sentence on why the vibe fits this book.
 
 Voice: passionate, slightly obsessed — a husband who reads every thriller his wife is too scared to pick up alone.`;
 }
@@ -284,7 +309,7 @@ function openWithClaude(idx) {
   const entry = getJournal()[idx];
   if (!entry) return;
   const prompt = buildClaudePrompt(entry);
-  showClaudePanel(entry.title, prompt, { skipLog: true });
+  showClaudePanel(entry.title, prompt, { skipLog: true, entryIdx: idx });
 }
 
 function showJnlToast(msg) {
@@ -443,7 +468,24 @@ function renderEntryRow(e, all, libDataMap, inSaga = false) {
       <span class="jnl-caret">›</span>
     </div>
     <div class="jnl-entry-body">
-      <p class="jnl-thoughts">${esc(e.thoughts).replace(/\n/g, '<br>')}</p>
+      <div class="jnl-content-sections">
+        <div class="jnl-section">
+          <span class="jnl-section-label">Raw Thoughts</span>
+          <p class="jnl-section-body">${esc(e.thoughts).replace(/\n/g, '<br>')}</p>
+        </div>
+        ${e.script ? `<div class="jnl-section">
+          <span class="jnl-section-label jnl-sl-script">Script</span>
+          <p class="jnl-section-body">${esc(e.script).replace(/\n/g, '<br>')}</p>
+        </div>` : ''}
+        ${e.captions ? `<div class="jnl-section">
+          <span class="jnl-section-label jnl-sl-captions">Captions</span>
+          <p class="jnl-section-body">${esc(e.captions).replace(/\n/g, '<br>')}</p>
+        </div>` : ''}
+        ${e.songs ? `<div class="jnl-section">
+          <span class="jnl-section-label jnl-sl-songs">Songs</span>
+          <p class="jnl-section-body">${esc(e.songs).replace(/\n/g, '<br>')}</p>
+        </div>` : ''}
+      </div>
       <div class="jnl-entry-footer">
         <button class="claude-btn" onclick="openWithClaude(${idx})">
           <span class="claude-icon">✦</span> Ask Claude

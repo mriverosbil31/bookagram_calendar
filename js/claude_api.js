@@ -44,8 +44,9 @@ function crpLogToJournal() {
 // ── Main Claude panel ─────────────────────────────────────────────
 function showClaudePanel(title, prompt, opts = {}) {
   _cprompt = prompt;
-  const { bookTitle = '', bookAuthor = '', skipLog = false } = opts;
-  const showLog = !skipLog && !!bookTitle;
+  const { bookTitle = '', bookAuthor = '', skipLog = false, entryIdx } = opts;
+  const showLog      = !skipLog && !!bookTitle;
+  const showAutoFill = entryIdx !== undefined;
 
   document.getElementById('claude-panel-ov')?.remove();
   const ov = document.createElement('div');
@@ -69,6 +70,14 @@ function showClaudePanel(title, prompt, opts = {}) {
       <button class="crp-log-btn" onclick="crpLogToJournal()">Log to Journal</button>
     </div>` : '';
 
+  const autoFillHtml = showAutoFill ? `
+    <div class="crp-autofill-section" id="crp-autofill-section">
+      <div class="crp-log-hd crp-af-hd">↓ Paste Claude's response to auto-fill Script, Captions &amp; Songs</div>
+      <textarea id="crp-paste-area" class="jnl-input jnl-ta crp-paste-ta" rows="7"
+        placeholder="Paste Claude's full response here — it detects SCRIPT: / CAPTIONS: / SONGS: sections and fills them in automatically."></textarea>
+      <button class="crp-log-btn crp-af-btn" onclick="crpAutoFill(${entryIdx})">Auto-fill entry fields</button>
+    </div>` : '';
+
   ov.innerHTML = `
     <div class="jnl-modal crp-modal">
       <div class="jnl-modal-hd"><span class="claude-icon">✦</span> ${esc(title)}</div>
@@ -83,6 +92,7 @@ function showClaudePanel(title, prompt, opts = {}) {
           <span class="claude-icon">✦</span> Open Claude project →
         </a>
       </div>
+      ${autoFillHtml}
       <div class="jnl-modal-ft crp-footer">
         <button class="jnl-modal-close" onclick="document.getElementById('claude-panel-ov').remove()">Close</button>
         <button class="jnl-modal-save"  onclick="copyCrpPrompt()">Copy prompt</button>
@@ -91,4 +101,43 @@ function showClaudePanel(title, prompt, opts = {}) {
 
   document.body.appendChild(ov);
   ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+}
+
+// ── Auto-fill journal entry from pasted Claude response ───────────
+function crpAutoFill(entryIdx) {
+  const raw = document.getElementById('crp-paste-area')?.value.trim();
+  if (!raw) { showJnlToast('Paste Claude\'s response first'); return; }
+  const sections = parseSections(raw);
+  if (!sections.script && !sections.captions && !sections.songs) {
+    showJnlToast('Could not find SCRIPT / CAPTIONS / SONGS — check the format');
+    return;
+  }
+  const j = getJournal();
+  if (!j[entryIdx]) { showJnlToast('Entry not found'); return; }
+  if (sections.script)   j[entryIdx].script   = sections.script;
+  if (sections.captions) j[entryIdx].captions = sections.captions;
+  if (sections.songs)    j[entryIdx].songs    = sections.songs;
+  saveAndSync(j);
+  const sec = document.getElementById('crp-autofill-section');
+  if (sec) sec.innerHTML = `<div class="crp-logged">✓ Script, Captions &amp; Songs saved — <button class="crp-link-btn" onclick="document.getElementById('claude-panel-ov')?.remove();setView('journal')">View entry →</button></div>`;
+  showJnlToast('Entry fields updated!');
+}
+
+function parseSections(raw) {
+  const clean = raw.replace(/\*\*/g, '').replace(/^#{1,4}\s*/gm, '');
+  const labels = ['SCRIPT', 'CAPTIONS', 'SONGS'];
+  const result = {};
+  labels.forEach((label, i) => {
+    const re    = new RegExp(`(?:^|\\n)${label}:\\s*`, 'i');
+    const match = clean.match(re);
+    if (!match) return;
+    const start = match.index + match[0].length;
+    let end = clean.length;
+    for (let j = i + 1; j < labels.length; j++) {
+      const nm = clean.match(new RegExp(`(?:^|\\n)${labels[j]}:\\s*`, 'i'));
+      if (nm && nm.index > start) { end = nm.index; break; }
+    }
+    result[label.toLowerCase()] = clean.slice(start, end).trim();
+  });
+  return result;
 }
