@@ -672,7 +672,7 @@ function renderJournalView() {
 
   if (j.length) {
     html += `<div class="jnl-search-bar">
-      <input type="search" id="jnl-search" class="jnl-input jnl-search-input"
+      <input type="search" id="jnl-search" class="jnl-search-input"
         placeholder="Search by title or author…"
         value="${esc(jnlState.search)}"
         oninput="searchJournal(this.value)">
