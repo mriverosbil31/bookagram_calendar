@@ -1,7 +1,7 @@
 // ─── Reading Journal ──────────────────────────────────────────────
 const JOURNAL_KEY        = 'thc_journal';
 const JNL_SAGA_BOOKS_KEY = 'thc_jnl_saga_books';
-let jnlState = { sort: 'date', author: 'all', tag: 'all', page: 1 };
+let jnlState = { sort: 'date', author: 'all', tag: 'all', page: 1, search: '' };
 let _jnlEditIdx = -1;
 let _jnlAuthExpanded = false;
 
@@ -151,6 +151,10 @@ function openEditModal(idx) {
         </select>
       </div>
       <div class="jnl-section-field">
+        <label class="jnl-section-ta-label jnl-sfl-songs">Songs</label>
+        <textarea id="edit-songs" class="jnl-input jnl-ta" rows="3" placeholder="Song / audio suggestions…"></textarea>
+      </div>
+      <div class="jnl-section-field">
         <label class="jnl-section-ta-label">Raw Thoughts</label>
         <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="4" placeholder="Your raw thoughts…"></textarea>
       </div>
@@ -161,10 +165,6 @@ function openEditModal(idx) {
       <div class="jnl-section-field">
         <label class="jnl-section-ta-label jnl-sfl-captions">Captions</label>
         <textarea id="edit-captions" class="jnl-input jnl-ta" rows="4" placeholder="Instagram + TikTok captions…"></textarea>
-      </div>
-      <div class="jnl-section-field">
-        <label class="jnl-section-ta-label jnl-sfl-songs">Songs</label>
-        <textarea id="edit-songs" class="jnl-input jnl-ta" rows="3" placeholder="Song / audio suggestions…"></textarea>
       </div>
     </div>
     <div class="jnl-modal-ft">
@@ -362,6 +362,12 @@ function jnlFormatDate(d) {
 }
 
 // ── Filter / sort ─────────────────────────────────────────────────
+function searchJournal(q) {
+  jnlState.search = q.trim().toLowerCase();
+  jnlState.page   = 1;
+  applyJournalFilters();
+}
+
 function filterJournalByAuthor(author) {
   jnlState.author = author;
   jnlState.page   = 1;
@@ -400,6 +406,14 @@ function applyJournalFilters() {
     const libTagMap = new Map(getLibrary().map(b => [b.title.toLowerCase(), b.tags || []]));
     filtered = filtered.filter(e =>
       (libTagMap.get(e.title.toLowerCase()) || []).includes(jnlState.tag)
+    );
+  }
+
+  if (jnlState.search) {
+    const q = jnlState.search;
+    filtered = filtered.filter(e =>
+      (e.title  || '').toLowerCase().includes(q) ||
+      (e.author || '').toLowerCase().includes(q)
     );
   }
 
@@ -599,6 +613,7 @@ function renderJournalView() {
   jnlState.author = 'all';
   jnlState.tag    = 'all';
   jnlState.page   = 1;
+  jnlState.search = '';
   _jnlAuthExpanded = false;
 
   const j = getJournal();
@@ -656,6 +671,13 @@ function renderJournalView() {
     </div>`;
 
   if (j.length) {
+    html += `<div class="jnl-search-bar">
+      <input type="search" id="jnl-search" class="jnl-input jnl-search-input"
+        placeholder="Search by title or author…"
+        value="${esc(jnlState.search)}"
+        oninput="searchJournal(this.value)">
+    </div>`;
+
     // Build tag list from library entries that match journal books
     const libTagMapForFilter = new Map(getLibrary().map(b => [b.title.toLowerCase(), b.tags || []]));
     const journalTagsSet = new Set();
