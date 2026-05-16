@@ -155,6 +155,10 @@ function openEditModal(idx) {
         <textarea id="edit-songs" class="jnl-input jnl-ta" rows="3" placeholder="Song / audio suggestions…"></textarea>
       </div>
       <div class="jnl-section-field">
+        <label class="jnl-section-ta-label jnl-sfl-goodreads">Goodreads Review</label>
+        <textarea id="edit-goodreads" class="jnl-input jnl-ta" rows="4" placeholder="Your Goodreads review…"></textarea>
+      </div>
+      <div class="jnl-section-field">
         <label class="jnl-section-ta-label">Raw Thoughts</label>
         <textarea id="edit-thoughts" class="jnl-input jnl-ta" rows="4" placeholder="Your raw thoughts…"></textarea>
       </div>
@@ -192,6 +196,7 @@ function openEditModal(idx) {
   document.getElementById('edit-caption-tt').value = entry.captionTT || '';
   document.getElementById('edit-hashtags').value   = entry.hashtags  || '';
   document.getElementById('edit-songs').value      = entry.songs     || '';
+  document.getElementById('edit-goodreads').value = entry.goodreads || '';
   document.getElementById('edit-rating-val').value = entry.rating   || 0;
   document.getElementById('edit-is-saga').checked  = !!entry.sagaName;
   const sn = document.getElementById('edit-saga-name');
@@ -223,13 +228,14 @@ function saveEditModal() {
   const captionIG = document.getElementById('edit-caption-ig')?.value.trim() || '';
   const captionTT = document.getElementById('edit-caption-tt')?.value.trim() || '';
   const hashtags  = document.getElementById('edit-hashtags')?.value.trim()   || '';
-  const songs     = document.getElementById('edit-songs')?.value.trim()      || '';
+  const songs      = document.getElementById('edit-songs')?.value.trim()      || '';
+  const goodreads  = document.getElementById('edit-goodreads')?.value.trim()  || '';
   const isSaga   = document.getElementById('edit-is-saga').checked;
   const sagaName = isSaga ? (document.getElementById('edit-saga-name').value.trim() || null) : null;
   if (!title) { document.getElementById('edit-title').focus(); return; }
   const j = getJournal();
   if (!j[_jnlEditIdx]) return;
-  Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, script, captionIG, captionTT, hashtags, songs, sagaName });
+  Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, script, captionIG, captionTT, hashtags, songs, goodreads, sagaName });
   saveAndSync(j);
 
   const ownsBook  = document.getElementById('edit-owns-book')?.checked;
@@ -323,6 +329,9 @@ HASHTAGS:
 SONGS:
 Three song / audio suggestions. For each: song name, artist, and one sentence on why the vibe fits this book.
 
+GOODREADS:
+A Goodreads-style review: 2–3 short paragraphs. First: what the book is (no spoilers). Second: your honest reaction with one or two specific moments that stood out. Third: who you'd recommend it to and why. Close with the star rating. Around 150–200 words, personal and direct.
+
 Voice: passionate, slightly obsessed — a husband who reads every thriller his wife is too scared to pick up alone.`;
 }
 
@@ -356,15 +365,18 @@ function _jemParseScript(text) {
   const segments = [];
   let current = null;
   for (const line of text.split('\n')) {
-    const m = line.match(/^\[(\d+:\d+)\s*[-–]\s*(\d+:\d+)\]\s*([^:]+):\s*(.*)/);
-    if (m) {
+    // Handles: [0:00-0:04] HOOK: text  OR  0:00 – 0:04 – Hook: text  OR  0:00 – 0:04 – Hook (text on next line)
+    const m = line.match(/^\[?(\d+:\d+)\s*[-–]\s*(\d+:\d+)\]?\s*(?:[-–:]\s*)?([^:\n]+?)(?::\s*(.*)|$)/);
+    if (m && m[1] && m[2] && m[3] && m[3].trim().length > 0) {
       if (current) segments.push(current);
-      current = { start: m[1], end: m[2], section: m[3].trim(), text: m[4].trim() };
+      current = { start: m[1].trim(), end: m[2].trim(), section: m[3].trim(), text: (m[4] || '').trim() };
     } else if (current) {
       current.text += (current.text ? '\n' : '') + line;
     }
   }
   if (current) segments.push(current);
+  // Trim trailing empty lines from each segment text
+  segments.forEach(s => { s.text = s.text.trim(); });
   return segments;
 }
 
@@ -413,12 +425,13 @@ function jemCopyScript(segIdx) {
 
 function jemCopy(field) {
   const texts = {
-    ig:       [_jemEntry?.captionIG || '', 'Instagram caption copied!'],
-    tt:       [_jemEntry?.captionTT || '', 'TikTok caption copied!'],
-    hashtags: [_jemEntry?.hashtags  || '', 'Hashtags copied!'],
-    songs:    [_jemEntry?.songs     || '', 'Songs copied!'],
-    captions: [_jemEntry?.captions  || '', 'Captions copied!'],
-    thoughts: [_jemEntry?.thoughts  || '', 'Copied!'],
+    ig:        [_jemEntry?.captionIG  || '', 'Instagram caption copied!'],
+    tt:        [_jemEntry?.captionTT  || '', 'TikTok caption copied!'],
+    hashtags:  [_jemEntry?.hashtags   || '', 'Hashtags copied!'],
+    songs:     [_jemEntry?.songs      || '', 'Songs copied!'],
+    goodreads: [_jemEntry?.goodreads  || '', 'Goodreads review copied!'],
+    captions:  [_jemEntry?.captions   || '', 'Captions copied!'],
+    thoughts:  [_jemEntry?.thoughts   || '', 'Copied!'],
   };
   const [text, msg] = texts[field] || ['', 'Copied!'];
   _crpCopy(text, msg);
@@ -444,7 +457,8 @@ function openEntryModal(idx) {
 
   const hasScript   = !!(entry.script);
   const hasCaptions = !!(entry.captionIG || entry.captionTT || entry.hashtags || entry.captions);
-  const hasSongs    = !!(entry.songs);
+  const hasSongs     = !!(entry.songs);
+  const hasGoodreads = !!(entry.goodreads);
 
   // Script panel
   const scriptPanel = hasScript
@@ -498,6 +512,17 @@ function openEntryModal(idx) {
       </div>`
     : `<p class="jem-empty-note">No song suggestions yet — hit Ask Claude to generate them.</p>`;
 
+  // Goodreads panel
+  const goodreadsPanel = hasGoodreads
+    ? `<div class="jem-field">
+        <div class="jem-field-header">
+          <span class="jem-field-label jem-fl-goodreads">Goodreads Review</span>
+          <button class="jem-copy-btn" onclick="jemCopy('goodreads')">Copy</button>
+        </div>
+        <div class="jem-field-text">${esc(entry.goodreads).replace(/\n/g,'<br>')}</div>
+      </div>`
+    : `<p class="jem-empty-note">No Goodreads review yet — hit Ask Claude to generate one.</p>`;
+
   const ov = document.createElement('div');
   ov.id = 'jem-ov';
   ov.className = 'jem-overlay';
@@ -510,10 +535,11 @@ function openEntryModal(idx) {
       <button class="jem-close" onclick="document.getElementById('jem-ov').remove()">×</button>
     </div>
     <div class="jem-tabs">
-      <button class="jem-tab active" data-tab="overview"  onclick="switchJemTab('overview')">Overview</button>
-      <button class="jem-tab"        data-tab="script"    onclick="switchJemTab('script')">Script${hasScript ? dot : ''}</button>
-      <button class="jem-tab"        data-tab="captions"  onclick="switchJemTab('captions')">Captions${hasCaptions ? dot : ''}</button>
-      <button class="jem-tab"        data-tab="songs"     onclick="switchJemTab('songs')">Songs${hasSongs ? dot : ''}</button>
+      <button class="jem-tab active" data-tab="overview"   onclick="switchJemTab('overview')">Overview</button>
+      <button class="jem-tab"        data-tab="script"     onclick="switchJemTab('script')">Script${hasScript ? dot : ''}</button>
+      <button class="jem-tab"        data-tab="captions"   onclick="switchJemTab('captions')">Captions${hasCaptions ? dot : ''}</button>
+      <button class="jem-tab"        data-tab="songs"      onclick="switchJemTab('songs')">Songs${hasSongs ? dot : ''}</button>
+      <button class="jem-tab"        data-tab="goodreads"  onclick="switchJemTab('goodreads')">Goodreads${hasGoodreads ? dot : ''}</button>
     </div>
     <div class="jem-content">
       <div class="jem-panel active" data-panel="overview">
@@ -530,6 +556,7 @@ function openEntryModal(idx) {
       <div class="jem-panel" data-panel="script">${scriptPanel}</div>
       <div class="jem-panel" data-panel="captions">${captionsPanel}</div>
       <div class="jem-panel" data-panel="songs">${songsPanel}</div>
+      <div class="jem-panel" data-panel="goodreads">${goodreadsPanel}</div>
     </div>
     <div class="jem-footer">
       <button class="jem-edit-btn" onclick="document.getElementById('jem-ov').remove();openEditModal(${idx})">✎ Edit</button>

@@ -74,7 +74,7 @@ function showClaudePanel(title, prompt, opts = {}) {
     <div class="crp-autofill-section" id="crp-autofill-section">
       <div class="crp-log-hd crp-af-hd">↓ Paste Claude's response to auto-fill all fields</div>
       <textarea id="crp-paste-area" class="jnl-input jnl-ta crp-paste-ta" rows="7"
-        placeholder="Paste Claude's full response here — it detects SCRIPT: / CAPTIONS_IG: / CAPTIONS_TT: / HASHTAGS: / SONGS: sections and fills them in automatically."></textarea>
+        placeholder="Paste Claude's full response here — it detects SCRIPT: / CAPTIONS_IG: / CAPTIONS_TT: / HASHTAGS: / SONGS: / GOODREADS: sections and fills them in automatically."></textarea>
       <button class="crp-log-btn crp-af-btn" onclick="crpAutoFill(${entryIdx})">Auto-fill entry fields</button>
     </div>` : '';
 
@@ -108,8 +108,8 @@ function crpAutoFill(entryIdx) {
   const raw = document.getElementById('crp-paste-area')?.value.trim();
   if (!raw) { showJnlToast('Paste Claude\'s response first'); return; }
   const sections = parseSections(raw);
-  if (!sections.script && !sections.captionIG && !sections.captionTT && !sections.hashtags && !sections.songs && !sections.captions) {
-    showJnlToast('Could not find SCRIPT / CAPTIONS_IG / CAPTIONS_TT / SONGS — check the format');
+  if (!sections.script && !sections.captionIG && !sections.captionTT && !sections.hashtags && !sections.songs && !sections.goodreads && !sections.captions) {
+    showJnlToast('Could not find SCRIPT / CAPTIONS_IG / CAPTIONS_TT / SONGS / GOODREADS — check the format');
     return;
   }
   const j = getJournal();
@@ -119,6 +119,7 @@ function crpAutoFill(entryIdx) {
   if (sections.captionTT) j[entryIdx].captionTT = sections.captionTT;
   if (sections.hashtags)  j[entryIdx].hashtags  = sections.hashtags;
   if (sections.songs)     j[entryIdx].songs     = sections.songs;
+  if (sections.goodreads) j[entryIdx].goodreads = sections.goodreads;
   if (sections.captions)  j[entryIdx].captions  = sections.captions;
   saveAndSync(j);
   const sec = document.getElementById('crp-autofill-section');
@@ -134,6 +135,7 @@ function parseSections(raw) {
     'CAPTIONS_TT': 'captionTT',
     'HASHTAGS':    'hashtags',
     'SONGS':       'songs',
+    'GOODREADS':   'goodreads',
     'CAPTIONS':    'captions',
   };
   const labels = Object.keys(labelMap);

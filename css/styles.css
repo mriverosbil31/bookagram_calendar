@@ -1465,7 +1465,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   padding-top: 12px;
   margin-bottom: 12px;
 }
-.jnl-entry-footer { display: flex; justify-content: flex-end; }
+.jnl-entry-footer { display: flex; justify-content: flex-end; gap: 10px; }
 
 /* ── saga group ── */
 .jnl-saga-group {
@@ -3596,10 +3596,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .jnl-content-btn:hover { background: var(--fog); color: var(--ink); border-color: var(--fog); }
 
-/* Edit modal: caption sub-labels for IG/TT/Hashtags */
-.jnl-sfl-ig       { color: var(--ig-purple) !important; }
-.jnl-sfl-tt       { color: var(--tt-red) !important; }
-.jnl-sfl-hashtags { color: var(--both-teal) !important; }
+/* Edit modal: caption sub-labels for IG/TT/Hashtags/Goodreads */
+.jnl-sfl-ig        { color: var(--ig-purple) !important; }
+.jnl-sfl-tt        { color: var(--tt-red) !important; }
+.jnl-sfl-hashtags  { color: var(--both-teal) !important; }
+.jnl-sfl-goodreads { color: #2c7a4b !important; }
+.jem-fl-goodreads  { color: #2c7a4b; }
 
 @media (max-width: 600px) {
   .jem-modal  { max-height: 95vh; border-radius: 10px; }
