@@ -72,9 +72,9 @@ function showClaudePanel(title, prompt, opts = {}) {
 
   const autoFillHtml = showAutoFill ? `
     <div class="crp-autofill-section" id="crp-autofill-section">
-      <div class="crp-log-hd crp-af-hd">↓ Paste Claude's response to auto-fill Script, Captions &amp; Songs</div>
+      <div class="crp-log-hd crp-af-hd">↓ Paste Claude's response to auto-fill all fields</div>
       <textarea id="crp-paste-area" class="jnl-input jnl-ta crp-paste-ta" rows="7"
-        placeholder="Paste Claude's full response here — it detects SCRIPT: / CAPTIONS: / SONGS: sections and fills them in automatically."></textarea>
+        placeholder="Paste Claude's full response here — it detects SCRIPT: / CAPTIONS_IG: / CAPTIONS_TT: / HASHTAGS: / SONGS: sections and fills them in automatically."></textarea>
       <button class="crp-log-btn crp-af-btn" onclick="crpAutoFill(${entryIdx})">Auto-fill entry fields</button>
     </div>` : '';
 
@@ -108,36 +108,48 @@ function crpAutoFill(entryIdx) {
   const raw = document.getElementById('crp-paste-area')?.value.trim();
   if (!raw) { showJnlToast('Paste Claude\'s response first'); return; }
   const sections = parseSections(raw);
-  if (!sections.script && !sections.captions && !sections.songs) {
-    showJnlToast('Could not find SCRIPT / CAPTIONS / SONGS — check the format');
+  if (!sections.script && !sections.captionIG && !sections.captionTT && !sections.hashtags && !sections.songs && !sections.captions) {
+    showJnlToast('Could not find SCRIPT / CAPTIONS_IG / CAPTIONS_TT / SONGS — check the format');
     return;
   }
   const j = getJournal();
   if (!j[entryIdx]) { showJnlToast('Entry not found'); return; }
-  if (sections.script)   j[entryIdx].script   = sections.script;
-  if (sections.captions) j[entryIdx].captions = sections.captions;
-  if (sections.songs)    j[entryIdx].songs    = sections.songs;
+  if (sections.script)    j[entryIdx].script    = sections.script;
+  if (sections.captionIG) j[entryIdx].captionIG = sections.captionIG;
+  if (sections.captionTT) j[entryIdx].captionTT = sections.captionTT;
+  if (sections.hashtags)  j[entryIdx].hashtags  = sections.hashtags;
+  if (sections.songs)     j[entryIdx].songs     = sections.songs;
+  if (sections.captions)  j[entryIdx].captions  = sections.captions;
   saveAndSync(j);
   const sec = document.getElementById('crp-autofill-section');
-  if (sec) sec.innerHTML = `<div class="crp-logged">✓ Script, Captions &amp; Songs saved — <button class="crp-link-btn" onclick="document.getElementById('claude-panel-ov')?.remove();setView('journal')">View entry →</button></div>`;
+  if (sec) sec.innerHTML = `<div class="crp-logged">✓ Script, Captions &amp; Songs saved — <button class="crp-link-btn" onclick="document.getElementById('claude-panel-ov')?.remove();openEntryModal(${entryIdx})">View in Content Hub →</button></div>`;
   showJnlToast('Entry fields updated!');
 }
 
 function parseSections(raw) {
   const clean = raw.replace(/\*\*/g, '').replace(/^#{1,4}\s*/gm, '');
-  const labels = ['SCRIPT', 'CAPTIONS', 'SONGS'];
+  const labelMap = {
+    'SCRIPT':      'script',
+    'CAPTIONS_IG': 'captionIG',
+    'CAPTIONS_TT': 'captionTT',
+    'HASHTAGS':    'hashtags',
+    'SONGS':       'songs',
+    'CAPTIONS':    'captions',
+  };
+  const labels = Object.keys(labelMap);
   const result = {};
-  labels.forEach((label, i) => {
+  labels.forEach(label => {
     const re    = new RegExp(`(?:^|\\n)${label}:\\s*`, 'i');
     const match = clean.match(re);
     if (!match) return;
     const start = match.index + match[0].length;
     let end = clean.length;
-    for (let j = i + 1; j < labels.length; j++) {
-      const nm = clean.match(new RegExp(`(?:^|\\n)${labels[j]}:\\s*`, 'i'));
-      if (nm && nm.index > start) { end = nm.index; break; }
-    }
-    result[label.toLowerCase()] = clean.slice(start, end).trim();
+    labels.forEach(other => {
+      if (other === label) return;
+      const nm = clean.match(new RegExp(`(?:^|\\n)${other}:\\s*`, 'i'));
+      if (nm && nm.index > start && nm.index < end) end = nm.index;
+    });
+    result[labelMap[label]] = clean.slice(start, end).trim();
   });
   return result;
 }

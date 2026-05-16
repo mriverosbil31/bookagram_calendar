@@ -163,8 +163,16 @@ function openEditModal(idx) {
         <textarea id="edit-script" class="jnl-input jnl-ta" rows="4" placeholder="TikTok / Reel voiceover script…"></textarea>
       </div>
       <div class="jnl-section-field">
-        <label class="jnl-section-ta-label jnl-sfl-captions">Captions</label>
-        <textarea id="edit-captions" class="jnl-input jnl-ta" rows="4" placeholder="Instagram + TikTok captions…"></textarea>
+        <label class="jnl-section-ta-label jnl-sfl-ig">Instagram Caption</label>
+        <textarea id="edit-caption-ig" class="jnl-input jnl-ta" rows="3" placeholder="Instagram carousel caption…"></textarea>
+      </div>
+      <div class="jnl-section-field">
+        <label class="jnl-section-ta-label jnl-sfl-tt">TikTok Caption</label>
+        <textarea id="edit-caption-tt" class="jnl-input jnl-ta" rows="2" placeholder="TikTok caption (2 lines max)…"></textarea>
+      </div>
+      <div class="jnl-section-field">
+        <label class="jnl-section-ta-label jnl-sfl-hashtags">Hashtags</label>
+        <textarea id="edit-hashtags" class="jnl-input jnl-ta" rows="2" placeholder="#booktok #bookstagram…"></textarea>
       </div>
     </div>
     <div class="jnl-modal-ft">
@@ -179,9 +187,11 @@ function openEditModal(idx) {
   document.getElementById('edit-author').value     = entry.author   || '';
   document.getElementById('edit-date').value       = entry.dateRead || '';
   document.getElementById('edit-thoughts').value  = entry.thoughts  || '';
-  document.getElementById('edit-script').value    = entry.script   || '';
-  document.getElementById('edit-captions').value  = entry.captions || '';
-  document.getElementById('edit-songs').value     = entry.songs    || '';
+  document.getElementById('edit-script').value      = entry.script    || '';
+  document.getElementById('edit-caption-ig').value = entry.captionIG || '';
+  document.getElementById('edit-caption-tt').value = entry.captionTT || '';
+  document.getElementById('edit-hashtags').value   = entry.hashtags  || '';
+  document.getElementById('edit-songs').value      = entry.songs     || '';
   document.getElementById('edit-rating-val').value = entry.rating   || 0;
   document.getElementById('edit-is-saga').checked  = !!entry.sagaName;
   const sn = document.getElementById('edit-saga-name');
@@ -209,15 +219,17 @@ function saveEditModal() {
   const rating   = parseFloat(document.getElementById('edit-rating-val').value) || 0;
   const dateRead = document.getElementById('edit-date').value;
   const thoughts = document.getElementById('edit-thoughts').value.trim();
-  const script   = document.getElementById('edit-script')?.value.trim()   || '';
-  const captions = document.getElementById('edit-captions')?.value.trim() || '';
-  const songs    = document.getElementById('edit-songs')?.value.trim()    || '';
+  const script    = document.getElementById('edit-script')?.value.trim()     || '';
+  const captionIG = document.getElementById('edit-caption-ig')?.value.trim() || '';
+  const captionTT = document.getElementById('edit-caption-tt')?.value.trim() || '';
+  const hashtags  = document.getElementById('edit-hashtags')?.value.trim()   || '';
+  const songs     = document.getElementById('edit-songs')?.value.trim()      || '';
   const isSaga   = document.getElementById('edit-is-saga').checked;
   const sagaName = isSaga ? (document.getElementById('edit-saga-name').value.trim() || null) : null;
   if (!title) { document.getElementById('edit-title').focus(); return; }
   const j = getJournal();
   if (!j[_jnlEditIdx]) return;
-  Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, script, captions, songs, sagaName });
+  Object.assign(j[_jnlEditIdx], { title, author, rating, dateRead, thoughts, script, captionIG, captionTT, hashtags, songs, sagaName });
   saveAndSync(j);
 
   const ownsBook  = document.getElementById('edit-owns-book')?.checked;
@@ -291,13 +303,22 @@ My rating: ${stars} (${r}/5)${entry.dateRead ? `\nDate read: ${entry.dateRead}` 
 My raw thoughts:
 ${entry.thoughts}
 
-Please give me exactly three sections using these exact labels:
+Please give me exactly five sections using these exact labels:
 
 SCRIPT:
-A TikTok / Reel voiceover — punchy hook for the first 3 seconds, then 30–45 seconds of content, then a CTA. No filler. Conversational but gripping.
+A TikTok / Reel voiceover. Break it into timed segments. Each segment MUST be on its own line in this exact format:
+[mm:ss-mm:ss] SECTION NAME: the text for that segment
+Use these sections in order: Hook (0:00-0:04), Setup (0:04-0:14), Opinion 1 with a descriptive label (0:14-0:30), Opinion 2 with a descriptive label (0:30-0:47), Rating (0:47-0:58), CTA (0:58-1:15).
+No intro, no markdown, just the lines. Conversational and gripping.
 
-CAPTIONS:
-An Instagram carousel caption (strong hook · 3–4 body sentences · CTA · line break · 5–8 thriller hashtags). Then on a new line: a short TikTok caption (2 lines max + 3 hashtags).
+CAPTIONS_IG:
+Instagram carousel caption: strong hook line, 3–4 body sentences, CTA. No hashtags here.
+
+CAPTIONS_TT:
+TikTok caption only: 2 punchy lines, under 150 characters total. No hashtags here.
+
+HASHTAGS:
+10–12 hashtags for both platforms. Include #booktok #bookstagram and thriller-specific tags. Format: each hashtag on its own line.
 
 SONGS:
 Three song / audio suggestions. For each: song name, artist, and one sentence on why the vibe fits this book.
@@ -310,6 +331,216 @@ function openWithClaude(idx) {
   if (!entry) return;
   const prompt = buildClaudePrompt(entry);
   showClaudePanel(entry.title, prompt, { skipLog: true, entryIdx: idx });
+}
+
+// ── Content Hub modal ─────────────────────────────────────────────
+let _jemEntry = null;
+let _jemIdx   = -1;
+
+function _jemTimeToSecs(t) {
+  const p = t.split(':').map(Number);
+  return p.length === 2 ? p[0] * 60 + p[1] : p[0];
+}
+
+function _jemSectionColor(section) {
+  const s = section.toLowerCase();
+  if (s.includes('hook'))   return { bg: '#fde8e8', color: '#8b1a1a' };
+  if (s.includes('setup'))  return { bg: '#ede8fa', color: '#4a2a8a' };
+  if (s.includes('cta'))    return { bg: '#d8f2f8', color: '#0a6080' };
+  if (s.includes('rating')) return { bg: '#fdf3dc', color: '#7a5500' };
+  return { bg: '#e8f5ec', color: '#1a5c30' };
+}
+
+function _jemParseScript(text) {
+  if (!text || !text.trim()) return [];
+  const segments = [];
+  let current = null;
+  for (const line of text.split('\n')) {
+    const m = line.match(/^\[(\d+:\d+)\s*[-–]\s*(\d+:\d+)\]\s*([^:]+):\s*(.*)/);
+    if (m) {
+      if (current) segments.push(current);
+      current = { start: m[1], end: m[2], section: m[3].trim(), text: m[4].trim() };
+    } else if (current) {
+      current.text += (current.text ? '\n' : '') + line;
+    }
+  }
+  if (current) segments.push(current);
+  return segments;
+}
+
+function _jemRenderScript(scriptText) {
+  const segs = _jemParseScript(scriptText);
+  if (!segs.length) {
+    return `<div class="jem-field-text">${esc(scriptText).replace(/\n/g, '<br>')}</div>`;
+  }
+  const totalSecs = _jemTimeToSecs(segs[segs.length - 1].end);
+  const cards = segs.map((seg, i) => {
+    const c = _jemSectionColor(seg.section);
+    return `<div class="jem-tl-card">
+      <div class="jem-tl-top">
+        <div class="jem-tl-left">
+          <span class="jem-tl-time">${esc(seg.start)} – ${esc(seg.end)}</span>
+          <span class="jem-tl-badge" style="background:${c.bg};color:${c.color}">${esc(seg.section)}</span>
+        </div>
+        <button class="jem-copy-btn" onclick="jemCopyScript(${i})">Copy</button>
+      </div>
+      <div class="jem-tl-text">${esc(seg.text).replace(/\n/g, '<br>')}</div>
+    </div>`;
+  }).join('');
+  const barSegs = totalSecs > 0 ? segs.map(seg => {
+    const dur = _jemTimeToSecs(seg.end) - _jemTimeToSecs(seg.start);
+    const pct = (dur / totalSecs * 100).toFixed(1);
+    const c = _jemSectionColor(seg.section);
+    return `<div class="jem-tl-bar-seg" style="width:${pct}%;background:${c.color};opacity:0.55"></div>`;
+  }).join('') : '';
+  const barLabels = totalSecs > 0 ? segs.map(seg => {
+    const dur = _jemTimeToSecs(seg.end) - _jemTimeToSecs(seg.start);
+    const pct = (dur / totalSecs * 100).toFixed(1);
+    return `<div class="jem-tl-bar-lbl" style="width:${pct}%">${esc(seg.section.split(' ')[0])}</div>`;
+  }).join('') : '';
+  return `<div class="jem-timeline">${cards}</div>
+    ${totalSecs > 0 ? `<div class="jem-tl-bar-wrap">
+      <div class="jem-tl-bar">${barSegs}</div>
+      <div class="jem-tl-bar-labels">${barLabels}</div>
+      <div style="font-size:11px;color:var(--ash);text-align:right;margin-top:2px">0:00 — ${esc(segs[segs.length-1].end)} total</div>
+    </div>` : ''}`;
+}
+
+function jemCopyScript(segIdx) {
+  const segs = _jemParseScript(_jemEntry?.script || '');
+  if (segs[segIdx]) _crpCopy(segs[segIdx].text, 'Copied!');
+}
+
+function jemCopy(field) {
+  const texts = {
+    ig:       [_jemEntry?.captionIG || '', 'Instagram caption copied!'],
+    tt:       [_jemEntry?.captionTT || '', 'TikTok caption copied!'],
+    hashtags: [_jemEntry?.hashtags  || '', 'Hashtags copied!'],
+    songs:    [_jemEntry?.songs     || '', 'Songs copied!'],
+    captions: [_jemEntry?.captions  || '', 'Captions copied!'],
+    thoughts: [_jemEntry?.thoughts  || '', 'Copied!'],
+  };
+  const [text, msg] = texts[field] || ['', 'Copied!'];
+  _crpCopy(text, msg);
+}
+
+function switchJemTab(tab) {
+  document.querySelectorAll('.jem-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.jem-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+}
+
+function openEntryModal(idx) {
+  const j = getJournal();
+  const entry = j[idx];
+  if (!entry) return;
+  _jemEntry = entry;
+  _jemIdx   = idx;
+
+  document.getElementById('jem-ov')?.remove();
+
+  const stars = renderJnlStars(entry.rating);
+  const dt    = entry.dateRead ? jnlFormatDate(entry.dateRead) : '';
+  const dot   = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-left:5px;vertical-align:middle;opacity:0.65"></span>`;
+
+  const hasScript   = !!(entry.script);
+  const hasCaptions = !!(entry.captionIG || entry.captionTT || entry.hashtags || entry.captions);
+  const hasSongs    = !!(entry.songs);
+
+  // Script panel
+  const scriptPanel = hasScript
+    ? _jemRenderScript(entry.script)
+    : `<p class="jem-empty-note">No script yet — hit Ask Claude to generate one.</p>`;
+
+  // Captions panel (new fields + legacy fallback)
+  const igText      = entry.captionIG || '';
+  const ttText      = entry.captionTT || '';
+  const hashText    = entry.hashtags  || '';
+  const legacyText  = (!igText && !ttText && entry.captions) ? entry.captions : '';
+  const captionsPanel = (igText || ttText || hashText || legacyText) ? `
+    ${igText ? `<div class="jem-field">
+      <div class="jem-field-header">
+        <span class="jem-field-label jem-fl-ig">Instagram</span>
+        <button class="jem-copy-btn" onclick="jemCopy('ig')">Copy</button>
+      </div>
+      <div class="jem-field-text">${esc(igText).replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+    ${ttText ? `<div class="jem-field">
+      <div class="jem-field-header">
+        <span class="jem-field-label jem-fl-tt">TikTok</span>
+        <button class="jem-copy-btn" onclick="jemCopy('tt')">Copy</button>
+      </div>
+      <div class="jem-field-text">${esc(ttText).replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+    ${hashText ? `<div class="jem-field">
+      <div class="jem-field-header">
+        <span class="jem-field-label jem-fl-hashtags">Hashtags</span>
+        <button class="jem-copy-btn" onclick="jemCopy('hashtags')">Copy</button>
+      </div>
+      <div class="jem-field-text">${esc(hashText).replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+    ${legacyText ? `<div class="jem-field">
+      <div class="jem-field-header">
+        <span class="jem-field-label">Captions</span>
+        <button class="jem-copy-btn" onclick="jemCopy('captions')">Copy</button>
+      </div>
+      <div class="jem-field-text">${esc(legacyText).replace(/\n/g,'<br>')}</div>
+    </div>` : ''}
+  ` : `<p class="jem-empty-note">No captions yet — hit Ask Claude to generate them.</p>`;
+
+  // Songs panel
+  const songsPanel = hasSongs
+    ? `<div class="jem-field">
+        <div class="jem-field-header">
+          <span class="jem-field-label jem-fl-songs">Songs</span>
+          <button class="jem-copy-btn" onclick="jemCopy('songs')">Copy</button>
+        </div>
+        <div class="jem-field-text">${esc(entry.songs).replace(/\n/g,'<br>')}</div>
+      </div>`
+    : `<p class="jem-empty-note">No song suggestions yet — hit Ask Claude to generate them.</p>`;
+
+  const ov = document.createElement('div');
+  ov.id = 'jem-ov';
+  ov.className = 'jem-overlay';
+  ov.innerHTML = `<div class="jem-modal">
+    <div class="jem-header">
+      <div>
+        <div class="jem-book-title">${esc(entry.title)}</div>
+        <div class="jem-book-meta">${entry.author ? esc(entry.author) + ' · ' : ''}${stars}${dt ? ' · ' + dt : ''}</div>
+      </div>
+      <button class="jem-close" onclick="document.getElementById('jem-ov').remove()">×</button>
+    </div>
+    <div class="jem-tabs">
+      <button class="jem-tab active" data-tab="overview"  onclick="switchJemTab('overview')">Overview</button>
+      <button class="jem-tab"        data-tab="script"    onclick="switchJemTab('script')">Script${hasScript ? dot : ''}</button>
+      <button class="jem-tab"        data-tab="captions"  onclick="switchJemTab('captions')">Captions${hasCaptions ? dot : ''}</button>
+      <button class="jem-tab"        data-tab="songs"     onclick="switchJemTab('songs')">Songs${hasSongs ? dot : ''}</button>
+    </div>
+    <div class="jem-content">
+      <div class="jem-panel active" data-panel="overview">
+        ${entry.thoughts
+          ? `<div class="jem-field">
+              <div class="jem-field-header">
+                <span class="jem-field-label">Raw Thoughts</span>
+                <button class="jem-copy-btn" onclick="jemCopy('thoughts')">Copy</button>
+              </div>
+              <div class="jem-thoughts-text">${esc(entry.thoughts).replace(/\n/g,'<br>')}</div>
+            </div>`
+          : '<p class="jem-empty-note">No raw thoughts logged.</p>'}
+      </div>
+      <div class="jem-panel" data-panel="script">${scriptPanel}</div>
+      <div class="jem-panel" data-panel="captions">${captionsPanel}</div>
+      <div class="jem-panel" data-panel="songs">${songsPanel}</div>
+    </div>
+    <div class="jem-footer">
+      <button class="jem-edit-btn" onclick="document.getElementById('jem-ov').remove();openEditModal(${idx})">✎ Edit</button>
+      <button class="claude-btn" onclick="document.getElementById('jem-ov').remove();openWithClaude(${idx})">
+        <span class="claude-icon">✦</span> Ask Claude
+      </button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(ov);
+  ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
 }
 
 function showJnlToast(msg) {
@@ -482,25 +713,9 @@ function renderEntryRow(e, all, libDataMap, inSaga = false) {
       <span class="jnl-caret">›</span>
     </div>
     <div class="jnl-entry-body">
-      <div class="jnl-content-sections">
-        ${e.songs ? `<div class="jnl-section">
-          <span class="jnl-section-label jnl-sl-songs">Songs</span>
-          <p class="jnl-section-body">${esc(e.songs).replace(/\n/g, '<br>')}</p>
-        </div>` : ''}
-        <div class="jnl-section">
-          <span class="jnl-section-label">Raw Thoughts</span>
-          <p class="jnl-section-body">${esc(e.thoughts).replace(/\n/g, '<br>')}</p>
-        </div>
-        ${e.script ? `<div class="jnl-section">
-          <span class="jnl-section-label jnl-sl-script">Script</span>
-          <p class="jnl-section-body">${esc(e.script).replace(/\n/g, '<br>')}</p>
-        </div>` : ''}
-        ${e.captions ? `<div class="jnl-section">
-          <span class="jnl-section-label jnl-sl-captions">Captions</span>
-          <p class="jnl-section-body">${esc(e.captions).replace(/\n/g, '<br>')}</p>
-        </div>` : ''}
-      </div>
+      <p class="jnl-section-body" style="padding:4px 0 12px">${esc(e.thoughts).replace(/\n/g, '<br>')}</p>
       <div class="jnl-entry-footer">
+        <button class="jnl-content-btn" onclick="openEntryModal(${idx});event.stopPropagation()">Content ▶</button>
         <button class="claude-btn" onclick="openWithClaude(${idx})">
           <span class="claude-icon">✦</span> Ask Claude
         </button>
