@@ -88,13 +88,13 @@ function saveCustomPost(monthIdx) {
   const post = { id, monthIdx, weekIdx, day, pl, title: finalTitle, desc, addedAt: Date.now() };
   const customs = getCustomPosts();
   customs.push(post);
-  saveCustomPosts(customs);
+  saveAndSyncCustomPosts(customs);
 
   if (bookTitle) {
     const all = getAllBooks();
     if (!all[id]) all[id] = [];
     all[id].push({ title: bookTitle, author: bookAuthor });
-    saveAllBooks(all);
+    saveAndSyncCalBooks(all);
   }
 
   const thoughts = document.getElementById('cal-post-thoughts')?.value.trim() || '';
@@ -119,13 +119,13 @@ function saveCustomPost(monthIdx) {
 
 function deleteCustomPost(id) {
   if (!confirm('Delete this post?')) return;
-  saveCustomPosts(getCustomPosts().filter(p => p.id !== id));
+  saveAndSyncCustomPosts(getCustomPosts().filter(p => p.id !== id));
   const archived = getArchived();
   archived.delete(id);
-  saveArchived(archived);
+  saveAndSyncArchived(archived);
   const all = getAllBooks();
   delete all[id];
-  saveAllBooks(all);
+  saveAndSyncCalBooks(all);
   renderCalendar();
 }
 
@@ -192,7 +192,7 @@ function saveEditCustomPost(id) {
   const idx = customs.findIndex(p => p.id === id);
   if (idx === -1) return;
   Object.assign(customs[idx], { day, pl, title, desc, weekIdx });
-  saveCustomPosts(customs);
+  saveAndSyncCustomPosts(customs);
   document.getElementById('cal-edit-post-ov')?.remove();
   renderCalendar();
   showJnlToast('Post updated!');
@@ -266,7 +266,7 @@ function addBook(postId) {
   if (!all[postId]) all[postId] = [];
   const exists = all[postId].some(b => normBook(b).title.toLowerCase() === title.toLowerCase());
   if (!exists) all[postId].push({ title, author });
-  saveAllBooks(all);
+  saveAndSyncCalBooks(all);
   titleInput.value = '';
   if (authorInput) authorInput.value = '';
   titleInput.focus();
@@ -279,7 +279,7 @@ function removeBook(postId, idx) {
   if (all[postId]) {
     all[postId].splice(idx, 1);
     if (!all[postId].length) delete all[postId];
-    saveAllBooks(all);
+    saveAndSyncCalBooks(all);
   }
   refreshChips(postId);
   refreshAuthorsList();
@@ -313,7 +313,7 @@ function calBookAutoFill(postId, title) {
 function toggleArchived(id) {
   const archived = getArchived();
   if (archived.has(id)) { archived.delete(id); } else { archived.add(id); }
-  saveArchived(archived);
+  saveAndSyncArchived(archived);
   renderCalendar();
 }
 
@@ -463,4 +463,5 @@ function renderCalendar() {
   document.getElementById('main-content').innerHTML = html;
   refreshAuthorsList();
   refreshCalLibraryList();
+  syncCalendarFromCloud();
 }

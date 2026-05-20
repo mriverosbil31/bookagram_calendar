@@ -86,3 +86,60 @@ function saveAndSyncTodos(arr) {
   saveTodos(arr);
   pushTodosToSupabase(arr);
 }
+
+// ─── Calendar data sync (books, archived, custom posts) ───────────
+function saveAndSyncCalBooks(obj) {
+  saveAllBooks(obj);
+  _supa.from('journal').upsert({ id: 'cal_books', entries: obj, updated_at: new Date().toISOString() })
+    .catch(e => console.warn('[sync] cal_books push failed', e));
+}
+
+function saveAndSyncArchived(set) {
+  saveArchived(set);
+  _supa.from('journal').upsert({ id: 'cal_archived', entries: [...set], updated_at: new Date().toISOString() })
+    .catch(e => console.warn('[sync] cal_archived push failed', e));
+}
+
+function saveAndSyncCustomPosts(arr) {
+  saveCustomPosts(arr);
+  _supa.from('journal').upsert({ id: 'cal_custom', entries: arr, updated_at: new Date().toISOString() })
+    .catch(e => console.warn('[sync] cal_custom push failed', e));
+}
+
+async function syncCalendarFromCloud() {
+  try {
+    const [booksRes, archivedRes, customRes] = await Promise.all([
+      _supa.from('journal').select('entries').eq('id', 'cal_books').single(),
+      _supa.from('journal').select('entries').eq('id', 'cal_archived').single(),
+      _supa.from('journal').select('entries').eq('id', 'cal_custom').single(),
+    ]);
+
+    let changed = false;
+
+    const remoteBooks = booksRes.data?.entries || {};
+    const localBooks  = getAllBooks();
+    if (Object.keys(remoteBooks).length === 0 && Object.keys(localBooks).length > 0) {
+      _supa.from('journal').upsert({ id: 'cal_books', entries: localBooks, updated_at: new Date().toISOString() }).catch(() => {});
+    } else if (JSON.stringify(remoteBooks) !== JSON.stringify(localBooks)) {
+      saveAllBooks(remoteBooks); changed = true;
+    }
+
+    const remoteArchived = archivedRes.data?.entries || [];
+    const localArchived  = [...getArchived()].sort();
+    if (remoteArchived.length === 0 && localArchived.length > 0) {
+      _supa.from('journal').upsert({ id: 'cal_archived', entries: localArchived, updated_at: new Date().toISOString() }).catch(() => {});
+    } else if (JSON.stringify([...remoteArchived].sort()) !== JSON.stringify(localArchived)) {
+      saveArchived(new Set(remoteArchived)); changed = true;
+    }
+
+    const remoteCustom = customRes.data?.entries || [];
+    const localCustom  = getCustomPosts();
+    if (remoteCustom.length === 0 && localCustom.length > 0) {
+      _supa.from('journal').upsert({ id: 'cal_custom', entries: localCustom, updated_at: new Date().toISOString() }).catch(() => {});
+    } else if (JSON.stringify(remoteCustom) !== JSON.stringify(localCustom)) {
+      saveCustomPosts(remoteCustom); changed = true;
+    }
+
+    if (changed && currentView === 'calendar') renderCalendar();
+  } catch (e) { console.warn('[sync] calendar fetch failed, using local cache', e); }
+}
