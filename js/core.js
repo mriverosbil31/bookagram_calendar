@@ -1,7 +1,8 @@
 // ─── Storage keys ─────────────────────────────────────────────────
-const ARCHIVED_KEY     = 'thc_archived';
-const BOOKS_KEY        = 'thc_books';
-const CUSTOM_LINKS_KEY = 'thc_custom_links';
+const ARCHIVED_KEY        = 'thc_archived';
+const BOOKS_KEY           = 'thc_books';
+const CUSTOM_LINKS_KEY    = 'thc_custom_links';
+const POST_OVERRIDES_KEY  = 'thc_post_overrides';
 
 // ─── Shared constants ─────────────────────────────────────────────
 const ITEMS_PER_PAGE = 15;
@@ -38,6 +39,13 @@ function saveAllBooks(obj) {
 }
 function getBooksForPost(id) {
   return (getAllBooks()[id] || []).map(normBook);
+}
+function getPostOverrides() {
+  try { return JSON.parse(localStorage.getItem(POST_OVERRIDES_KEY)) || {}; }
+  catch { return {}; }
+}
+function savePostOverrides(obj) {
+  localStorage.setItem(POST_OVERRIDES_KEY, JSON.stringify(obj));
 }
 function getCustomLinks() {
   try { return JSON.parse(localStorage.getItem(CUSTOM_LINKS_KEY)) || []; }
@@ -88,7 +96,7 @@ function setView(view) {
   document.getElementById('vnav-' + view)?.classList.add('active');
   document.getElementById('month-nav-wrap').style.display = view === 'calendar' ? '' : 'none';
   closeDrawer();
-  if (view === 'calendar')       { renderMonthNav(); renderCalendar(); }
+  if (view === 'calendar')       { renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
   else if (view === 'books')     renderBooksView();
   else if (view === 'resources') renderResourcesView();
   else if (view === 'journal')   { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }

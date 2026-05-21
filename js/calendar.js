@@ -129,16 +129,38 @@ function deleteCustomPost(id) {
   renderCalendar();
 }
 
-function showEditCustomPost(id) {
-  const post = getCustomPosts().find(p => p.id === id);
-  if (!post) return;
-  const m = months[post.monthIdx] || months[currentMonth];
-  const weekOptions = m.weeks.map((w, wi) =>
-    `<option value="${wi}"${wi === post.weekIdx ? ' selected' : ''}>${esc(w.label)}</option>`
-  ).join('');
-  const dayOptions = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    .map(d => `<option value="${d}"${d === post.day ? ' selected' : ''}>${d}</option>`).join('');
+function showEditPost(id) {
+  const isCustom = id.startsWith('custom-');
   const plLabels = { ig: 'Instagram', tt: 'TikTok', both: 'Both', story: 'Story' };
+  let currentPl, currentTitle, currentDesc, weekDayHtml = '';
+
+  if (isCustom) {
+    const post = getCustomPosts().find(p => p.id === id);
+    if (!post) { showJnlToast('Post not found'); return; }
+    currentPl    = post.pl;
+    currentTitle = post.title;
+    currentDesc  = post.desc || '';
+    const m = months[post.monthIdx] || months[currentMonth];
+    const weekOptions = m.weeks.map((w, wi) =>
+      `<option value="${wi}"${wi === post.weekIdx ? ' selected' : ''}>${esc(w.label)}</option>`
+    ).join('');
+    const dayOptions = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+      .map(d => `<option value="${d}"${d === post.day ? ' selected' : ''}>${d}</option>`).join('');
+    weekDayHtml = `<div class="jnl-row">
+        <select id="cal-edit-day"  class="jnl-input" style="color-scheme:dark">${dayOptions}</select>
+        <select id="cal-edit-week" class="jnl-input" style="color-scheme:dark">${weekOptions}</select>
+      </div>`;
+  } else {
+    const pm = id.match(/^m(\d+)-w(\d+)-([ps])(\d+)$/);
+    if (!pm) return;
+    const w    = months[+pm[1]]?.weeks[+pm[2]];
+    const item = pm[3] === 's' ? w?.stories?.[+pm[4]] : w?.posts?.[+pm[4]];
+    if (!item) return;
+    const ov   = getPostOverrides()[id] || {};
+    currentPl    = ov.pl    || item.pl    || 'both';
+    currentTitle = ov.title || item.title || '';
+    currentDesc  = ov.desc  !== undefined ? ov.desc : (item.desc || '');
+  }
 
   document.getElementById('cal-edit-post-ov')?.remove();
   const ov = document.createElement('div');
@@ -152,22 +174,19 @@ function showEditCustomPost(id) {
           <div class="jnl-label" style="margin-bottom:6px">Platform</div>
           <div class="cal-platform-picker" id="cal-edit-pl-picker">
             ${['ig','tt','both','story'].map(pl => `
-              <button type="button" class="cal-pl-btn${post.pl === pl ? ' active' : ''}"
+              <button type="button" class="cal-pl-btn${currentPl === pl ? ' active' : ''}"
                 data-pl="${pl}" onclick="calEditPickPl('${pl}')">${plLabels[pl]}</button>`).join('')}
           </div>
-          <input type="hidden" id="cal-edit-pl-val" value="${post.pl}">
+          <input type="hidden" id="cal-edit-pl-val" value="${currentPl}">
         </div>
-        <div class="jnl-row">
-          <select id="cal-edit-day"  class="jnl-input" style="color-scheme:dark">${dayOptions}</select>
-          <select id="cal-edit-week" class="jnl-input" style="color-scheme:dark">${weekOptions}</select>
-        </div>
-        <input id="cal-edit-title" type="text" class="jnl-input" placeholder="Post title *" value="${esc(post.title)}">
+        ${weekDayHtml}
+        <input id="cal-edit-title" type="text" class="jnl-input" placeholder="Post title *" value="${esc(currentTitle)}">
         <textarea id="cal-edit-desc" class="jnl-input jnl-ta" rows="3"
-          placeholder="Caption idea or content description…">${esc(post.desc)}</textarea>
+          placeholder="Caption idea or content description…">${esc(currentDesc)}</textarea>
       </div>
       <div class="jnl-modal-ft">
         <button class="jnl-modal-close" onclick="document.getElementById('cal-edit-post-ov').remove()">Cancel</button>
-        <button class="jnl-modal-save" onclick="saveEditCustomPost('${id}')">Save changes</button>
+        <button class="jnl-modal-save" onclick="saveEditPost('${id}')">Save changes</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
@@ -181,18 +200,26 @@ function calEditPickPl(pl) {
   );
 }
 
-function saveEditCustomPost(id) {
-  const title   = document.getElementById('cal-edit-title')?.value.trim();
-  const desc    = document.getElementById('cal-edit-desc')?.value.trim() || '';
-  const pl      = document.getElementById('cal-edit-pl-val')?.value || 'ig';
-  const day     = document.getElementById('cal-edit-day')?.value || 'Mon';
-  const weekIdx = parseInt(document.getElementById('cal-edit-week')?.value ?? 0);
-  if (!title) { document.getElementById('cal-edit-title')?.focus(); return; }
-  const customs = getCustomPosts();
-  const idx = customs.findIndex(p => p.id === id);
-  if (idx === -1) return;
-  Object.assign(customs[idx], { day, pl, title, desc, weekIdx });
-  saveAndSyncCustomPosts(customs);
+function saveEditPost(id) {
+  const title = document.getElementById('cal-edit-title')?.value.trim();
+  const desc  = document.getElementById('cal-edit-desc')?.value.trim() || '';
+  const pl    = document.getElementById('cal-edit-pl-val')?.value || 'ig';
+  if (!title) { document.getElementById('cal-edit-title')?.focus(); showJnlToast('Title is required'); return; }
+
+  if (id.startsWith('custom-')) {
+    const day     = document.getElementById('cal-edit-day')?.value  || 'Mon';
+    const weekIdx = parseInt(document.getElementById('cal-edit-week')?.value ?? 0);
+    const customs = getCustomPosts();
+    const idx     = customs.findIndex(p => p.id === id);
+    if (idx === -1) { showJnlToast('Post not found — try refreshing'); return; }
+    Object.assign(customs[idx], { day, pl, title, desc, weekIdx });
+    saveAndSyncCustomPosts(customs);
+  } else {
+    const overrides = getPostOverrides();
+    overrides[id] = { title, desc, pl };
+    saveAndSyncPostOverrides(overrides);
+  }
+
   document.getElementById('cal-edit-post-ov')?.remove();
   renderCalendar();
   showJnlToast('Post updated!');
@@ -333,20 +360,21 @@ function plBadge(pl) {
 
 // ─── Card builder ─────────────────────────────────────────────────
 function buildCard(item, id, isStory, isArchived, isCustom = false) {
-  const title = item.title;
-  const desc  = item.desc;
+  const override = getPostOverrides()[id] || {};
+  const title = override.title || item.title;
+  const desc  = override.desc  !== undefined ? override.desc : (item.desc || '');
   const day   = isStory ? 'Story' : item.day;
-  const pl    = isStory ? 'story' : item.pl;
+  const pl    = isStory ? 'story' : (override.pl || item.pl);
   const books = getBooksForPost(id);
   const chips = books.map((b, i) =>
     `<span class="book-chip">${esc(b.title)}${b.author ? `<span class="chip-author"> — ${esc(b.author)}</span>` : ''}<button class="chip-x" onclick="removeBook('${id}',${i})" title="Remove">×</button></span>`
   ).join('');
 
-  const customActions = isCustom ? `
+  const editActions = `
     <div class="card-custom-actions">
-      <button class="card-edit-btn" onclick="showEditCustomPost('${id}');event.stopPropagation()" title="Edit">✎</button>
-      <button class="card-del-btn"  onclick="deleteCustomPost('${id}');event.stopPropagation()"  title="Delete">×</button>
-    </div>` : '';
+      <button class="card-edit-btn" onclick="showEditPost('${id}');event.stopPropagation()" title="Edit">✎</button>
+      ${isCustom ? `<button class="card-del-btn" onclick="deleteCustomPost('${id}');event.stopPropagation()" title="Delete">×</button>` : ''}
+    </div>`;
 
   const claudeRow = books.length ? `
     <div class="cal-claude-row">
@@ -359,7 +387,7 @@ function buildCard(item, id, isStory, isArchived, isCustom = false) {
     <div class="card-top-row">
       <div class="pday">${day}</div>
       ${plBadge(pl)}
-      ${customActions}
+      ${editActions}
       <button class="check-btn${isArchived ? ' checked' : ''}" onclick="toggleArchived('${id}')" title="${isArchived ? 'Unmark as posted' : 'Mark as posted'}">
         <span class="check-icon">${isArchived ? '✓' : ''}</span>
       </button>
@@ -463,5 +491,4 @@ function renderCalendar() {
   document.getElementById('main-content').innerHTML = html;
   refreshAuthorsList();
   refreshCalLibraryList();
-  syncCalendarFromCloud();
 }

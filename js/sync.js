@@ -106,12 +106,19 @@ function saveAndSyncCustomPosts(arr) {
     .catch(e => console.warn('[sync] cal_custom push failed', e));
 }
 
+function saveAndSyncPostOverrides(obj) {
+  savePostOverrides(obj);
+  _supa.from('journal').upsert({ id: 'cal_overrides', entries: obj, updated_at: new Date().toISOString() })
+    .catch(e => console.warn('[sync] cal_overrides push failed', e));
+}
+
 async function syncCalendarFromCloud() {
   try {
-    const [booksRes, archivedRes, customRes] = await Promise.all([
+    const [booksRes, archivedRes, customRes, overridesRes] = await Promise.all([
       _supa.from('journal').select('entries').eq('id', 'cal_books').single(),
       _supa.from('journal').select('entries').eq('id', 'cal_archived').single(),
       _supa.from('journal').select('entries').eq('id', 'cal_custom').single(),
+      _supa.from('journal').select('entries').eq('id', 'cal_overrides').single(),
     ]);
 
     let changed = false;
@@ -138,6 +145,14 @@ async function syncCalendarFromCloud() {
       _supa.from('journal').upsert({ id: 'cal_custom', entries: localCustom, updated_at: new Date().toISOString() }).catch(() => {});
     } else if (JSON.stringify(remoteCustom) !== JSON.stringify(localCustom)) {
       saveCustomPosts(remoteCustom); changed = true;
+    }
+
+    const remoteOverrides = overridesRes.data?.entries || {};
+    const localOverrides  = getPostOverrides();
+    if (Object.keys(remoteOverrides).length === 0 && Object.keys(localOverrides).length > 0) {
+      _supa.from('journal').upsert({ id: 'cal_overrides', entries: localOverrides, updated_at: new Date().toISOString() }).catch(() => {});
+    } else if (JSON.stringify(remoteOverrides) !== JSON.stringify(localOverrides)) {
+      savePostOverrides(remoteOverrides); changed = true;
     }
 
     if (changed && currentView === 'calendar') renderCalendar();
