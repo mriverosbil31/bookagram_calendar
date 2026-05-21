@@ -118,7 +118,6 @@ function saveCustomPost(monthIdx) {
 }
 
 function deleteCustomPost(id) {
-  if (!confirm('Delete this post?')) return;
   saveAndSyncCustomPosts(getCustomPosts().filter(p => p.id !== id));
   const archived = getArchived();
   archived.delete(id);
@@ -127,6 +126,21 @@ function deleteCustomPost(id) {
   delete all[id];
   saveAndSyncCalBooks(all);
   renderCalendar();
+}
+
+function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  if (id.startsWith('custom-')) {
+    deleteCustomPost(id);
+  } else {
+    const deleted = getDeletedPosts();
+    deleted.add(id);
+    saveAndSyncDeletedPosts(deleted);
+    const overrides = getPostOverrides();
+    delete overrides[id];
+    saveAndSyncPostOverrides(overrides);
+    renderCalendar();
+  }
 }
 
 function showEditPost(id) {
@@ -373,7 +387,7 @@ function buildCard(item, id, isStory, isArchived, isCustom = false) {
   const editActions = `
     <div class="card-custom-actions">
       <button class="card-edit-btn" onclick="showEditPost('${id}');event.stopPropagation()" title="Edit">✎</button>
-      ${isCustom ? `<button class="card-del-btn" onclick="deleteCustomPost('${id}');event.stopPropagation()" title="Delete">×</button>` : ''}
+      <button class="card-del-btn" onclick="deletePost('${id}');event.stopPropagation()" title="Delete">×</button>
     </div>`;
 
   const claudeRow = books.length ? `
@@ -419,6 +433,7 @@ function buildCard(item, id, isStory, isArchived, isCustom = false) {
 function renderCalendar() {
   const m         = months[currentMonth];
   const archived  = getArchived();
+  const deleted   = getDeletedPosts();
   const archCards = [];
 
   let html = `
@@ -442,11 +457,13 @@ function renderCalendar() {
 
     w.posts.forEach((p, pi) => {
       const id = `m${currentMonth}-w${wi}-p${pi}`;
+      if (deleted.has(id)) return;
       (archived.has(id) ? archCards : activePosts).push(buildCard(p, id, false, archived.has(id)));
     });
 
     (w.stories || []).forEach((s, si) => {
       const id = `m${currentMonth}-w${wi}-s${si}`;
+      if (deleted.has(id)) return;
       (archived.has(id) ? archCards : activeStories).push(buildCard(s, id, true, archived.has(id)));
     });
 

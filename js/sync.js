@@ -112,6 +112,12 @@ function saveAndSyncPostOverrides(obj) {
     .catch(e => console.warn('[sync] cal_overrides push failed', e));
 }
 
+function saveAndSyncDeletedPosts(set) {
+  saveDeletedPosts(set);
+  _supa.from('journal').upsert({ id: 'cal_deleted', entries: [...set], updated_at: new Date().toISOString() })
+    .catch(e => console.warn('[sync] cal_deleted push failed', e));
+}
+
 async function syncCalendarFromCloud() {
   // Snapshot local state before the async fetch. If the user edits anything
   // while the fetch is in-flight, that type won't be overwritten.
@@ -119,13 +125,15 @@ async function syncCalendarFromCloud() {
   const snapArchived  = JSON.stringify([...getArchived()].sort());
   const snapCustom    = JSON.stringify(getCustomPosts());
   const snapOverrides = JSON.stringify(getPostOverrides());
+  const snapDeleted   = JSON.stringify([...getDeletedPosts()].sort());
 
   try {
-    const [booksRes, archivedRes, customRes, overridesRes] = await Promise.all([
+    const [booksRes, archivedRes, customRes, overridesRes, deletedRes] = await Promise.all([
       _supa.from('journal').select('entries').eq('id', 'cal_books').single(),
       _supa.from('journal').select('entries').eq('id', 'cal_archived').single(),
       _supa.from('journal').select('entries').eq('id', 'cal_custom').single(),
       _supa.from('journal').select('entries').eq('id', 'cal_overrides').single(),
+      _supa.from('journal').select('entries').eq('id', 'cal_deleted').single(),
     ]);
 
     let changed = false;
@@ -164,6 +172,15 @@ async function syncCalendarFromCloud() {
       _supa.from('journal').upsert({ id: 'cal_overrides', entries: localOverrides, updated_at: new Date().toISOString() }).catch(() => {});
     } else if (JSON.stringify(remoteOverrides) !== localOverridesStr && localOverridesStr === snapOverrides) {
       savePostOverrides(remoteOverrides); changed = true;
+    }
+
+    const remoteDeleted   = deletedRes.data?.entries || [];
+    const localDeleted    = [...getDeletedPosts()].sort();
+    const localDeletedStr = JSON.stringify(localDeleted);
+    if (remoteDeleted.length === 0 && localDeleted.length > 0) {
+      _supa.from('journal').upsert({ id: 'cal_deleted', entries: localDeleted, updated_at: new Date().toISOString() }).catch(() => {});
+    } else if (JSON.stringify([...remoteDeleted].sort()) !== localDeletedStr && localDeletedStr === snapDeleted) {
+      saveDeletedPosts(new Set(remoteDeleted)); changed = true;
     }
 
     if (changed && currentView === 'calendar') renderCalendar();

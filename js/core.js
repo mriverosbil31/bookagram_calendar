@@ -3,6 +3,7 @@ const ARCHIVED_KEY        = 'thc_archived';
 const BOOKS_KEY           = 'thc_books';
 const CUSTOM_LINKS_KEY    = 'thc_custom_links';
 const POST_OVERRIDES_KEY  = 'thc_post_overrides';
+const DELETED_POSTS_KEY   = 'thc_deleted_posts';
 
 // ─── Shared constants ─────────────────────────────────────────────
 const ITEMS_PER_PAGE = 15;
@@ -46,6 +47,13 @@ function getPostOverrides() {
 }
 function savePostOverrides(obj) {
   localStorage.setItem(POST_OVERRIDES_KEY, JSON.stringify(obj));
+}
+function getDeletedPosts() {
+  try { return new Set(JSON.parse(localStorage.getItem(DELETED_POSTS_KEY)) || []); }
+  catch { return new Set(); }
+}
+function saveDeletedPosts(set) {
+  localStorage.setItem(DELETED_POSTS_KEY, JSON.stringify([...set]));
 }
 function getCustomLinks() {
   try { return JSON.parse(localStorage.getItem(CUSTOM_LINKS_KEY)) || []; }
