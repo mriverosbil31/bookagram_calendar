@@ -113,6 +113,13 @@ function saveAndSyncPostOverrides(obj) {
 }
 
 async function syncCalendarFromCloud() {
+  // Snapshot local state before the async fetch. If the user edits anything
+  // while the fetch is in-flight, that type won't be overwritten.
+  const snapBooks     = JSON.stringify(getAllBooks());
+  const snapArchived  = JSON.stringify([...getArchived()].sort());
+  const snapCustom    = JSON.stringify(getCustomPosts());
+  const snapOverrides = JSON.stringify(getPostOverrides());
+
   try {
     const [booksRes, archivedRes, customRes, overridesRes] = await Promise.all([
       _supa.from('journal').select('entries').eq('id', 'cal_books').single(),
@@ -123,35 +130,39 @@ async function syncCalendarFromCloud() {
 
     let changed = false;
 
-    const remoteBooks = booksRes.data?.entries || {};
-    const localBooks  = getAllBooks();
+    const remoteBooks   = booksRes.data?.entries || {};
+    const localBooks    = getAllBooks();
+    const localBooksStr = JSON.stringify(localBooks);
     if (Object.keys(remoteBooks).length === 0 && Object.keys(localBooks).length > 0) {
       _supa.from('journal').upsert({ id: 'cal_books', entries: localBooks, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify(remoteBooks) !== JSON.stringify(localBooks)) {
+    } else if (JSON.stringify(remoteBooks) !== localBooksStr && localBooksStr === snapBooks) {
       saveAllBooks(remoteBooks); changed = true;
     }
 
-    const remoteArchived = archivedRes.data?.entries || [];
-    const localArchived  = [...getArchived()].sort();
+    const remoteArchived   = archivedRes.data?.entries || [];
+    const localArchived    = [...getArchived()].sort();
+    const localArchivedStr = JSON.stringify(localArchived);
     if (remoteArchived.length === 0 && localArchived.length > 0) {
       _supa.from('journal').upsert({ id: 'cal_archived', entries: localArchived, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify([...remoteArchived].sort()) !== JSON.stringify(localArchived)) {
+    } else if (JSON.stringify([...remoteArchived].sort()) !== localArchivedStr && localArchivedStr === snapArchived) {
       saveArchived(new Set(remoteArchived)); changed = true;
     }
 
-    const remoteCustom = customRes.data?.entries || [];
-    const localCustom  = getCustomPosts();
+    const remoteCustom   = customRes.data?.entries || [];
+    const localCustom    = getCustomPosts();
+    const localCustomStr = JSON.stringify(localCustom);
     if (remoteCustom.length === 0 && localCustom.length > 0) {
       _supa.from('journal').upsert({ id: 'cal_custom', entries: localCustom, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify(remoteCustom) !== JSON.stringify(localCustom)) {
+    } else if (JSON.stringify(remoteCustom) !== localCustomStr && localCustomStr === snapCustom) {
       saveCustomPosts(remoteCustom); changed = true;
     }
 
-    const remoteOverrides = overridesRes.data?.entries || {};
-    const localOverrides  = getPostOverrides();
+    const remoteOverrides   = overridesRes.data?.entries || {};
+    const localOverrides    = getPostOverrides();
+    const localOverridesStr = JSON.stringify(localOverrides);
     if (Object.keys(remoteOverrides).length === 0 && Object.keys(localOverrides).length > 0) {
       _supa.from('journal').upsert({ id: 'cal_overrides', entries: localOverrides, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify(remoteOverrides) !== JSON.stringify(localOverrides)) {
+    } else if (JSON.stringify(remoteOverrides) !== localOverridesStr && localOverridesStr === snapOverrides) {
       savePostOverrides(remoteOverrides); changed = true;
     }
 

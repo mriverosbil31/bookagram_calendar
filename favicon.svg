@@ -1,45 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Background -->
   <rect width="32" height="32" rx="5" fill="#0f0e1a"/>
-
-  <!-- Book body -->
-  <rect x="5" y="4" width="22" height="24" rx="1.5" fill="#f0ead6"/>
-  <!-- Spine strip -->
-  <rect x="5" y="4" width="4" height="24" rx="1.5 0 0 1.5" fill="#cdbfa0"/>
-  <!-- Spine inner edge line -->
-  <line x1="9" y1="4" x2="9" y2="28" stroke="#b8a888" stroke-width="0.6"/>
-
-  <!-- Eye socket (slight shadow behind eye) -->
-  <ellipse cx="18" cy="16" rx="7.5" ry="4.5" fill="#e0d4be"/>
-
-  <!-- Eye white -->
-  <ellipse cx="18" cy="16" rx="6.8" ry="3.8" fill="#f8f6f0"/>
-
-  <!-- Iris (blood red — thriller vibe) -->
-  <circle cx="18" cy="16" r="3.2" fill="#8b1a1a"/>
-  <!-- Iris ring detail -->
-  <circle cx="18" cy="16" r="3.2" fill="none" stroke="#6b1010" stroke-width="0.5"/>
-
-  <!-- Pupil -->
-  <circle cx="18" cy="16" r="1.6" fill="#080810"/>
-
-  <!-- Eye highlight (makes it look alive) -->
-  <circle cx="16.8" cy="14.7" r="0.75" fill="white" opacity="0.9"/>
-  <circle cx="19.2" cy="17" r="0.35" fill="white" opacity="0.5"/>
-
-  <!-- Upper eyelid -->
-  <path d="M11.2 16 Q18 10 24.8 16" fill="none" stroke="#2a1a10" stroke-width="1.1" stroke-linecap="round"/>
-  <!-- Lashes hint on upper lid -->
-  <path d="M13 14.2 Q13.5 13.2 13.2 12.6" fill="none" stroke="#2a1a10" stroke-width="0.6" stroke-linecap="round"/>
-  <path d="M15.5 13 Q16 12 15.8 11.3" fill="none" stroke="#2a1a10" stroke-width="0.6" stroke-linecap="round"/>
-  <path d="M18 12.6 Q18.3 11.5 18.2 10.8" fill="none" stroke="#2a1a10" stroke-width="0.6" stroke-linecap="round"/>
-  <path d="M20.5 13.1 Q21.1 12.2 21.2 11.5" fill="none" stroke="#2a1a10" stroke-width="0.6" stroke-linecap="round"/>
-  <path d="M22.8 14.4 Q23.5 13.7 23.8 13.1" fill="none" stroke="#2a1a10" stroke-width="0.6" stroke-linecap="round"/>
-
-  <!-- Lower eyelid -->
-  <path d="M11.2 16 Q18 20.8 24.8 16" fill="none" stroke="#2a1a10" stroke-width="0.8" stroke-linecap="round"/>
-
-  <!-- Blood tear at inner corner -->
-  <path d="M11.2 16 Q10.3 17.2 11.4 18.2" fill="none" stroke="#c0392b" stroke-width="0.9" stroke-linecap="round"/>
-  <circle cx="11.4" cy="18.2" r="0.6" fill="#c0392b"/>
+  <path d="M16 6 C16 6 8 16 8 20 a8 8 0 0 0 16 0 C24 16 16 6 16 6 Z" fill="#c0392b"/>
+  <ellipse cx="13" cy="18" rx="2" ry="3" fill="#e05555" opacity="0.5"/>
 </svg>
