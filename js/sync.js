@@ -97,10 +97,22 @@ const _SYNC_GRACE   = 10_000;
 function _calTouch(type) { _calLastWrite[type] = Date.now(); }
 function _calFresh(type) { return (Date.now() - (_calLastWrite[type] || 0)) < _SYNC_GRACE; }
 
+const _SUPA_URL = 'https://zuzpfvpbvmpkegfbjpdh.supabase.co/rest/v1/journal';
+const _SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1enBmdnBidm1wa2VnZmJqcGRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMDIxOTEsImV4cCI6MjA5Mjc3ODE5MX0.5pds87uuuX7aZ0sgYQhjFi3WQ3eeHGxGlGogL45yrJ0';
+
 async function _pushCal(id, entries) {
   try {
-    const { error } = await _supa.from('journal').upsert({ id, entries, updated_at: new Date().toISOString() });
-    if (error) console.warn('[sync] push failed', id, error);
+    const res = await fetch(_SUPA_URL, {
+      method: 'POST',
+      headers: {
+        'apikey': _SUPA_KEY,
+        'Authorization': 'Bearer ' + _SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ id, entries, updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) console.warn('[sync] push failed', id, res.status, await res.text());
   } catch(e) { console.warn('[sync] push error', id, e); }
 }
 
