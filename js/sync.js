@@ -97,39 +97,27 @@ const _SYNC_GRACE   = 10_000;
 function _calTouch(type) { _calLastWrite[type] = Date.now(); }
 function _calFresh(type) { return (Date.now() - (_calLastWrite[type] || 0)) < _SYNC_GRACE; }
 
+async function _pushCal(id, entries) {
+  try {
+    const { error } = await _supa.from('journal').upsert({ id, entries, updated_at: new Date().toISOString() });
+    if (error) console.warn('[sync] push failed', id, error);
+  } catch(e) { console.warn('[sync] push error', id, e); }
+}
+
 function saveAndSyncCalBooks(obj) {
-  saveAllBooks(obj);
-  _calTouch('books');
-  _supa.from('journal').upsert({ id: 'cal_books', entries: obj, updated_at: new Date().toISOString() })
-    .catch(e => console.warn('[sync] cal_books push failed', e));
+  saveAllBooks(obj); _calTouch('books'); _pushCal('cal_books', obj);
 }
-
 function saveAndSyncArchived(set) {
-  saveArchived(set);
-  _calTouch('archived');
-  _supa.from('journal').upsert({ id: 'cal_archived', entries: [...set], updated_at: new Date().toISOString() })
-    .catch(e => console.warn('[sync] cal_archived push failed', e));
+  saveArchived(set); _calTouch('archived'); _pushCal('cal_archived', [...set]);
 }
-
 function saveAndSyncCustomPosts(arr) {
-  saveCustomPosts(arr);
-  _calTouch('custom');
-  _supa.from('journal').upsert({ id: 'cal_custom', entries: arr, updated_at: new Date().toISOString() })
-    .catch(e => console.warn('[sync] cal_custom push failed', e));
+  saveCustomPosts(arr); _calTouch('custom'); _pushCal('cal_custom', arr);
 }
-
 function saveAndSyncPostOverrides(obj) {
-  savePostOverrides(obj);
-  _calTouch('overrides');
-  _supa.from('journal').upsert({ id: 'cal_overrides', entries: obj, updated_at: new Date().toISOString() })
-    .catch(e => console.warn('[sync] cal_overrides push failed', e));
+  savePostOverrides(obj); _calTouch('overrides'); _pushCal('cal_overrides', obj);
 }
-
 function saveAndSyncDeletedPosts(set) {
-  saveDeletedPosts(set);
-  _calTouch('deleted');
-  _supa.from('journal').upsert({ id: 'cal_deleted', entries: [...set], updated_at: new Date().toISOString() })
-    .catch(e => console.warn('[sync] cal_deleted push failed', e));
+  saveDeletedPosts(set); _calTouch('deleted'); _pushCal('cal_deleted', [...set]);
 }
 
 async function syncCalendarFromCloud() {

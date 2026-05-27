@@ -306,6 +306,28 @@ Voice: passionate, slightly obsessed — a husband who reads every thriller his 
 }
 
 // ─── Book-in-post CRUD ────────────────────────────────────────────
+function _renderBookChips(postId) {
+  const books = getBooksForPost(postId);
+  const chipsEl = document.getElementById('bchips-' + postId);
+  if (!chipsEl) return false;
+  chipsEl.innerHTML = books.map((b, i) =>
+    `<span class="book-chip">${esc(b.title)}${b.author ? `<span class="chip-author"> — ${esc(b.author)}</span>` : ''}<button class="chip-x" onclick="removeBook('${postId}',${i})" title="Remove">×</button></span>`
+  ).join('');
+  const card = chipsEl.closest('.post-card');
+  if (card) {
+    const existing = card.querySelector('.cal-claude-row');
+    if (books.length && !existing) {
+      const row = document.createElement('div');
+      row.className = 'cal-claude-row';
+      row.innerHTML = `<button class="claude-btn claude-btn--cal" onclick="openCalWithClaude('${postId}')"><span class="claude-icon">✦</span> Ask Claude</button>`;
+      card.appendChild(row);
+    } else if (!books.length && existing) {
+      existing.remove();
+    }
+  }
+  return true;
+}
+
 function addBook(postId) {
   const titleInput  = document.getElementById('binput-'  + postId);
   const authorInput = document.getElementById('bauthor-' + postId);
@@ -318,9 +340,14 @@ function addBook(postId) {
   const exists = all[postId].some(b => normBook(b).title.toLowerCase() === title.toLowerCase());
   if (!exists) all[postId].push({ title, author });
   saveAndSyncCalBooks(all);
-  renderCalendar();
-  showJnlToast(exists ? 'Book already added' : `"${title}" added!`);
-  document.getElementById('binput-' + postId)?.focus();
+  if (_renderBookChips(postId)) {
+    titleInput.value = '';
+    if (authorInput) authorInput.value = '';
+    titleInput.focus();
+  } else {
+    renderCalendar();
+  }
+  showJnlToast(exists ? 'Already added' : `"${title}" saved!`);
 }
 
 function removeBook(postId, idx) {
@@ -330,7 +357,7 @@ function removeBook(postId, idx) {
     if (!all[postId].length) delete all[postId];
     saveAndSyncCalBooks(all);
   }
-  renderCalendar();
+  if (!_renderBookChips(postId)) renderCalendar();
 }
 
 function refreshChips(postId) {
