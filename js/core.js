@@ -139,4 +139,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const hash  = window.location.hash.slice(1);
   const valid = ['calendar', 'books', 'journal', 'resources', 'library', 'todos', 'sprint'];
   setView(valid.includes(hash) ? hash : 'calendar');
+
+  // Re-sync when the user switches back to this tab, so changes from another
+  // device show up without needing a full page refresh.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && currentView === 'calendar') syncCalendarFromCloud();
+  });
+  window.addEventListener('focus', () => {
+    if (currentView === 'calendar') syncCalendarFromCloud();
+  });
 });

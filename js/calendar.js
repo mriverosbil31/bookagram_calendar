@@ -308,11 +308,8 @@ function addBook(postId) {
   const exists = all[postId].some(b => normBook(b).title.toLowerCase() === title.toLowerCase());
   if (!exists) all[postId].push({ title, author });
   saveAndSyncCalBooks(all);
-  titleInput.value = '';
-  if (authorInput) authorInput.value = '';
-  titleInput.focus();
-  refreshChips(postId);
-  refreshAuthorsList();
+  renderCalendar();
+  document.getElementById('binput-' + postId)?.focus();
 }
 
 function removeBook(postId, idx) {
@@ -322,8 +319,7 @@ function removeBook(postId, idx) {
     if (!all[postId].length) delete all[postId];
     saveAndSyncCalBooks(all);
   }
-  refreshChips(postId);
-  refreshAuthorsList();
+  renderCalendar();
 }
 
 function refreshChips(postId) {
