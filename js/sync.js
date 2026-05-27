@@ -88,45 +88,51 @@ function saveAndSyncTodos(arr) {
 }
 
 // ─── Calendar data sync (books, archived, custom posts) ───────────
+// Track the last time each data type was written locally.
+// syncCalendarFromCloud will not overwrite a type that was written
+// within the last 10 s — this covers the in-flight push window and
+// any sync triggered immediately after a user action (focus / visibility).
+const _calLastWrite = {};
+const _SYNC_GRACE   = 10_000;
+function _calTouch(type) { _calLastWrite[type] = Date.now(); }
+function _calFresh(type) { return (Date.now() - (_calLastWrite[type] || 0)) < _SYNC_GRACE; }
+
 function saveAndSyncCalBooks(obj) {
   saveAllBooks(obj);
+  _calTouch('books');
   _supa.from('journal').upsert({ id: 'cal_books', entries: obj, updated_at: new Date().toISOString() })
     .catch(e => console.warn('[sync] cal_books push failed', e));
 }
 
 function saveAndSyncArchived(set) {
   saveArchived(set);
+  _calTouch('archived');
   _supa.from('journal').upsert({ id: 'cal_archived', entries: [...set], updated_at: new Date().toISOString() })
     .catch(e => console.warn('[sync] cal_archived push failed', e));
 }
 
 function saveAndSyncCustomPosts(arr) {
   saveCustomPosts(arr);
+  _calTouch('custom');
   _supa.from('journal').upsert({ id: 'cal_custom', entries: arr, updated_at: new Date().toISOString() })
     .catch(e => console.warn('[sync] cal_custom push failed', e));
 }
 
 function saveAndSyncPostOverrides(obj) {
   savePostOverrides(obj);
+  _calTouch('overrides');
   _supa.from('journal').upsert({ id: 'cal_overrides', entries: obj, updated_at: new Date().toISOString() })
     .catch(e => console.warn('[sync] cal_overrides push failed', e));
 }
 
 function saveAndSyncDeletedPosts(set) {
   saveDeletedPosts(set);
+  _calTouch('deleted');
   _supa.from('journal').upsert({ id: 'cal_deleted', entries: [...set], updated_at: new Date().toISOString() })
     .catch(e => console.warn('[sync] cal_deleted push failed', e));
 }
 
 async function syncCalendarFromCloud() {
-  // Snapshot local state before the async fetch. If the user edits anything
-  // while the fetch is in-flight, that type won't be overwritten.
-  const snapBooks     = JSON.stringify(getAllBooks());
-  const snapArchived  = JSON.stringify([...getArchived()].sort());
-  const snapCustom    = JSON.stringify(getCustomPosts());
-  const snapOverrides = JSON.stringify(getPostOverrides());
-  const snapDeleted   = JSON.stringify([...getDeletedPosts()].sort());
-
   try {
     const [booksRes, archivedRes, customRes, overridesRes, deletedRes] = await Promise.all([
       _supa.from('journal').select('entries').eq('id', 'cal_books').single(),
@@ -138,48 +144,43 @@ async function syncCalendarFromCloud() {
 
     let changed = false;
 
-    const remoteBooks   = booksRes.data?.entries || {};
-    const localBooks    = getAllBooks();
-    const localBooksStr = JSON.stringify(localBooks);
+    const remoteBooks = booksRes.data?.entries || {};
+    const localBooks  = getAllBooks();
     if (Object.keys(remoteBooks).length === 0 && Object.keys(localBooks).length > 0) {
       _supa.from('journal').upsert({ id: 'cal_books', entries: localBooks, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify(remoteBooks) !== localBooksStr && localBooksStr === snapBooks) {
+    } else if (JSON.stringify(remoteBooks) !== JSON.stringify(localBooks) && !_calFresh('books')) {
       saveAllBooks(remoteBooks); changed = true;
     }
 
-    const remoteArchived   = archivedRes.data?.entries || [];
-    const localArchived    = [...getArchived()].sort();
-    const localArchivedStr = JSON.stringify(localArchived);
+    const remoteArchived = archivedRes.data?.entries || [];
+    const localArchived  = [...getArchived()].sort();
     if (remoteArchived.length === 0 && localArchived.length > 0) {
       _supa.from('journal').upsert({ id: 'cal_archived', entries: localArchived, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify([...remoteArchived].sort()) !== localArchivedStr && localArchivedStr === snapArchived) {
+    } else if (JSON.stringify([...remoteArchived].sort()) !== JSON.stringify(localArchived) && !_calFresh('archived')) {
       saveArchived(new Set(remoteArchived)); changed = true;
     }
 
-    const remoteCustom   = customRes.data?.entries || [];
-    const localCustom    = getCustomPosts();
-    const localCustomStr = JSON.stringify(localCustom);
+    const remoteCustom = customRes.data?.entries || [];
+    const localCustom  = getCustomPosts();
     if (remoteCustom.length === 0 && localCustom.length > 0) {
       _supa.from('journal').upsert({ id: 'cal_custom', entries: localCustom, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify(remoteCustom) !== localCustomStr && localCustomStr === snapCustom) {
+    } else if (JSON.stringify(remoteCustom) !== JSON.stringify(localCustom) && !_calFresh('custom')) {
       saveCustomPosts(remoteCustom); changed = true;
     }
 
-    const remoteOverrides   = overridesRes.data?.entries || {};
-    const localOverrides    = getPostOverrides();
-    const localOverridesStr = JSON.stringify(localOverrides);
+    const remoteOverrides = overridesRes.data?.entries || {};
+    const localOverrides  = getPostOverrides();
     if (Object.keys(remoteOverrides).length === 0 && Object.keys(localOverrides).length > 0) {
       _supa.from('journal').upsert({ id: 'cal_overrides', entries: localOverrides, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify(remoteOverrides) !== localOverridesStr && localOverridesStr === snapOverrides) {
+    } else if (JSON.stringify(remoteOverrides) !== JSON.stringify(localOverrides) && !_calFresh('overrides')) {
       savePostOverrides(remoteOverrides); changed = true;
     }
 
-    const remoteDeleted   = deletedRes.data?.entries || [];
-    const localDeleted    = [...getDeletedPosts()].sort();
-    const localDeletedStr = JSON.stringify(localDeleted);
+    const remoteDeleted = deletedRes.data?.entries || [];
+    const localDeleted  = [...getDeletedPosts()].sort();
     if (remoteDeleted.length === 0 && localDeleted.length > 0) {
       _supa.from('journal').upsert({ id: 'cal_deleted', entries: localDeleted, updated_at: new Date().toISOString() }).catch(() => {});
-    } else if (JSON.stringify([...remoteDeleted].sort()) !== localDeletedStr && localDeletedStr === snapDeleted) {
+    } else if (JSON.stringify([...remoteDeleted].sort()) !== JSON.stringify(localDeleted) && !_calFresh('deleted')) {
       saveDeletedPosts(new Set(remoteDeleted)); changed = true;
     }
 
