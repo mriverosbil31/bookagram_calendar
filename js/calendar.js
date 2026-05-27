@@ -319,6 +319,7 @@ function addBook(postId) {
   if (!exists) all[postId].push({ title, author });
   saveAndSyncCalBooks(all);
   renderCalendar();
+  showJnlToast(exists ? 'Book already added' : `"${title}" added!`);
   document.getElementById('binput-' + postId)?.focus();
 }
 
