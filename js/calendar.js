@@ -170,10 +170,18 @@ function showEditPost(id) {
     const w    = months[+pm[1]]?.weeks[+pm[2]];
     const item = pm[3] === 's' ? w?.stories?.[+pm[4]] : w?.posts?.[+pm[4]];
     if (!item) return;
-    const ov   = getPostOverrides()[id] || {};
+    const ov     = getPostOverrides()[id] || {};
     currentPl    = ov.pl    || item.pl    || 'both';
     currentTitle = ov.title || item.title || '';
     currentDesc  = ov.desc  !== undefined ? ov.desc : (item.desc || '');
+    if (pm[3] !== 's') {
+      const currentDay = ov.day || item.day || 'Mon';
+      const dayOptions = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+        .map(d => `<option value="${d}"${d === currentDay ? ' selected' : ''}>${d}</option>`).join('');
+      weekDayHtml = `<div class="jnl-row">
+          <select id="cal-edit-day" class="jnl-input" style="color-scheme:dark">${dayOptions}</select>
+        </div>`;
+    }
   }
 
   document.getElementById('cal-edit-post-ov')?.remove();
@@ -230,7 +238,9 @@ function saveEditPost(id) {
     saveAndSyncCustomPosts(customs);
   } else {
     const overrides = getPostOverrides();
+    const dayEl = document.getElementById('cal-edit-day');
     overrides[id] = { title, desc, pl };
+    if (dayEl) overrides[id].day = dayEl.value;
     saveAndSyncPostOverrides(overrides);
   }
 
@@ -373,7 +383,7 @@ function buildCard(item, id, isStory, isArchived, isCustom = false) {
   const override = getPostOverrides()[id] || {};
   const title = override.title || item.title;
   const desc  = override.desc  !== undefined ? override.desc : (item.desc || '');
-  const day   = isStory ? 'Story' : item.day;
+  const day   = isStory ? 'Story' : (override.day || item.day);
   const pl    = isStory ? 'story' : (override.pl || item.pl);
   const books = getBooksForPost(id);
   const chips = books.map((b, i) =>
@@ -448,27 +458,41 @@ function renderCalendar() {
       </button>
     </div>`;
 
+  const DAY_ORDER = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:7};
+  const overrides = getPostOverrides();
+
   m.weeks.forEach((w, wi) => {
-    const activePosts = [], activeStories = [];
+    const postQueue = [], storyQueue = [];
 
     w.posts.forEach((p, pi) => {
       const id = `m${currentMonth}-w${wi}-p${pi}`;
       if (deleted.has(id)) return;
-      (archived.has(id) ? archCards : activePosts).push(buildCard(p, id, false, archived.has(id)));
+      const isArch = archived.has(id);
+      if (isArch) { archCards.push(buildCard(p, id, false, true)); return; }
+      const ov = overrides[id] || {};
+      postQueue.push({ p, id, isCustom: false, day: ov.day || p.day || 'Mon' });
     });
 
     (w.stories || []).forEach((s, si) => {
       const id = `m${currentMonth}-w${wi}-s${si}`;
       if (deleted.has(id)) return;
-      (archived.has(id) ? archCards : activeStories).push(buildCard(s, id, true, archived.has(id)));
+      const isArch = archived.has(id);
+      if (isArch) { archCards.push(buildCard(s, id, true, true)); return; }
+      storyQueue.push({ p: s, id });
     });
 
     getCustomPosts()
       .filter(p => p.monthIdx === currentMonth && p.weekIdx === wi)
       .forEach(cp => {
         const isArch = archived.has(cp.id);
-        (isArch ? archCards : activePosts).push(buildCard(cp, cp.id, cp.pl === 'story', isArch, true));
+        if (isArch) { archCards.push(buildCard(cp, cp.id, cp.pl === 'story', true, true)); return; }
+        postQueue.push({ p: cp, id: cp.id, isCustom: true, isStory: cp.pl === 'story', day: cp.day || 'Mon' });
       });
+
+    postQueue.sort((a, b) => (DAY_ORDER[a.day] || 8) - (DAY_ORDER[b.day] || 8));
+
+    const activePosts   = postQueue.map(({ p, id, isCustom, isStory }) => buildCard(p, id, !!isStory, false, isCustom));
+    const activeStories = storyQueue.map(({ p, id })                   => buildCard(p, id, true, false, false));
 
     if (!activePosts.length && !activeStories.length) return;
 
