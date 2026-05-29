@@ -34,6 +34,14 @@ function showAddPostModal() {
           </div>
           <input type="hidden" id="cal-pl-val" value="ig">
         </div>
+        <div id="cal-type-wrap">
+          <div class="jnl-label" style="margin-bottom:6px">Content type</div>
+          <div class="cal-platform-picker" id="cal-type-picker">
+            <button type="button" class="cal-pl-btn active" data-type="post" onclick="calPickType('post')">Post</button>
+            <button type="button" class="cal-pl-btn"        data-type="reel" onclick="calPickType('reel')">Reel</button>
+          </div>
+          <input type="hidden" id="cal-type-val" value="post">
+        </div>
         <div class="jnl-row">
           <input id="cal-book-title"  type="text" class="jnl-input" placeholder="Book title (optional)" list="library-titles-list">
           <input id="cal-book-author" type="text" class="jnl-input" placeholder="Author" list="global-authors-list">
@@ -68,6 +76,15 @@ function calPickPl(pl) {
   document.querySelectorAll('#cal-pl-picker .cal-pl-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.pl === pl)
   );
+  const typeWrap = document.getElementById('cal-type-wrap');
+  if (typeWrap) typeWrap.style.display = pl === 'story' ? 'none' : '';
+}
+
+function calPickType(type) {
+  document.getElementById('cal-type-val').value = type;
+  document.querySelectorAll('#cal-type-picker .cal-pl-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.type === type)
+  );
 }
 
 function saveCustomPost(monthIdx) {
@@ -84,8 +101,9 @@ function saveCustomPost(monthIdx) {
     : null);
   if (!finalTitle) { document.getElementById('cal-post-title')?.focus(); showJnlToast('Post title is required'); return; }
 
+  const type = document.getElementById('cal-type-val')?.value || 'post';
   const id = `custom-m${monthIdx}-${Date.now()}`;
-  const post = { id, monthIdx, weekIdx, day, pl, title: finalTitle, desc, addedAt: Date.now() };
+  const post = { id, monthIdx, weekIdx, day, pl, type: pl === 'story' ? 'story' : type, title: finalTitle, desc, addedAt: Date.now() };
   const customs = getCustomPosts();
   customs.push(post);
   saveAndSyncCustomPosts(customs);
@@ -146,14 +164,17 @@ function deletePost(id) {
 function showEditPost(id) {
   const isCustom = id.startsWith('custom-');
   const plLabels = { ig: 'Instagram', tt: 'TikTok', both: 'Both', story: 'Story' };
-  let currentPl, currentTitle, currentDesc, weekDayHtml = '';
+  let currentPl, currentType, currentTitle, currentDesc, weekDayHtml = '';
+  let isStoryEdit = false;
 
   if (isCustom) {
     const post = getCustomPosts().find(p => p.id === id);
     if (!post) { showJnlToast('Post not found'); return; }
     currentPl    = post.pl;
+    currentType  = post.type || 'post';
     currentTitle = post.title;
     currentDesc  = post.desc || '';
+    isStoryEdit  = post.pl === 'story';
     const m = months[post.monthIdx] || months[currentMonth];
     const weekOptions = m.weeks.map((w, wi) =>
       `<option value="${wi}"${wi === post.weekIdx ? ' selected' : ''}>${esc(w.label)}</option>`
@@ -172,8 +193,10 @@ function showEditPost(id) {
     if (!item) return;
     const ov     = getPostOverrides()[id] || {};
     currentPl    = ov.pl    || item.pl    || 'both';
+    currentType  = ov.type  || item.type  || 'post';
     currentTitle = ov.title || item.title || '';
     currentDesc  = ov.desc  !== undefined ? ov.desc : (item.desc || '');
+    isStoryEdit  = pm[3] === 's';
     if (pm[3] !== 's') {
       const currentDay = ov.day || item.day || 'Mon';
       const dayOptions = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
@@ -183,6 +206,16 @@ function showEditPost(id) {
         </div>`;
     }
   }
+
+  const typePickerHtml = isStoryEdit ? '' : `
+    <div id="cal-edit-type-wrap"${currentPl === 'story' ? ' style="display:none"' : ''}>
+      <div class="jnl-label" style="margin-bottom:6px">Content type</div>
+      <div class="cal-platform-picker" id="cal-edit-type-picker">
+        <button type="button" class="cal-pl-btn${currentType === 'post' ? ' active' : ''}" data-type="post" onclick="calEditPickType('post')">Post</button>
+        <button type="button" class="cal-pl-btn${currentType === 'reel' ? ' active' : ''}" data-type="reel" onclick="calEditPickType('reel')">Reel</button>
+      </div>
+      <input type="hidden" id="cal-edit-type-val" value="${currentType}">
+    </div>`;
 
   document.getElementById('cal-edit-post-ov')?.remove();
   const ov = document.createElement('div');
@@ -201,6 +234,7 @@ function showEditPost(id) {
           </div>
           <input type="hidden" id="cal-edit-pl-val" value="${currentPl}">
         </div>
+        ${typePickerHtml}
         ${weekDayHtml}
         <input id="cal-edit-title" type="text" class="jnl-input" placeholder="Post title *" value="${esc(currentTitle)}">
         <textarea id="cal-edit-desc" class="jnl-input jnl-ta" rows="3"
@@ -220,12 +254,22 @@ function calEditPickPl(pl) {
   document.querySelectorAll('#cal-edit-pl-picker .cal-pl-btn').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.pl === pl)
   );
+  const typeWrap = document.getElementById('cal-edit-type-wrap');
+  if (typeWrap) typeWrap.style.display = pl === 'story' ? 'none' : '';
+}
+
+function calEditPickType(type) {
+  document.getElementById('cal-edit-type-val').value = type;
+  document.querySelectorAll('#cal-edit-type-picker .cal-pl-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.type === type)
+  );
 }
 
 function saveEditPost(id) {
   const title = document.getElementById('cal-edit-title')?.value.trim();
   const desc  = document.getElementById('cal-edit-desc')?.value.trim() || '';
   const pl    = document.getElementById('cal-edit-pl-val')?.value || 'ig';
+  const type  = pl === 'story' ? 'story' : (document.getElementById('cal-edit-type-val')?.value || 'post');
   if (!title) { document.getElementById('cal-edit-title')?.focus(); showJnlToast('Title is required'); return; }
 
   if (id.startsWith('custom-')) {
@@ -234,12 +278,12 @@ function saveEditPost(id) {
     const customs = getCustomPosts();
     const idx     = customs.findIndex(p => p.id === id);
     if (idx === -1) { showJnlToast('Post not found — try refreshing'); return; }
-    Object.assign(customs[idx], { day, pl, title, desc, weekIdx });
+    Object.assign(customs[idx], { day, pl, type, title, desc, weekIdx });
     saveAndSyncCustomPosts(customs);
   } else {
     const overrides = getPostOverrides();
     const dayEl = document.getElementById('cal-edit-day');
-    overrides[id] = { title, desc, pl };
+    overrides[id] = { title, desc, pl, type };
     if (dayEl) overrides[id].day = dayEl.value;
     saveAndSyncPostOverrides(overrides);
   }
@@ -406,6 +450,12 @@ function plBadge(pl) {
   return '<span class="pbadge both">Both</span>';
 }
 
+function typeBadge(type) {
+  if (!type || type === 'story') return '';
+  if (type === 'reel') return '<span class="pbadge type-reel">Reel</span>';
+  return '<span class="pbadge type-post">Post</span>';
+}
+
 // ─── Card builder ─────────────────────────────────────────────────
 function buildCard(item, id, isStory, isArchived, isCustom = false) {
   const override = getPostOverrides()[id] || {};
@@ -413,6 +463,7 @@ function buildCard(item, id, isStory, isArchived, isCustom = false) {
   const desc  = override.desc  !== undefined ? override.desc : (item.desc || '');
   const day   = isStory ? 'Story' : (override.day || item.day);
   const pl    = isStory ? 'story' : (override.pl || item.pl);
+  const type  = isStory ? 'story' : (override.type || item.type || 'post');
   const books = getBooksForPost(id);
   const chips = books.map((b, i) =>
     `<span class="book-chip">${esc(b.title)}${b.author ? `<span class="chip-author"> — ${esc(b.author)}</span>` : ''}<button class="chip-x" onclick="removeBook('${id}',${i})" title="Remove">×</button></span>`
@@ -435,6 +486,7 @@ function buildCard(item, id, isStory, isArchived, isCustom = false) {
     <div class="card-top-row">
       <div class="pday">${day}</div>
       ${plBadge(pl)}
+      ${typeBadge(type)}
       ${editActions}
       <button class="check-btn${isArchived ? ' checked' : ''}" onclick="toggleArchived('${id}')" title="${isArchived ? 'Unmark as posted' : 'Mark as posted'}">
         <span class="check-icon">${isArchived ? '✓' : ''}</span>

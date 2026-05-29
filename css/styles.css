@@ -397,6 +397,9 @@ body {
 .story { background: var(--story-amber-bg); color: var(--story-amber);  }
 .both  { background: var(--both-teal-bg);  color: var(--both-teal);    }
 
+.type-post { background: #eeeae5; color: #5c4a3a; }
+.type-reel { background: #dceef8; color: #1a4868; }
+
 .ptitle {
   font-family: 'Playfair Display', serif;
   font-size: 14px;
@@ -3451,6 +3454,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .cal-pl-btn.active[data-pl="tt"]    { background: var(--tt-red-bg);       border-color: var(--tt-red);       color: var(--tt-red); }
 .cal-pl-btn.active[data-pl="both"]  { background: var(--both-teal-bg);    border-color: var(--both-teal);    color: var(--both-teal); }
 .cal-pl-btn.active[data-pl="story"] { background: var(--story-amber-bg);  border-color: var(--story-amber);  color: var(--story-amber); }
+.cal-pl-btn.active[data-type="post"] { background: #eeeae5; border-color: #8a7060; color: #5c4a3a; }
+.cal-pl-btn.active[data-type="reel"] { background: #dceef8; border-color: #1a4868; color: #1a4868; }
 
 /* "Also log to journal" section in Add Post modal */
 .cal-add-journal-section {
