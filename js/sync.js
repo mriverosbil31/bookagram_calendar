@@ -29,7 +29,10 @@ async function syncJournalFromCloud() {
     const remote = await _sbGet('main') || [];
     const local  = getJournal();
     if (remote.length === 0 && local.length > 0) { _sbSet('main', local); return; }
-    if (JSON.stringify(remote) !== JSON.stringify(local)) { saveJournal(remote); applyJournalFilters(); }
+    if (JSON.stringify(remote) !== JSON.stringify(local)) {
+      saveJournal(remote);
+      if (currentView === 'journal') renderJournalView();
+    }
   } catch(e) { console.warn('[sync] journal fetch failed', e); }
 }
 
@@ -44,7 +47,10 @@ async function syncLibraryFromCloud() {
     const remote = await _sbGet('library') || [];
     const local  = getLibrary();
     if (remote.length === 0 && local.length > 0) { _sbSet('library', local); return; }
-    if (JSON.stringify(remote) !== JSON.stringify(local)) { saveLibrary(remote); renderLibGrid(); }
+    if (JSON.stringify(remote) !== JSON.stringify(local)) {
+      saveLibrary(remote);
+      if (currentView === 'library') { renderLibGrid(); refreshLibraryTitlesList(); }
+    }
   } catch(e) { console.warn('[sync] library fetch failed', e); }
 }
 
@@ -59,7 +65,10 @@ async function syncTodosFromCloud() {
     const remote = await _sbGet('todos') || [];
     const local  = getTodos();
     if (remote.length === 0 && local.length > 0) { _sbSet('todos', local); return; }
-    if (JSON.stringify(remote) !== JSON.stringify(local)) { saveTodos(remote); renderTodosView(); }
+    if (JSON.stringify(remote) !== JSON.stringify(local)) {
+      saveTodos(remote);
+      if (currentView === 'todos') renderTodosView();
+    }
   } catch(e) { console.warn('[sync] todos fetch failed', e); }
 }
 
