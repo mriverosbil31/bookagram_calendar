@@ -32,8 +32,14 @@ function saveArchived(set) {
   localStorage.setItem(ARCHIVED_KEY, JSON.stringify([...set]));
 }
 function getAllBooks() {
-  try { return JSON.parse(localStorage.getItem(BOOKS_KEY)) || {}; }
-  catch { return {}; }
+  try {
+    const d = JSON.parse(localStorage.getItem(BOOKS_KEY));
+    if (!d || typeof d !== 'object' || Array.isArray(d)) return {};
+    // Drop any key whose value isn't an array (guards against corrupted data)
+    const clean = {};
+    for (const [k, v] of Object.entries(d)) { if (Array.isArray(v)) clean[k] = v; }
+    return clean;
+  } catch { return {}; }
 }
 function saveAllBooks(obj) {
   localStorage.setItem(BOOKS_KEY, JSON.stringify(obj));

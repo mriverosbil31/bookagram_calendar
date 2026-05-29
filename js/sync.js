@@ -49,7 +49,7 @@ async function syncLibraryFromCloud() {
     if (remote.length === 0 && local.length > 0) { _sbSet('library', local); return; }
     if (JSON.stringify(remote) !== JSON.stringify(local)) {
       saveLibrary(remote);
-      if (currentView === 'library') { renderLibGrid(); refreshLibraryTitlesList(); }
+      if (currentView === 'library') renderLibraryView();
     }
   } catch(e) { console.warn('[sync] library fetch failed', e); }
 }
