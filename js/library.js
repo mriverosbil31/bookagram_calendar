@@ -3,6 +3,11 @@ const LIBRARY_KEY = 'thc_library';
 let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' };
 let libExpandedSagas = new Set();
 
+// ─── TBR Spinner state ────────────────────────────────────────────
+let tbrExcluded = new Set();
+let tbrSpinning = false;
+let tbrFilter   = { format: 'all', tag: 'all', unreadOnly: true };
+
 const TAG_PALETTE = [
   { bg: '#fde8e8', color: '#8b1a1a', border: '#f5c0c0' },
   { bg: '#f0e8fa', color: '#6B3FA0', border: '#d8c0f0' },
@@ -342,6 +347,198 @@ function sagaGroupHTML(name, books) {
   </div>`;
 }
 
+// ─── TBR Spinner ─────────────────────────────────────────────────
+function getTbrPool() {
+  let books = getLibrary().map(normLibBook);
+  if (tbrFilter.unreadOnly) books = books.filter(b => !b.read);
+  if (tbrFilter.format === 'physical') books = books.filter(b => b.format === 'physical' || b.format === 'both');
+  if (tbrFilter.format === 'ebook')    books = books.filter(b => b.format === 'ebook'    || b.format === 'both');
+  if (tbrFilter.tag !== 'all')         books = books.filter(b => (b.tags || []).includes(tbrFilter.tag));
+  return books.filter(b => !tbrExcluded.has(b.addedAt));
+}
+
+function spinTbr() {
+  if (tbrSpinning) return;
+  const pool    = getTbrPool();
+  const emptyEl = document.getElementById('tbr-empty');
+  const cardEl  = document.getElementById('tbr-card');
+
+  if (!pool.length) {
+    if (emptyEl) emptyEl.style.display = '';
+    if (cardEl)  { cardEl.classList.remove('tbr-card--show'); cardEl.innerHTML = ''; }
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  tbrSpinning = true;
+  const btn = document.getElementById('tbr-spin-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  cardEl?.classList.remove('tbr-card--show');
+
+  const final   = pool[Math.floor(Math.random() * pool.length)];
+  const titleEl = document.getElementById('tbr-reel-title');
+  const delays  = [50, 60, 72, 88, 108, 132, 162, 198, 244, 296, 358, 440];
+  let step = 0;
+
+  function tick() {
+    const r = pool[Math.floor(Math.random() * pool.length)];
+    if (titleEl) titleEl.textContent = r.title;
+    if (step < delays.length - 1) {
+      step++;
+      setTimeout(tick, delays[step]);
+    } else {
+      if (titleEl) titleEl.textContent = final.title;
+      tbrReveal(final);
+    }
+  }
+  setTimeout(tick, delays[0]);
+}
+
+function tbrReveal(book) {
+  const cardEl = document.getElementById('tbr-card');
+  if (!cardEl) return;
+
+  const tags = (book.tags || []).map(t => {
+    const c = tagColor(t);
+    return `<span class="lib-tag-pill" style="background:${c.bg};color:${c.color};border-color:${c.border}">${esc(t)}</span>`;
+  }).join('');
+
+  const fmtLabel = { physical: 'Physical', ebook: 'eBook', both: 'Physical + eBook' }[book.format] || book.format;
+  const saga = book.sagaName
+    ? `<div class="tbr-card-saga">${esc(book.sagaName)}${book.sagaOrder != null ? ` · Book ${book.sagaOrder}` : ''}</div>`
+    : '';
+
+  cardEl.innerHTML = `
+    <div class="tbr-card-title">${esc(book.title)}</div>
+    ${book.author ? `<div class="tbr-card-author">by ${esc(book.author)}</div>` : ''}
+    ${saga}
+    <div class="tbr-card-meta">
+      <span class="tbr-card-fmt">${esc(fmtLabel)}</span>
+      ${tags}
+    </div>
+    <div class="tbr-card-actions">
+      <button class="tbr-action-btn tbr-btn-skip" onclick="tbrSkip(${book.addedAt})">Skip this one</button>
+      <button class="tbr-action-btn tbr-btn-pick" onclick="tbrConfirmPick(${book.addedAt})">This is my pick! ✓</button>
+    </div>`;
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    cardEl.classList.add('tbr-card--show');
+    tbrSpinning = false;
+    const btn = document.getElementById('tbr-spin-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Spin again'; }
+  }));
+}
+
+function tbrSkip(bookId) {
+  tbrExcluded.add(bookId);
+  document.getElementById('tbr-card')?.classList.remove('tbr-card--show');
+  tbrUpdateCounter();
+  setTimeout(spinTbr, 280);
+}
+
+function tbrConfirmPick(bookId) {
+  const book   = getLibrary().map(normLibBook).find(b => b.addedAt === bookId);
+  const cardEl = document.getElementById('tbr-card');
+  if (!cardEl || !book) return;
+  cardEl.innerHTML = `<div class="tbr-confirmed">
+    ✓ Your next read:<br>
+    <strong>${esc(book.title)}</strong>
+    ${book.author ? `<span class="tbr-confirmed-author">by ${esc(book.author)}</span>` : ''}
+  </div>`;
+  const btn = document.getElementById('tbr-spin-btn');
+  if (btn) btn.textContent = 'Spin for another';
+}
+
+function tbrSetFormat(val) {
+  tbrFilter.format = val;
+  document.querySelectorAll('.tbr-fpill[data-fkey="format"]').forEach(p =>
+    p.classList.toggle('active', p.dataset.fval === val));
+  tbrSoftReset();
+}
+
+function tbrSetTag(val) {
+  tbrFilter.tag = val;
+  tbrSoftReset();
+}
+
+function tbrSetUnreadOnly(checked) {
+  tbrFilter.unreadOnly = checked;
+  tbrSoftReset();
+}
+
+function tbrSoftReset() {
+  tbrExcluded  = new Set();
+  tbrSpinning  = false;
+  const cardEl = document.getElementById('tbr-card');
+  if (cardEl)  { cardEl.classList.remove('tbr-card--show'); cardEl.innerHTML = ''; }
+  const emptyEl = document.getElementById('tbr-empty');
+  if (emptyEl) emptyEl.style.display = 'none';
+  const reelEl = document.getElementById('tbr-reel-title');
+  if (reelEl)  reelEl.textContent = '?';
+  const btn = document.getElementById('tbr-spin-btn');
+  if (btn)     { btn.disabled = false; btn.textContent = 'Spin!'; }
+  tbrUpdateCounter();
+}
+
+function tbrUpdateCounter() {
+  const el = document.getElementById('tbr-pool-count');
+  if (!el) return;
+  const n = getTbrPool().length;
+  el.textContent = `${n} book${n !== 1 ? 's' : ''} in pool`;
+  el.dataset.empty = n === 0 ? '1' : '';
+}
+
+function renderTbrSpinner() {
+  const allTags = new Set();
+  getLibrary().map(normLibBook)
+    .filter(b => !tbrFilter.unreadOnly || !b.read)
+    .forEach(b => (b.tags || []).forEach(t => allTags.add(t)));
+
+  const tagOpts = [...allTags].sort().map(t =>
+    `<option value="${esc(t)}"${tbrFilter.tag === t ? ' selected' : ''}>${esc(t)}</option>`
+  ).join('');
+
+  const poolCount = getTbrPool().length;
+
+  return `<div class="tbr-spinner">
+    <div class="tbr-spin-hd">
+      <div class="tbr-spin-hd-left">
+        <span class="tbr-spin-title">What Should I Read Next?</span>
+        <span class="tbr-spin-sub">Spin the wheel — let fate choose your next book</span>
+      </div>
+      <span id="tbr-pool-count" class="tbr-pool-count" ${poolCount === 0 ? 'data-empty="1"' : ''}>${poolCount} book${poolCount !== 1 ? 's' : ''} in pool</span>
+    </div>
+
+    <div class="tbr-controls">
+      <label class="tbr-toggle-label">
+        <input type="checkbox" class="tbr-toggle-chk"${tbrFilter.unreadOnly ? ' checked' : ''} onchange="tbrSetUnreadOnly(this.checked)">
+        Unread only
+      </label>
+      <div class="tbr-fpills">
+        <button class="tbr-fpill${tbrFilter.format==='all'?' active':''}" data-fkey="format" data-fval="all" onclick="tbrSetFormat('all')">All formats</button>
+        <button class="tbr-fpill${tbrFilter.format==='physical'?' active':''}" data-fkey="format" data-fval="physical" onclick="tbrSetFormat('physical')">Physical</button>
+        <button class="tbr-fpill${tbrFilter.format==='ebook'?' active':''}" data-fkey="format" data-fval="ebook" onclick="tbrSetFormat('ebook')">eBook</button>
+      </div>
+      ${allTags.size ? `<select class="tbr-tag-sel" onchange="tbrSetTag(this.value)">
+        <option value="all"${tbrFilter.tag==='all'?' selected':''}>All tags</option>
+        ${tagOpts}
+      </select>` : ''}
+    </div>
+
+    <div class="tbr-stage">
+      <div class="tbr-reel">
+        <div id="tbr-reel-title" class="tbr-reel-title">?</div>
+      </div>
+      <button id="tbr-spin-btn" class="tbr-spin-btn" onclick="spinTbr()">Spin!</button>
+      <div id="tbr-empty" class="tbr-empty" style="display:none">
+        No more books to spin!
+        <button class="tbr-reset-btn" onclick="tbrSoftReset()">Start fresh</button>
+      </div>
+      <div id="tbr-card" class="tbr-card"></div>
+    </div>
+  </div>`;
+}
+
 // ─── Views ────────────────────────────────────────────────────────
 function renderLibraryView() {
   libExpandedSagas = new Set();
@@ -354,6 +551,8 @@ function renderLibraryView() {
       <div class="view-header-title">My Library</div>
       <div class="view-header-sub">Your book shelf — track what you own and what you've read.</div>
     </div>
+
+    ${renderTbrSpinner()}
 
     <div class="lib-add-panel">
       <div class="jnl-panel-title">+ Add a book to your shelf</div>
