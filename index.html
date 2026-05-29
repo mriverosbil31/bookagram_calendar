@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260529b">
+  <link rel="stylesheet" href="css/styles.css?v=20260529c">
 </head>
 <body>
 
@@ -18,13 +18,13 @@
     <button class="drawer-close" onclick="closeDrawer()">×</button>
     <div class="drawer-logo">The Husband's <span>Corner</span></div>
     <div class="drawer-nav">
-      <button onclick="setView('calendar')">Calendar</button>
-      <button onclick="setView('books')">Books</button>
-      <button onclick="setView('journal')">Journal</button>
-      <button onclick="setView('library')">My Library</button>
-      <button onclick="setView('todos')">Launch</button>
-      <button onclick="setView('resources')">Reading Lists</button>
-      <button onclick="setView('sprint')">Sprint</button>
+      <a href="#calendar">Calendar</a>
+      <a href="#books">Books</a>
+      <a href="#journal">Journal</a>
+      <a href="#library">My Library</a>
+      <a href="#todos">Launch</a>
+      <a href="#resources">Reading Lists</a>
+      <a href="#sprint">Sprint</a>
     </div>
   </nav>
 
@@ -58,13 +58,13 @@
 
   <nav class="view-nav-wrap" aria-label="View navigation">
     <div class="view-nav">
-      <button class="vnav active" id="vnav-calendar" onclick="setView('calendar')">Calendar</button>
-      <button class="vnav" id="vnav-books" onclick="setView('books')">Books</button>
-      <button class="vnav" id="vnav-journal" onclick="setView('journal')">Journal</button>
-      <button class="vnav" id="vnav-library" onclick="setView('library')">My Library</button>
-      <button class="vnav" id="vnav-todos" onclick="setView('todos')">Launch</button>
-      <button class="vnav" id="vnav-resources" onclick="setView('resources')">Reading Lists</button>
-      <button class="vnav" id="vnav-sprint"    onclick="setView('sprint')">🔥 Sprint</button>
+      <a class="vnav active" id="vnav-calendar" href="#calendar">Calendar</a>
+      <a class="vnav" id="vnav-books" href="#books">Books</a>
+      <a class="vnav" id="vnav-journal" href="#journal">Journal</a>
+      <a class="vnav" id="vnav-library" href="#library">My Library</a>
+      <a class="vnav" id="vnav-todos" href="#todos">Launch</a>
+      <a class="vnav" id="vnav-resources" href="#resources">Reading Lists</a>
+      <a class="vnav" id="vnav-sprint" href="#sprint">🔥 Sprint</a>
     </div>
   </nav>
 
@@ -78,16 +78,16 @@
     <p>"There is nothing more deceptive than an obvious fact." — Arthur Conan Doyle</p>
   </footer>
 
-  <script src="js/data.js?v=20260529b"></script>
-  <script src="js/core.js?v=20260529b"></script>
-  <script src="js/sync.js?v=20260529b"></script>
-  <script src="js/journal.js?v=20260529b"></script>
-  <script src="js/claude_api.js?v=20260529b"></script>
-  <script src="js/library.js?v=20260529b"></script>
-  <script src="js/calendar.js?v=20260529b"></script>
-  <script src="js/books.js?v=20260529b"></script>
-  <script src="js/todos.js?v=20260529b"></script>
-  <script src="js/resources.js?v=20260529b"></script>
-  <script src="js/sprint.js?v=20260529b"></script>
+  <script src="js/data.js?v=20260529c"></script>
+  <script src="js/core.js?v=20260529c"></script>
+  <script src="js/sync.js?v=20260529c"></script>
+  <script src="js/journal.js?v=20260529c"></script>
+  <script src="js/claude_api.js?v=20260529c"></script>
+  <script src="js/library.js?v=20260529c"></script>
+  <script src="js/calendar.js?v=20260529c"></script>
+  <script src="js/books.js?v=20260529c"></script>
+  <script src="js/todos.js?v=20260529c"></script>
+  <script src="js/resources.js?v=20260529c"></script>
+  <script src="js/sprint.js?v=20260529c"></script>
 </body>
 </html>

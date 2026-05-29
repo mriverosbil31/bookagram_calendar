@@ -105,7 +105,12 @@ function renderMonthNav() {
 
 function setView(view) {
   currentView = view;
-  window.location.hash = view;
+  // replaceState doesn't fire hashchange, avoiding double-render loops when
+  // setView is called programmatically after an <a href="#view"> click already
+  // updated the hash.
+  if (window.location.hash !== '#' + view) {
+    history.replaceState(null, '', '#' + view);
+  }
   document.querySelectorAll('.vnav').forEach(b => b.classList.remove('active'));
   document.getElementById('vnav-' + view)?.classList.add('active');
   document.getElementById('month-nav-wrap').style.display = view === 'calendar' ? '' : 'none';
@@ -142,9 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   initTodos();
-  const hash  = window.location.hash.slice(1);
   const valid = ['calendar', 'books', 'journal', 'resources', 'library', 'todos', 'sprint'];
+  const hash  = window.location.hash.slice(1);
   setView(valid.includes(hash) ? hash : 'calendar');
+
+  window.addEventListener('hashchange', () => {
+    const h = window.location.hash.slice(1);
+    if (valid.includes(h)) setView(h);
+  });
 
   // Re-sync when the user switches back to this tab, so changes from another
   // device show up without needing a full page refresh.
