@@ -148,6 +148,92 @@ body {
   border-bottom-color: var(--blood);
 }
 
+.mnav-done { color: var(--both-teal); }
+.mnav-done:hover { color: var(--both-teal); }
+.mnav-done.active { color: var(--both-teal); border-bottom-color: var(--both-teal); }
+
+.mnav-archived {
+  margin-left: auto;
+  color: var(--ash);
+  border-left: 1px solid var(--mist);
+  padding-left: 20px;
+}
+.mnav-archived.active {
+  color: var(--blood);
+  border-bottom-color: var(--blood);
+}
+
+/* ── Archived Months view ── */
+.archived-months-view { padding: 0; }
+
+.arch-months-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.arch-month-card {
+  background: #fff;
+  border: 1px solid var(--mist);
+  border-radius: 12px;
+  padding: 20px 22px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  position: relative;
+}
+.arch-month-card:hover {
+  border-color: var(--both-teal);
+  box-shadow: 0 2px 12px rgba(26,92,74,0.1);
+}
+.arch-month-check {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 24px;
+  height: 24px;
+  background: var(--both-teal-bg);
+  color: var(--both-teal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.arch-month-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.arch-month-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--blood);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.arch-month-theme {
+  font-size: 12px;
+  color: var(--ash);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+.arch-month-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--both-teal);
+  margin-bottom: 8px;
+}
+.arch-month-link {
+  font-size: 12px;
+  color: var(--ash);
+}
+.arch-month-card:hover .arch-month-link { color: var(--both-teal); }
+
 /* ── MAIN ── */
 .main {
   max-width: 1100px;

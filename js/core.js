@@ -9,9 +9,10 @@ const DELETED_POSTS_KEY   = 'thc_deleted_posts';
 const ITEMS_PER_PAGE = 15;
 
 // ─── State ────────────────────────────────────────────────────────
-let currentView  = 'calendar';
-let currentMonth = 0;
-let archivedOpen = false;
+let currentView         = 'calendar';
+let currentMonth        = 0;
+let archivedOpen        = false;
+let archivedMonthsMode  = false;
 
 // ─── Drawer ───────────────────────────────────────────────────────
 function toggleDrawer() {
@@ -97,10 +98,46 @@ function refreshAuthorsList() {
 }
 
 // ─── Navigation ───────────────────────────────────────────────────
+function isMonthComplete(mi) {
+  const arch    = getArchived();
+  const deleted = getDeletedPosts();
+  const m       = months[mi];
+  if (!m) return false;
+  let total = 0, done = 0;
+  m.weeks.forEach((w, wi) => {
+    w.posts.forEach((_, pi) => {
+      const id = `m${mi}-w${wi}-p${pi}`;
+      if (deleted.has(id)) return;
+      total++; if (arch.has(id)) done++;
+    });
+    (w.stories || []).forEach((_, si) => {
+      const id = `m${mi}-w${wi}-s${si}`;
+      if (deleted.has(id)) return;
+      total++; if (arch.has(id)) done++;
+    });
+  });
+  const customs = typeof getCustomPosts === 'function' ? getCustomPosts() : [];
+  customs.filter(cp => cp.monthIdx === mi).forEach(cp => {
+    if (deleted.has(cp.id)) return;
+    total++; if (arch.has(cp.id)) done++;
+  });
+  return total > 0 && done === total;
+}
+
 function renderMonthNav() {
-  document.getElementById('month-nav').innerHTML = months.map((m, i) =>
-    `<button class="mnav${i === currentMonth ? ' active' : ''}" onclick="setMonth(${i})">${m.name}</button>`
-  ).join('');
+  const tabs = months.map((m, i) => {
+    const done    = isMonthComplete(i);
+    const isActive = !archivedMonthsMode && i === currentMonth;
+    return `<button class="mnav${isActive ? ' active' : ''}${done ? ' mnav-done' : ''}" onclick="setMonth(${i})">${m.name}${done ? ' ✓' : ''}</button>`;
+  }).join('');
+  const archTab = `<button class="mnav mnav-archived${archivedMonthsMode ? ' active' : ''}" onclick="showArchivedMonths()">Archived</button>`;
+  document.getElementById('month-nav').innerHTML = tabs + archTab;
+}
+
+function showArchivedMonths() {
+  archivedMonthsMode = true;
+  renderMonthNav();
+  renderArchivedMonths();
 }
 
 function setView(view) {
@@ -115,7 +152,7 @@ function setView(view) {
   document.getElementById('vnav-' + view)?.classList.add('active');
   document.getElementById('month-nav-wrap').style.display = view === 'calendar' ? '' : 'none';
   closeDrawer();
-  if (view === 'calendar')       { renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
+  if (view === 'calendar')       { archivedMonthsMode = false; renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
   else if (view === 'books')     renderBooksView();
   else if (view === 'resources') renderResourcesView();
   else if (view === 'journal')   { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }
@@ -125,8 +162,9 @@ function setView(view) {
 }
 
 function setMonth(i) {
-  currentMonth = i;
-  archivedOpen = false;
+  currentMonth       = i;
+  archivedOpen       = false;
+  archivedMonthsMode = false;
   renderMonthNav();
   renderCalendar();
   const mainTop = document.querySelector('.main').offsetTop - 70;

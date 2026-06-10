@@ -198,11 +198,17 @@ function showEditPost(id) {
     currentDesc  = ov.desc  !== undefined ? ov.desc : (item.desc || '');
     isStoryEdit  = pm[3] === 's';
     if (pm[3] !== 's') {
-      const currentDay = ov.day || item.day || 'Mon';
-      const dayOptions = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+      const currentDay     = ov.day || item.day || 'Mon';
+      const currentWeekIdx = ov.weekIdx !== undefined ? ov.weekIdx : +pm[2];
+      const mn = months[+pm[1]];
+      const dayOptions  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
         .map(d => `<option value="${d}"${d === currentDay ? ' selected' : ''}>${d}</option>`).join('');
+      const weekOptions = mn.weeks.map((wk, wi) =>
+        `<option value="${wi}"${wi === currentWeekIdx ? ' selected' : ''}>${esc(wk.label)}</option>`
+      ).join('');
       weekDayHtml = `<div class="jnl-row">
-          <select id="cal-edit-day" class="jnl-input" style="color-scheme:dark">${dayOptions}</select>
+          <select id="cal-edit-day"  class="jnl-input" style="color-scheme:dark">${dayOptions}</select>
+          <select id="cal-edit-week" class="jnl-input" style="color-scheme:dark">${weekOptions}</select>
         </div>`;
     }
   }
@@ -282,9 +288,11 @@ function saveEditPost(id) {
     saveAndSyncCustomPosts(customs);
   } else {
     const overrides = getPostOverrides();
-    const dayEl = document.getElementById('cal-edit-day');
+    const dayEl  = document.getElementById('cal-edit-day');
+    const weekEl = document.getElementById('cal-edit-week');
     overrides[id] = { title, desc, pl, type };
-    if (dayEl) overrides[id].day = dayEl.value;
+    if (dayEl)  overrides[id].day     = dayEl.value;
+    if (weekEl) overrides[id].weekIdx = parseInt(weekEl.value, 10);
     saveAndSyncPostOverrides(overrides);
   }
 
@@ -541,15 +549,26 @@ function renderCalendar() {
   const DAY_ORDER = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:7};
   const overrides = getPostOverrides();
 
+  // Pass 1: bucket built-in posts by effective week (respects weekIdx override)
+  const dataPostsByWeek = {};
   m.weeks.forEach((w, wi) => {
-    const postQueue = [], storyQueue = [];
-
     w.posts.forEach((p, pi) => {
       const id = `m${currentMonth}-w${wi}-p${pi}`;
       if (deleted.has(id)) return;
+      const ov = overrides[id] || {};
+      const targetWi = ov.weekIdx !== undefined ? ov.weekIdx : wi;
+      if (!dataPostsByWeek[targetWi]) dataPostsByWeek[targetWi] = [];
+      dataPostsByWeek[targetWi].push({ p, id, ov });
+    });
+  });
+
+  // Pass 2: render each week using remapped data
+  m.weeks.forEach((w, wi) => {
+    const postQueue = [], storyQueue = [];
+
+    (dataPostsByWeek[wi] || []).forEach(({ p, id, ov }) => {
       const isArch = archived.has(id);
       if (isArch) { archCards.push(buildCard(p, id, false, true)); return; }
-      const ov = overrides[id] || {};
       postQueue.push({ p, id, isCustom: false, day: ov.day || p.day || 'Mon' });
     });
 
@@ -608,4 +627,64 @@ function renderCalendar() {
   document.getElementById('main-content').innerHTML = html;
   refreshAuthorsList();
   refreshCalLibraryList();
+}
+
+// ─── Archived Months view ─────────────────────────────────────────
+function renderArchivedMonths() {
+  const archived = getArchived();
+  const deleted  = getDeletedPosts();
+
+  const completedMonths = months.map((m, mi) => {
+    let total = 0, done = 0;
+    m.weeks.forEach((w, wi) => {
+      w.posts.forEach((_, pi) => {
+        const id = `m${mi}-w${wi}-p${pi}`;
+        if (deleted.has(id)) return;
+        total++;
+        if (archived.has(id)) done++;
+      });
+      (w.stories || []).forEach((_, si) => {
+        const id = `m${mi}-w${wi}-s${si}`;
+        if (deleted.has(id)) return;
+        total++;
+        if (archived.has(id)) done++;
+      });
+    });
+    getCustomPosts().filter(cp => cp.monthIdx === mi).forEach(cp => {
+      if (deleted.has(cp.id)) return;
+      total++;
+      if (archived.has(cp.id)) done++;
+    });
+    return { m, mi, total, done, complete: total > 0 && done === total };
+  }).filter(x => x.complete);
+
+  let html = `<div class="archived-months-view">
+    <div class="view-header">
+      <div class="view-header-title">Archived Months</div>
+      <div class="view-header-sub">Months where every post has been marked as posted.</div>
+    </div>`;
+
+  if (!completedMonths.length) {
+    html += `<div class="empty-state">
+      <div class="empty-dash">—</div>
+      <div class="empty-title">Nothing archived yet</div>
+      <div class="empty-desc">Mark all posts in a month as posted and it will appear here.</div>
+    </div>`;
+  } else {
+    html += `<div class="arch-months-grid">`;
+    completedMonths.forEach(({ m, mi, done }) => {
+      html += `<div class="arch-month-card" onclick="setMonth(${mi})">
+        <div class="arch-month-check">✓</div>
+        <div class="arch-month-name">${esc(m.fullName)}</div>
+        <div class="arch-month-label">${esc(m.label)}</div>
+        <div class="arch-month-theme">${esc(m.theme)}</div>
+        <div class="arch-month-count">${done} post${done !== 1 ? 's' : ''} posted</div>
+        <div class="arch-month-link">View month →</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('main-content').innerHTML = html;
 }
