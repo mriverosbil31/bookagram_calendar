@@ -552,68 +552,74 @@ function renderLibraryView() {
       <div class="view-header-sub">Your book shelf — track what you own and what you've read.</div>
     </div>
 
-    ${renderTbrSpinner()}
+    <div class="lib-main-layout">
+      <div class="lib-main-col">
+        <div class="lib-add-panel">
+          <div class="jnl-panel-title">+ Add a book to your shelf</div>
+          <div class="lib-add-form">
+            <input id="lib-add-title" type="text" class="jnl-input" placeholder="Book title *"
+              list="library-titles-list"
+              onkeydown="if(event.key==='Enter')document.getElementById('lib-add-author').focus()">
+            <datalist id="library-titles-list"></datalist>
+            <input id="lib-add-author" type="text" class="jnl-input" placeholder="Author"
+              list="global-authors-list"
+              onkeydown="if(event.key==='Enter')document.getElementById('lib-add-format').focus()">
+            <select id="lib-add-format" class="jnl-input lib-select">
+              <option value="physical">Physical</option>
+              <option value="ebook">eBook</option>
+              <option value="both">Both</option>
+            </select>
+            <label class="lib-read-chk-label">
+              <input id="lib-add-read" type="checkbox" class="lib-read-chk"> Already read
+            </label>
+          </div>
+          <div class="lib-add-form lib-add-form-row2">
+            <input id="lib-add-saga" type="text" class="jnl-input" placeholder="Saga / series name (optional)"
+              onkeydown="if(event.key==='Enter')document.getElementById('lib-add-order').focus()">
+            <input id="lib-add-order" type="number" min="1" class="jnl-input lib-order-fld" placeholder="Book #"
+              onkeydown="if(event.key==='Enter')document.getElementById('lib-add-tags').focus()">
+            <input id="lib-add-tags" type="text" class="jnl-input" placeholder="Tags (comma-separated)"
+              onkeydown="if(event.key==='Enter')addLibraryBook()">
+            <button class="jnl-save-btn" onclick="addLibraryBook()">Add</button>
+          </div>
+        </div>
 
-    <div class="lib-add-panel">
-      <div class="jnl-panel-title">+ Add a book to your shelf</div>
-      <div class="lib-add-form">
-        <input id="lib-add-title" type="text" class="jnl-input" placeholder="Book title *"
-          list="library-titles-list"
-          onkeydown="if(event.key==='Enter')document.getElementById('lib-add-author').focus()">
-        <datalist id="library-titles-list"></datalist>
-        <input id="lib-add-author" type="text" class="jnl-input" placeholder="Author"
-          list="global-authors-list"
-          onkeydown="if(event.key==='Enter')document.getElementById('lib-add-format').focus()">
-        <select id="lib-add-format" class="jnl-input lib-select">
-          <option value="physical">Physical</option>
-          <option value="ebook">eBook</option>
-          <option value="both">Both</option>
-        </select>
-        <label class="lib-read-chk-label">
-          <input id="lib-add-read" type="checkbox" class="lib-read-chk"> Already read
-        </label>
+        <div class="lib-filter-bar">
+          <input class="lib-search" type="search" placeholder="Search title, author, tag…"
+            value="${esc(libState.search)}"
+            oninput="libSearch(this.value)">
+          <div class="lib-filter-row">
+            <div class="lib-filter-group">
+              <span class="lib-filter-label">Format:</span>
+              <button class="lib-fpill" data-ftype="format" data-fval="all"      onclick="filterLib('format','all')">All</button>
+              <button class="lib-fpill" data-ftype="format" data-fval="physical" onclick="filterLib('format','physical')">Physical</button>
+              <button class="lib-fpill" data-ftype="format" data-fval="ebook"    onclick="filterLib('format','ebook')">eBook</button>
+              <button class="lib-fpill" data-ftype="format" data-fval="both"     onclick="filterLib('format','both')">Both</button>
+            </div>
+            <div class="lib-filter-group">
+              <span class="lib-filter-label">Status:</span>
+              <button class="lib-fpill" data-ftype="read" data-fval="all"    onclick="filterLib('read','all')">All</button>
+              <button class="lib-fpill" data-ftype="read" data-fval="unread" onclick="filterLib('read','unread')">Unread</button>
+              <button class="lib-fpill" data-ftype="read" data-fval="read"   onclick="filterLib('read','read')">Read</button>
+            </div>
+            <div class="lib-filter-group">
+              <span class="lib-filter-label">Author:</span>
+              <select class="lib-author-select" onchange="filterLib('author',this.value)">
+                <option value="all">All authors</option>
+                ${allAuthors.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="lib-tag-filter-row" id="lib-tag-filter-row"></div>
+        </div>
+
+        <div id="lib-grid" class="lib-grid-wrap"></div>
       </div>
-      <div class="lib-add-form lib-add-form-row2">
-        <input id="lib-add-saga" type="text" class="jnl-input" placeholder="Saga / series name (optional)"
-          onkeydown="if(event.key==='Enter')document.getElementById('lib-add-order').focus()">
-        <input id="lib-add-order" type="number" min="1" class="jnl-input lib-order-fld" placeholder="Book #"
-          onkeydown="if(event.key==='Enter')document.getElementById('lib-add-tags').focus()">
-        <input id="lib-add-tags" type="text" class="jnl-input" placeholder="Tags (comma-separated)"
-          onkeydown="if(event.key==='Enter')addLibraryBook()">
-        <button class="jnl-save-btn" onclick="addLibraryBook()">Add</button>
+
+      <div class="lib-side-col">
+        ${renderTbrSpinner()}
       </div>
     </div>
-
-    <div class="lib-filter-bar">
-      <input class="lib-search" type="search" placeholder="Search title, author, tag…"
-        value="${esc(libState.search)}"
-        oninput="libSearch(this.value)">
-      <div class="lib-filter-row">
-        <div class="lib-filter-group">
-          <span class="lib-filter-label">Format:</span>
-          <button class="lib-fpill" data-ftype="format" data-fval="all"      onclick="filterLib('format','all')">All</button>
-          <button class="lib-fpill" data-ftype="format" data-fval="physical" onclick="filterLib('format','physical')">Physical</button>
-          <button class="lib-fpill" data-ftype="format" data-fval="ebook"    onclick="filterLib('format','ebook')">eBook</button>
-          <button class="lib-fpill" data-ftype="format" data-fval="both"     onclick="filterLib('format','both')">Both</button>
-        </div>
-        <div class="lib-filter-group">
-          <span class="lib-filter-label">Status:</span>
-          <button class="lib-fpill" data-ftype="read" data-fval="all"    onclick="filterLib('read','all')">All</button>
-          <button class="lib-fpill" data-ftype="read" data-fval="unread" onclick="filterLib('read','unread')">Unread</button>
-          <button class="lib-fpill" data-ftype="read" data-fval="read"   onclick="filterLib('read','read')">Read</button>
-        </div>
-        <div class="lib-filter-group">
-          <span class="lib-filter-label">Author:</span>
-          <select class="lib-author-select" onchange="filterLib('author',this.value)">
-            <option value="all">All authors</option>
-            ${allAuthors.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="lib-tag-filter-row" id="lib-tag-filter-row"></div>
-    </div>
-
-    <div id="lib-grid" class="lib-grid-wrap"></div>
   </div>`;
 
   refreshLibraryTitlesList();

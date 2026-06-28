@@ -441,7 +441,11 @@ function toggleArchived(id) {
   const archived = getArchived();
   if (archived.has(id)) { archived.delete(id); } else { archived.add(id); }
   saveAndSyncArchived(archived);
-  renderCalendar();
+  if (isMonthComplete(currentMonth) && currentMonth < months.length - 1) {
+    setMonth(currentMonth + 1);
+  } else {
+    renderCalendar();
+  }
 }
 
 function toggleArchivedPanel(btn) {

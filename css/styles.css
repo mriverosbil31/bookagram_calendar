@@ -1972,6 +1972,27 @@ button, a { -webkit-tap-highlight-color: transparent; }
 ═══════════════════════════════════════════════════════════ */
 .library-view { display: flex; flex-direction: column; gap: 0; }
 
+/* ── Library two-column layout ── */
+.lib-main-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.lib-main-col {
+  flex: 1;
+  min-width: 0;
+}
+.lib-side-col {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 80px;
+}
+@media (max-width: 860px) {
+  .lib-main-layout { flex-direction: column-reverse; }
+  .lib-side-col { width: 100%; position: static; }
+}
+
 /* ── TBR Spinner ── */
 .tbr-spinner {
   background: var(--shadow);
@@ -2121,6 +2142,28 @@ button, a { -webkit-tap-highlight-color: transparent; }
   transition: background 0.12s;
 }
 .tbr-reset-btn:hover { background: rgba(255,255,255,0.08); color: var(--parchment); }
+
+/* ── TBR compact side-panel overrides ── */
+.lib-side-col .tbr-spinner {
+  padding: 16px 16px 20px;
+  margin-bottom: 0;
+}
+.lib-side-col .tbr-spin-hd { margin-bottom: 12px; }
+.lib-side-col .tbr-spin-title { font-size: 14px; }
+.lib-side-col .tbr-spin-sub { font-size: 11px; }
+.lib-side-col .tbr-controls {
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  gap: 8px;
+}
+.lib-side-col .tbr-reel {
+  max-width: 100%;
+  padding: 12px 16px;
+  min-height: 52px;
+}
+.lib-side-col .tbr-reel-title { font-size: 15px; }
+.lib-side-col .tbr-spin-btn { padding: 8px 24px; font-size: 12px; }
+.lib-side-col .tbr-card { max-width: 100%; }
 
 .tbr-card {
   width: 100%;
