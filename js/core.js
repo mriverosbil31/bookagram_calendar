@@ -152,7 +152,7 @@ function setView(view) {
   document.getElementById('vnav-' + view)?.classList.add('active');
   document.getElementById('month-nav-wrap').style.display = view === 'calendar' ? '' : 'none';
   closeDrawer();
-  if (view === 'calendar')       { archivedMonthsMode = false; renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
+  if (view === 'calendar')       { archivedMonthsMode = false; advanceToActiveMonth(); renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
   else if (view === 'books')     renderBooksView();
   else if (view === 'resources') renderResourcesView();
   else if (view === 'journal')   { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }
@@ -169,6 +169,16 @@ function setMonth(i) {
   renderCalendar();
   const mainTop = document.querySelector('.main').offsetTop - 70;
   window.scrollTo({ top: mainTop, behavior: 'smooth' });
+}
+
+function advanceToActiveMonth() {
+  for (let i = currentMonth; i < months.length - 1; i++) {
+    if (!isMonthComplete(i)) { currentMonth = i; return; }
+  }
+  // all complete or already at last month — stay at last non-complete or last month
+  if (isMonthComplete(currentMonth) && currentMonth < months.length - 1) {
+    currentMonth = months.length - 1;
+  }
 }
 
 // ─── Init ─────────────────────────────────────────────────────────
