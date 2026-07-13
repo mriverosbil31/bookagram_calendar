@@ -2370,7 +2370,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 /* ── Split layout ── */
 .lib-split {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 260px 1fr;
   gap: 20px;
   align-items: start;
 }
@@ -2410,8 +2410,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   background: white;
   overflow: hidden;
 }
-.lib-table--sagas { --lib-cols: 16px 26px minmax(0,2fr) 88px 76px 28px; }
-.lib-table--books { --lib-cols: minmax(0,2fr) minmax(0,1fr) 88px 76px 28px; }
+.lib-table--sagas { --lib-cols: 16px 26px minmax(0,3fr) 88px 76px 28px; }
+.lib-table--books { --lib-cols: minmax(0,3fr) minmax(0,1fr) 88px 76px 28px; }
 
 .lib-table-head {
   display: grid;
