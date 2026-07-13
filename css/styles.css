@@ -2370,7 +2370,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 /* ── Split layout ── */
 .lib-split {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
   align-items: start;
 }
