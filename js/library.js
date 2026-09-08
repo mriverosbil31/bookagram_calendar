@@ -744,9 +744,9 @@ function renderLibGrid() {
     </div>`;
   }
 
-  // ── All Books (flat alphabetical) ─────────────────────────────────
+  // ── All Books (creation order — oldest first) ─────────────────────
   if (libState.libView === 'all') {
-    const sorted = [...items].sort((a, b) => a.title.localeCompare(b.title));
+    const sorted = [...items].sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
     const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
     const page = Math.max(1, Math.min(libState.page, totalPages));
     libState.page = page;
