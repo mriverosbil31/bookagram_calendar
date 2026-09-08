@@ -239,12 +239,12 @@ body {
 
 /* ── MAIN ── */
 .main {
-  max-width: 1400px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
 }
 .main--wide {
-  max-width: 1500px;
+  max-width: 1400px;
 }
 
 /* ── MONTH HEADER ── */
@@ -2486,13 +2486,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
   gap: 0 10px;
   padding: 9px 12px;
   align-items: center;
-  border-bottom: 1px solid var(--fog);
+  border-bottom: 1px solid var(--mist);
   transition: background 0.1s;
 }
 .lib-row:last-child { border-bottom: none; }
-.lib-row:hover { background: rgba(255,255,255,0.05); }
+.lib-row:nth-child(even) { background: rgba(255,255,255,0.025); }
+.lib-row:hover { background: rgba(255,255,255,0.06); }
 .lib-row--saga { background: rgba(255,255,255,0.03); }
-.lib-row--saga:hover { background: rgba(255,255,255,0.07); }
+.lib-row--saga:nth-child(even) { background: rgba(255,255,255,0.05); }
+.lib-row--saga:hover { background: rgba(255,255,255,0.09); }
 
 .lib-cell { min-width: 0; }
 .lib-cell-num { display: flex; justify-content: center; }
