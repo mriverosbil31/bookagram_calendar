@@ -627,7 +627,7 @@ body {
   display: inline-block;
 }
 
-.vnav:hover  { color: var(--ink); }
+.vnav:hover  { color: var(--parchment); }
 .vnav.active { color: var(--blood-light); border-bottom-color: var(--blood-light); }
 
 /* ── CARD TOP ROW ── */
@@ -1191,7 +1191,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 
 /* ── READING JOURNAL ─────────────────────────────────────────────── */
-.journal-view { max-width: 860px; margin: 0 auto; }
+.journal-view { max-width: none; }
 
 /* ── add panel ── */
 .jnl-add-panel {
