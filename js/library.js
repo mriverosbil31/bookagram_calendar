@@ -1,6 +1,6 @@
 // ─── My Library ───────────────────────────────────────────────────
 const LIBRARY_KEY = 'thc_library';
-let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' };
+let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all', libView: 'all' };
 let libExpandedSagas = new Set();
 
 // ─── TBR Spinner state ────────────────────────────────────────────
@@ -184,6 +184,34 @@ function libRowHTML(b, context) {
     return `<span class="lib-tag-pill" style="background:${c.bg};color:${c.color};border-color:${c.border}">${esc(t)}<button class="lib-tag-del" onclick="removeLibTag(${b.addedAt},this.dataset.tag)" data-tag="${esc(t)}" title="Remove tag">×</button></span>`;
   }).join('');
   const tagsRow = `<div class="lib-tags-row">${tagPills}<button class="lib-tag-add" onclick="showLibTagInput(${b.addedAt},this)" title="Add tag">+ tag</button></div>`;
+
+  if (context === 'all') {
+    const typeBadge = b.sagaName
+      ? `<span class="lib-type-badge lib-type-series">${esc(b.sagaName)}${b.sagaOrder ? ` #${b.sagaOrder}` : ''}</span>`
+      : `<span class="lib-type-badge lib-type-standalone">Stand-alone</span>`;
+    return `<div class="lib-row" data-lib-id="${b.addedAt}">
+      <div class="lib-cell lib-cell-title">
+        <input class="lib-title-in" value="${esc(b.title)}" title="${esc(b.title)}" placeholder="Title"
+          onblur="updateLibField(${b.addedAt},'title',this.value)">
+        ${typeBadge}
+        ${tagsRow}
+      </div>
+      <div class="lib-cell lib-cell-author">
+        <input class="lib-author-in" value="${esc(b.author)}" placeholder="Author"
+          list="global-authors-list"
+          onblur="updateLibField(${b.addedAt},'author',this.value)">
+      </div>
+      <div class="lib-cell lib-cell-format">${libFmtBadges(b)}</div>
+      <div class="lib-cell lib-cell-status">
+        <button class="lib-read-badge" data-read="${b.read}" onclick="toggleLibRead(${b.addedAt})">
+          ${b.read ? '✓ Read' : 'Unread'}
+        </button>
+      </div>
+      <div class="lib-cell lib-cell-del">
+        <button class="lib-del-btn" onclick="deleteLibraryBook(${b.addedAt})" title="Remove">×</button>
+      </div>
+    </div>`;
+  }
 
   if (context === 'saga') {
     return `<div class="lib-row lib-row--saga" data-lib-id="${b.addedAt}">
@@ -488,6 +516,16 @@ function tbrUpdateCounter() {
   el.dataset.empty = n === 0 ? '1' : '';
 }
 
+function setLibView(v) {
+  libState.libView = v;
+  libState.page = 1;
+  document.querySelectorAll('.lib-subtab').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === v)
+  );
+  renderLibGrid();
+  if (v === 'series') initLibSagaBooksDrag();
+}
+
 function renderTbrSpinner() {
   const allTags = new Set();
   getLibrary().map(normLibBook)
@@ -613,6 +651,12 @@ function renderLibraryView() {
           <div class="lib-tag-filter-row" id="lib-tag-filter-row"></div>
         </div>
 
+        <div class="lib-subtabs">
+          <button class="lib-subtab${libState.libView==='all'?' active':''}" data-view="all" onclick="setLibView('all')">All Books</button>
+          <button class="lib-subtab${libState.libView==='series'?' active':''}" data-view="series" onclick="setLibView('series')">Series</button>
+          <button class="lib-subtab${libState.libView==='standalone'?' active':''}" data-view="standalone" onclick="setLibView('standalone')">Stand-alone</button>
+        </div>
+
         <div id="lib-grid" class="lib-grid-wrap"></div>
       </div>
 
@@ -671,43 +715,24 @@ function renderLibGrid() {
     return;
   }
 
-  // ── Split ALL filtered items into saga groups + standalone (before paginating) ──
-  const sagaMap   = {};
-  const sagaNames = [];
-  const standalone = [];
-
-  items.forEach(b => {
-    if (b.sagaName) {
-      if (!sagaMap[b.sagaName]) { sagaMap[b.sagaName] = []; sagaNames.push(b.sagaName); }
-      sagaMap[b.sagaName].push(b);
-    } else {
-      standalone.push(b);
-    }
-  });
-
-  // Sort each saga by sagaOrder
-  sagaNames.forEach(name =>
-    sagaMap[name].sort((a, b) => (a.sagaOrder ?? 999) - (b.sagaOrder ?? 999))
-  );
-
-  // Paginate standalone books only
-  const totalPages = standalone.length ? Math.ceil(standalone.length / ITEMS_PER_PAGE) : 1;
-  const page = Math.max(1, Math.min(libState.page, totalPages));
-  libState.page = page;
-  const pageStandalone = standalone.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
   const countLabel = `${totalLib} book${totalLib !== 1 ? 's' : ''} in your library` +
     (filtered !== totalLib ? ` · ${filtered} matching` : '');
 
-  // ── Sagas panel ──────────────────────────────────────────────────
-  const sagasPanel = sagaNames.length
-    ? `<div class="lib-table lib-table--sagas">${sagaNames.map(name => sagaGroupHTML(name, sagaMap[name])).join('')}</div>`
-    : `<p class="lib-panel-empty">No series yet — type a series name on any book and it will appear here.</p>`;
+  function buildPagination(page, totalPages) {
+    let p = `<div class="jnl-pagination">
+      <button class="jpag-btn" onclick="setLibPage(${page - 1})"${page === 1 ? ' disabled' : ''}>‹</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - page) > 1) {
+        if (i === 3 || i === totalPages - 2) p += `<span class="jpag-ellipsis">…</span>`;
+        continue;
+      }
+      p += `<button class="jpag-btn${i === page ? ' active' : ''}" onclick="setLibPage(${i})">${i}</button>`;
+    }
+    return p + `<button class="jpag-btn" onclick="setLibPage(${page + 1})"${page === totalPages ? ' disabled' : ''}>›</button></div>`;
+  }
 
-  // ── Books panel ───────────────────────────────────────────────────
-  let booksTable = '';
-  if (standalone.length) {
-    booksTable = `<div class="lib-table lib-table--books">
+  function buildBooksTable(rows, context) {
+    return `<div class="lib-table lib-table--books">
       <div class="lib-table-head">
         <div class="lib-th">Title</div>
         <div class="lib-th">Author</div>
@@ -715,45 +740,53 @@ function renderLibGrid() {
         <div class="lib-th">Status</div>
         <div class="lib-th"></div>
       </div>
-      ${pageStandalone.map(b => libRowHTML(b, 'book')).join('')}
+      ${rows.map(b => libRowHTML(b, context)).join('')}
     </div>`;
-    if (standalone.length > ITEMS_PER_PAGE) {
-      booksTable += `<div class="jnl-pagination">
-        <button class="jpag-btn" onclick="setLibPage(${page - 1})"${page === 1 ? ' disabled' : ''}>‹</button>`;
-      for (let i = 1; i <= totalPages; i++) {
-        if (totalPages > 7 && i > 2 && i < totalPages - 1 && Math.abs(i - page) > 1) {
-          if (i === 3 || i === totalPages - 2) booksTable += `<span class="jpag-ellipsis">…</span>`;
-          continue;
-        }
-        booksTable += `<button class="jpag-btn${i === page ? ' active' : ''}" onclick="setLibPage(${i})">${i}</button>`;
-      }
-      booksTable += `<button class="jpag-btn" onclick="setLibPage(${page + 1})"${page === totalPages ? ' disabled' : ''}>›</button></div>`;
-    }
-  } else {
-    booksTable = `<p class="lib-panel-empty">All your books are in a series!</p>`;
   }
 
-  const sagaBookCount = items.filter(b => b.sagaName).length;
-  const html = `<div class="lib-count">${countLabel}</div>
-  <div class="lib-split">
-    <div class="lib-panel lib-panel--sagas">
-      <div class="lib-panel-hd">
-        <span class="lib-panel-title">Sagas & Series</span>
-        ${sagaNames.length ? `<span class="lib-panel-count">${sagaNames.length} series · ${sagaBookCount} book${sagaBookCount !== 1 ? 's' : ''}</span>` : ''}
-      </div>
-      ${sagasPanel}
-    </div>
-    <div class="lib-panel lib-panel--books">
-      <div class="lib-panel-hd">
-        <span class="lib-panel-title">Books</span>
-        ${standalone.length ? `<span class="lib-panel-count">${standalone.length} book${standalone.length !== 1 ? 's' : ''}</span>` : ''}
-      </div>
-      ${booksTable}
-    </div>
-  </div>`;
+  // ── All Books (flat alphabetical) ─────────────────────────────────
+  if (libState.libView === 'all') {
+    const sorted = [...items].sort((a, b) => a.title.localeCompare(b.title));
+    const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+    const page = Math.max(1, Math.min(libState.page, totalPages));
+    libState.page = page;
+    const pageItems = sorted.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+    let html = `<div class="lib-count">${countLabel}</div>${buildBooksTable(pageItems, 'all')}`;
+    if (sorted.length > ITEMS_PER_PAGE) html += buildPagination(page, totalPages);
+    container.innerHTML = html;
+    return;
+  }
 
+  // ── Series ────────────────────────────────────────────────────────
+  if (libState.libView === 'series') {
+    const sagaMap = {}, sagaNames = [];
+    items.filter(b => b.sagaName).forEach(b => {
+      if (!sagaMap[b.sagaName]) { sagaMap[b.sagaName] = []; sagaNames.push(b.sagaName); }
+      sagaMap[b.sagaName].push(b);
+    });
+    sagaNames.forEach(name => sagaMap[name].sort((a, b) => (a.sagaOrder ?? 999) - (b.sagaOrder ?? 999)));
+    const sagaBookCount = items.filter(b => b.sagaName).length;
+    const sagasHTML = sagaNames.length
+      ? `<div class="lib-table lib-table--sagas">${sagaNames.map(name => sagaGroupHTML(name, sagaMap[name])).join('')}</div>`
+      : `<p class="lib-panel-empty">No series yet — add a series name to any book and it will appear here.</p>`;
+    container.innerHTML = `<div class="lib-count">${countLabel}${sagaNames.length ? ` · ${sagaNames.length} series` : ''}</div>${sagasHTML}`;
+    initLibSagaBooksDrag();
+    return;
+  }
+
+  // ── Stand-alone ───────────────────────────────────────────────────
+  const standalone = items.filter(b => !b.sagaName);
+  if (!standalone.length) {
+    container.innerHTML = `<div class="lib-count">${countLabel}</div><p class="lib-panel-empty">All your books are in a series!</p>`;
+    return;
+  }
+  const totalPages = Math.max(1, Math.ceil(standalone.length / ITEMS_PER_PAGE));
+  const page = Math.max(1, Math.min(libState.page, totalPages));
+  libState.page = page;
+  const pageStandalone = standalone.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  let html = `<div class="lib-count">${countLabel}</div>${buildBooksTable(pageStandalone, 'book')}`;
+  if (standalone.length > ITEMS_PER_PAGE) html += buildPagination(page, totalPages);
   container.innerHTML = html;
-  initLibSagaBooksDrag();
 }
 
 // ─── Drag books within a saga to reorder ─────────────────────────

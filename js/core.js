@@ -152,12 +152,13 @@ function setView(view) {
   document.getElementById('vnav-' + view)?.classList.add('active');
   document.getElementById('month-nav-wrap').style.display = view === 'calendar' ? '' : 'none';
   closeDrawer();
-  if (view === 'calendar')       { archivedMonthsMode = false; advanceToActiveMonth(); renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
-  else if (view === 'books')     renderBooksView();
-  else if (view === 'resources') renderResourcesView();
+  document.getElementById('main-content').classList.toggle('main--wide', view === 'library');
+  if (view === 'library')        { libState = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all', libView: 'all' }; renderLibraryView(); }
   else if (view === 'journal')   { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }
-  else if (view === 'library')   { libState = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all' }; renderLibraryView(); }
+  else if (view === 'resources') renderResourcesView();
   else if (view === 'todos')     renderTodosView();
+  else if (view === 'calendar')  { archivedMonthsMode = false; advanceToActiveMonth(); renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
+  else if (view === 'books')     renderBooksView();
   else if (view === 'sprint')    renderSprintView();
 }
 
@@ -195,9 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   initTodos();
-  const valid = ['calendar', 'books', 'journal', 'resources', 'library', 'todos', 'sprint'];
+  const valid = ['library', 'journal', 'resources', 'todos', 'calendar', 'books', 'sprint'];
   const hash  = window.location.hash.slice(1);
-  setView(valid.includes(hash) ? hash : 'calendar');
+  setView(valid.includes(hash) ? hash : 'library');
 
   window.addEventListener('hashchange', () => {
     const h = window.location.hash.slice(1);
