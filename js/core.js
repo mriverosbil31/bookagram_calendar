@@ -153,7 +153,7 @@ function setView(view) {
   document.getElementById('month-nav-wrap').style.display = view === 'calendar' ? '' : 'none';
   closeDrawer();
   document.getElementById('main-content').classList.toggle('main--wide', view === 'library');
-  if (view === 'library')        { libState = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all', libView: 'all' }; renderLibraryView(); }
+  if (view === 'library')        { libState = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all', libView: 'all', dateRange: 'all' }; renderLibraryView(); }
   else if (view === 'journal')   { jnlState = { sort: 'date', author: 'all', page: 1 }; renderJournalView(); }
   else if (view === 'resources') renderResourcesView();
   else if (view === 'todos')     renderTodosView();

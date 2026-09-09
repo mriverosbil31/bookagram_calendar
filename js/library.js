@@ -1,6 +1,6 @@
 // ─── My Library ───────────────────────────────────────────────────
 const LIBRARY_KEY = 'thc_library';
-let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all', libView: 'all' };
+let libState        = { page: 1, format: 'all', read: 'all', search: '', author: 'all', tag: 'all', libView: 'all', dateRange: 'all' };
 let libExpandedSagas = new Set();
 
 // ─── TBR Spinner state ────────────────────────────────────────────
@@ -648,6 +648,15 @@ function renderLibraryView() {
               </select>
             </div>
           </div>
+          <div class="lib-filter-row">
+            <div class="lib-filter-group">
+              <span class="lib-filter-label">Added:</span>
+              <button class="lib-fpill${libState.dateRange==='all'?' active':''}"       data-ftype="dateRange" data-fval="all"   onclick="filterLib('dateRange','all')">All time</button>
+              <button class="lib-fpill${libState.dateRange==='week'?' active':''}"      data-ftype="dateRange" data-fval="week"  onclick="filterLib('dateRange','week')">This week</button>
+              <button class="lib-fpill${libState.dateRange==='month'?' active':''}"     data-ftype="dateRange" data-fval="month" onclick="filterLib('dateRange','month')">This month</button>
+              <button class="lib-fpill${libState.dateRange==='year'?' active':''}"      data-ftype="dateRange" data-fval="year"  onclick="filterLib('dateRange','year')">This year</button>
+            </div>
+          </div>
           <div class="lib-tag-filter-row" id="lib-tag-filter-row"></div>
         </div>
 
@@ -696,6 +705,20 @@ function renderLibGrid() {
   if (libState.read === 'unread')    items = items.filter(b => !b.read);
   if (libState.author !== 'all')     items = items.filter(b => b.author === libState.author);
   if (libState.tag    !== 'all')     items = items.filter(b => b.tags.includes(libState.tag));
+
+  // Date added filter
+  if (libState.dateRange !== 'all') {
+    const now = new Date();
+    let cutoff;
+    if (libState.dateRange === 'week') {
+      cutoff = new Date(now); cutoff.setDate(now.getDate() - 7);
+    } else if (libState.dateRange === 'month') {
+      cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (libState.dateRange === 'year') {
+      cutoff = new Date(now.getFullYear(), 0, 1);
+    }
+    if (cutoff) items = items.filter(b => (b.addedAt || 0) >= cutoff.getTime());
+  }
 
   // Sync filter UI
   renderLibTagFilters(allBooks);
