@@ -4144,14 +4144,21 @@ button, a { -webkit-tap-highlight-color: transparent; }
   white-space: nowrap;
 }
 
+/* Checkboxes stack */
+.advent-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
 /* Ready checkbox */
 .advent-ready-wrap {
   display: flex;
   align-items: center;
   gap: 5px;
   cursor: pointer;
-  flex-shrink: 0;
-  margin-top: 4px;
 }
 .advent-chk {
   accent-color: var(--blood);
@@ -4169,6 +4176,19 @@ button, a { -webkit-tap-highlight-color: transparent; }
   user-select: none;
 }
 .advent-box--ready .advent-check-label { color: var(--both-teal); }
+
+/* Messaged checkbox */
+.advent-chk--msg { accent-color: #2a7d6b; }
+.advent-msg-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ash);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+.advent-box--messaged { border-left: 3px solid #2a7d6b; }
+.advent-box--messaged .advent-msg-label { color: #3fa88e; }
 
 /* Fields */
 .advent-fields { display: flex; flex-direction: column; gap: 8px; }

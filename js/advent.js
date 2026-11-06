@@ -32,7 +32,6 @@ function toggleAdventReady(day) {
   if (!data[day]) data[day] = {};
   data[day].ready = !data[day].ready;
   saveAdvent(data);
-  // Toggle CSS class + disabled state without full re-render
   const box = document.getElementById(`advent-box-${day}`);
   if (!box) return;
   const ready = data[day].ready;
@@ -42,6 +41,19 @@ function toggleAdventReady(day) {
   const lbl = box.querySelector('.advent-check-label');
   if (lbl) lbl.textContent = ready ? '✓ Ready' : 'Mark ready';
   _adventUpdateProgress();
+}
+
+function toggleAdventMessaged(day) {
+  const data = getAdvent();
+  if (!data[day]) data[day] = {};
+  data[day].messaged = !data[day].messaged;
+  saveAdvent(data);
+  const box = document.getElementById(`advent-box-${day}`);
+  if (!box) return;
+  const messaged = data[day].messaged;
+  box.classList.toggle('advent-box--messaged', messaged);
+  const lbl = box.querySelector('.advent-msg-label');
+  if (lbl) lbl.textContent = messaged ? '✓ Messaged' : 'Messaged?';
 }
 
 function _adventUpdateProgress() {
@@ -56,27 +68,36 @@ function _adventUpdateProgress() {
 function renderAdventView() {
   const container = document.getElementById('main-content');
   if (!container) return;
-  const data  = getAdvent();
-  const done  = Object.values(data).filter(v => v.ready).length;
+  const data     = getAdvent();
+  const done     = Object.values(data).filter(v => v.ready).length;
+  const messaged = Object.values(data).filter(v => v.messaged).length;
 
   let boxes = '';
   for (let d = 1; d <= 25; d++) {
-    const entry   = data[d] || {};
-    const ready   = !!entry.ready;
-    const dayName = _adventDayName(d);
+    const entry    = data[d] || {};
+    const ready    = !!entry.ready;
+    const msg      = !!entry.messaged;
+    const dayName  = _adventDayName(d);
 
     boxes += `
-    <div class="advent-box${ready ? ' advent-box--ready' : ''}" id="advent-box-${d}">
+    <div class="advent-box${ready ? ' advent-box--ready' : ''}${msg ? ' advent-box--messaged' : ''}" id="advent-box-${d}">
       <div class="advent-box-hd">
         <div class="advent-date-block">
           <span class="advent-num">${d}</span>
           <span class="advent-dname">${dayName} · Dec ${d}</span>
         </div>
-        <label class="advent-ready-wrap">
-          <input type="checkbox" class="advent-chk" ${ready ? 'checked' : ''}
-            onchange="toggleAdventReady(${d})">
-          <span class="advent-check-label">${ready ? '✓ Ready' : 'Mark ready'}</span>
-        </label>
+        <div class="advent-checks">
+          <label class="advent-ready-wrap">
+            <input type="checkbox" class="advent-chk" ${ready ? 'checked' : ''}
+              onchange="toggleAdventReady(${d})">
+            <span class="advent-check-label">${ready ? '✓ Ready' : 'Mark ready'}</span>
+          </label>
+          <label class="advent-ready-wrap advent-msg-wrap">
+            <input type="checkbox" class="advent-chk advent-chk--msg" ${msg ? 'checked' : ''}
+              onchange="toggleAdventMessaged(${d})">
+            <span class="advent-msg-label">${msg ? '✓ Messaged' : 'Messaged?'}</span>
+          </label>
+        </div>
       </div>
       <div class="advent-fields">
         <div class="advent-field">
