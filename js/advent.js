@@ -83,8 +83,8 @@ function _adventUpdateProgress() {
   const done  = Object.values(data).filter(v => v.ready).length;
   const bar   = document.querySelector('.advent-prog-fill');
   const label = document.querySelector('.advent-prog-label');
-  if (bar)   bar.style.width = `${(done / 25) * 100}%`;
-  if (label) label.textContent = `${done} / 25 ready`;
+  if (bar)   bar.style.width = `${(done / 24) * 100}%`;
+  if (label) label.textContent = `${done} / 24 ready`;
 }
 
 function renderAdventView() {
@@ -94,7 +94,7 @@ function renderAdventView() {
   const done = Object.values(data).filter(v => v.ready).length;
 
   let boxes = '';
-  for (let d = 1; d <= 25; d++) {
+  for (let d = 1; d <= 24; d++) {
     const entry   = data[d] || {};
     const ready   = !!entry.ready;
     const msg     = !!entry.messaged;
@@ -146,9 +146,8 @@ function renderAdventView() {
         </div>
       </div>
 
-      <button class="advent-backup-btn" id="advent-backup-btn-${d}"
-        onclick="toggleAdventBackup(${d})"
-        ${hasBk ? 'class="advent-backup-btn advent-backup-btn--open"' : ''}>
+      <button class="advent-backup-btn${hasBk ? ' advent-backup-btn--open' : ''}" id="advent-backup-btn-${d}"
+        onclick="toggleAdventBackup(${d})">
         ${hasBk ? '— Hide backup' : '＋ Add backup'}
       </button>
 
@@ -181,11 +180,11 @@ function renderAdventView() {
     <div class="advent-hd">
       <div class="advent-hd-left">
         <h2 class="advent-title">🎄 Christmas Book Countdown</h2>
-        <p class="advent-sub">25 days · 25 books · 25 creators</p>
+        <p class="advent-sub">24 days · 24 books · 24 creators</p>
       </div>
       <div class="advent-progress">
-        <div class="advent-prog-bar"><div class="advent-prog-fill" style="width:${(done/25)*100}%"></div></div>
-        <span class="advent-prog-label">${done} / 25 ready</span>
+        <div class="advent-prog-bar"><div class="advent-prog-fill" style="width:${(done/24)*100}%"></div></div>
+        <span class="advent-prog-label">${done} / 24 ready</span>
       </div>
     </div>
     <div class="advent-grid">${boxes}</div>
