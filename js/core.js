@@ -160,6 +160,7 @@ function setView(view) {
   else if (view === 'calendar')  { archivedMonthsMode = false; advanceToActiveMonth(); renderMonthNav(); renderCalendar(); syncCalendarFromCloud(); }
   else if (view === 'books')     renderBooksView();
   else if (view === 'sprint')    renderSprintView();
+  else if (view === 'advent')    renderAdventView();
 }
 
 function setMonth(i) {
@@ -196,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   initTodos();
-  const valid = ['library', 'journal', 'resources', 'todos', 'calendar', 'books', 'sprint'];
+  const valid = ['library', 'journal', 'resources', 'todos', 'calendar', 'advent', 'books', 'sprint'];
   const hash  = window.location.hash.slice(1);
   setView(valid.includes(hash) ? hash : 'library');
 

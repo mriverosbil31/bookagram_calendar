@@ -4029,3 +4029,193 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .jem-footer { padding: 12px 16px; }
 }
 .jnl-search-input::placeholder { color: var(--ash); }
+
+/* ══════════════════════════════════════════════════════════════
+   🎄 CHRISTMAS BOOK COUNTDOWN — ADVENT VIEW
+   ══════════════════════════════════════════════════════════════ */
+
+.advent-view { padding-bottom: 3rem; }
+
+/* Header */
+.advent-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.advent-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 900;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+.advent-sub {
+  font-size: 13px;
+  color: var(--ash);
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
+/* Progress bar */
+.advent-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.advent-prog-bar {
+  width: 220px;
+  height: 6px;
+  background: var(--mist);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.advent-prog-fill {
+  height: 100%;
+  background: var(--blood);
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+.advent-prog-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ash);
+  letter-spacing: 0.03em;
+}
+
+/* Grid */
+.advent-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+/* Each box */
+.advent-box {
+  background: var(--card);
+  border: 1px solid var(--mist);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, opacity 0.3s;
+}
+.advent-box:hover { border-color: var(--ash); }
+
+/* Ready state */
+.advent-box--ready {
+  opacity: 0.45;
+  border-color: var(--fog);
+  pointer-events: auto;
+}
+.advent-box--ready:hover { border-color: var(--mist); }
+.advent-box--ready .advent-ready-wrap { pointer-events: auto; }
+
+/* Box header */
+.advent-box-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+.advent-date-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.advent-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--blood-light);
+  line-height: 1;
+}
+.advent-dname {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--ash);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Ready checkbox */
+.advent-ready-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.advent-chk {
+  accent-color: var(--blood);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.advent-check-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ash);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+.advent-box--ready .advent-check-label { color: var(--both-teal); }
+
+/* Fields */
+.advent-fields { display: flex; flex-direction: column; gap: 8px; }
+.advent-field  { display: flex; flex-direction: column; gap: 3px; }
+.advent-field-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ash);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.advent-input,
+.advent-textarea {
+  background: var(--shadow);
+  border: 1px solid var(--fog);
+  border-radius: 7px;
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  padding: 6px 8px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.advent-input::placeholder,
+.advent-textarea::placeholder { color: rgba(155,163,181,0.5); }
+.advent-input:focus,
+.advent-textarea:focus { border-color: var(--blood); }
+.advent-input:disabled,
+.advent-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.advent-textarea {
+  resize: vertical;
+  min-height: 52px;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 1050px) { .advent-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 800px)  { .advent-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px)  { .advent-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 360px)  { .advent-grid { grid-template-columns: 1fr; } }
+@media (max-width: 800px)  {
+  .advent-hd { flex-direction: column; }
+  .advent-progress { align-items: flex-start; }
+  .advent-prog-bar { width: 100%; max-width: 280px; }
+}
