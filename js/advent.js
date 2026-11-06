@@ -27,6 +27,18 @@ function adventInput(day, field, value) {
   }, 350);
 }
 
+// Backup fields: stored under data[day].backup.{creator,book,oneliner}
+function adventBackupInput(day, field, value) {
+  clearTimeout(_adventTimers[`${day}_bk_${field}`]);
+  _adventTimers[`${day}_bk_${field}`] = setTimeout(() => {
+    const data = getAdvent();
+    if (!data[day]) data[day] = {};
+    if (!data[day].backup) data[day].backup = {};
+    data[day].backup[field] = value;
+    saveAdvent(data);
+  }, 350);
+}
+
 function toggleAdventReady(day) {
   const data  = getAdvent();
   if (!data[day]) data[day] = {};
@@ -56,6 +68,16 @@ function toggleAdventMessaged(day) {
   if (lbl) lbl.textContent = messaged ? '✓ Messaged' : 'Messaged?';
 }
 
+function toggleAdventBackup(day) {
+  const section = document.getElementById(`advent-backup-${day}`);
+  const btn     = document.getElementById(`advent-backup-btn-${day}`);
+  if (!section || !btn) return;
+  const open = section.style.display !== 'none';
+  section.style.display = open ? 'none' : 'flex';
+  btn.textContent = open ? '＋ Add backup' : '— Hide backup';
+  btn.classList.toggle('advent-backup-btn--open', !open);
+}
+
 function _adventUpdateProgress() {
   const data  = getAdvent();
   const done  = Object.values(data).filter(v => v.ready).length;
@@ -68,16 +90,17 @@ function _adventUpdateProgress() {
 function renderAdventView() {
   const container = document.getElementById('main-content');
   if (!container) return;
-  const data     = getAdvent();
-  const done     = Object.values(data).filter(v => v.ready).length;
-  const messaged = Object.values(data).filter(v => v.messaged).length;
+  const data = getAdvent();
+  const done = Object.values(data).filter(v => v.ready).length;
 
   let boxes = '';
   for (let d = 1; d <= 25; d++) {
-    const entry    = data[d] || {};
-    const ready    = !!entry.ready;
-    const msg      = !!entry.messaged;
-    const dayName  = _adventDayName(d);
+    const entry   = data[d] || {};
+    const ready   = !!entry.ready;
+    const msg     = !!entry.messaged;
+    const bk      = entry.backup || {};
+    const hasBk   = !!(bk.creator || bk.book || bk.oneliner);
+    const dayName = _adventDayName(d);
 
     boxes += `
     <div class="advent-box${ready ? ' advent-box--ready' : ''}${msg ? ' advent-box--messaged' : ''}" id="advent-box-${d}">
@@ -99,6 +122,7 @@ function renderAdventView() {
           </label>
         </div>
       </div>
+
       <div class="advent-fields">
         <div class="advent-field">
           <span class="advent-field-lbl">Creator</span>
@@ -119,6 +143,34 @@ function renderAdventView() {
           <textarea class="advent-textarea" placeholder="One sentence…"
             ${ready ? 'disabled' : ''}
             oninput="adventInput(${d},'oneliner',this.value)">${esc(entry.oneliner || '')}</textarea>
+        </div>
+      </div>
+
+      <button class="advent-backup-btn" id="advent-backup-btn-${d}"
+        onclick="toggleAdventBackup(${d})"
+        ${hasBk ? 'class="advent-backup-btn advent-backup-btn--open"' : ''}>
+        ${hasBk ? '— Hide backup' : '＋ Add backup'}
+      </button>
+
+      <div class="advent-backup-section" id="advent-backup-${d}"
+        style="display:${hasBk ? 'flex' : 'none'}">
+        <div class="advent-backup-label">Backup option</div>
+        <div class="advent-field">
+          <span class="advent-field-lbl">Creator</span>
+          <input class="advent-input" type="text" placeholder="@handle or name"
+            value="${esc(bk.creator || '')}"
+            oninput="adventBackupInput(${d},'creator',this.value)">
+        </div>
+        <div class="advent-field">
+          <span class="advent-field-lbl">Book</span>
+          <input class="advent-input" type="text" placeholder="Title — Author"
+            value="${esc(bk.book || '')}"
+            oninput="adventBackupInput(${d},'book',this.value)">
+        </div>
+        <div class="advent-field">
+          <span class="advent-field-lbl">Why this book?</span>
+          <textarea class="advent-textarea" placeholder="One sentence…"
+            oninput="adventBackupInput(${d},'oneliner',this.value)">${esc(bk.oneliner || '')}</textarea>
         </div>
       </div>
     </div>`;

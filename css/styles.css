@@ -4229,6 +4229,43 @@ button, a { -webkit-tap-highlight-color: transparent; }
   line-height: 1.5;
 }
 
+/* Backup section */
+.advent-backup-btn {
+  margin-top: 8px;
+  background: none;
+  border: 1px dashed var(--mist);
+  border-radius: 6px;
+  color: var(--ash);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 5px 10px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.advent-backup-btn:hover,
+.advent-backup-btn--open {
+  border-color: var(--ash);
+  color: var(--ink);
+}
+.advent-backup-section {
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--mist);
+}
+.advent-backup-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #c47c2a;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* Responsive */
 @media (max-width: 1050px) { .advent-grid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 800px)  { .advent-grid { grid-template-columns: repeat(3, 1fr); } }
