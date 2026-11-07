@@ -23,7 +23,7 @@ function adventInput(day, field, value) {
     const data = getAdvent();
     if (!data[day]) data[day] = {};
     data[day][field] = value;
-    saveAdvent(data);
+    saveAndSyncAdvent(data);
   }, 350);
 }
 
@@ -35,7 +35,7 @@ function adventBackupInput(day, field, value) {
     if (!data[day]) data[day] = {};
     if (!data[day].backup) data[day].backup = {};
     data[day].backup[field] = value;
-    saveAdvent(data);
+    saveAndSyncAdvent(data);
   }, 350);
 }
 
@@ -43,7 +43,7 @@ function toggleAdventReady(day) {
   const data  = getAdvent();
   if (!data[day]) data[day] = {};
   data[day].ready = !data[day].ready;
-  saveAdvent(data);
+  saveAndSyncAdvent(data);
   const box = document.getElementById(`advent-box-${day}`);
   if (!box) return;
   const ready = data[day].ready;
@@ -59,7 +59,7 @@ function toggleAdventMessaged(day) {
   const data = getAdvent();
   if (!data[day]) data[day] = {};
   data[day].messaged = !data[day].messaged;
-  saveAdvent(data);
+  saveAndSyncAdvent(data);
   const box = document.getElementById(`advent-box-${day}`);
   if (!box) return;
   const messaged = data[day].messaged;
@@ -90,6 +90,7 @@ function _adventUpdateProgress() {
 function renderAdventView() {
   const container = document.getElementById('main-content');
   if (!container) return;
+  syncAdventFromCloud();
   const data = getAdvent();
   const done = Object.values(data).filter(v => v.ready).length;
 

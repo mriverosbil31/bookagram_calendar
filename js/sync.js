@@ -77,6 +77,27 @@ function saveAndSyncTodos(arr) {
   _sbSet('todos', arr);
 }
 
+// ─── Advent sync ──────────────────────────────────────────────────
+async function syncAdventFromCloud() {
+  try {
+    const remote = await _sbGet('advent');
+    const local  = getAdvent();
+    if (!remote || !Object.keys(remote).length) {
+      if (Object.keys(local).length) _sbSet('advent', local);
+      return;
+    }
+    if (JSON.stringify(remote) !== JSON.stringify(local)) {
+      saveAdvent(remote);
+      if (currentView === 'advent') renderAdventView();
+    }
+  } catch(e) { console.warn('[sync] advent fetch failed', e); }
+}
+
+function saveAndSyncAdvent(obj) {
+  saveAdvent(obj);
+  _sbSet('advent', obj);
+}
+
 // ─── Calendar data sync ───────────────────────────────────────────
 const _calLastWrite = {};
 const _SYNC_GRACE   = 10_000;
