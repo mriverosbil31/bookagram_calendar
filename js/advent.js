@@ -90,6 +90,31 @@ function toggleAdventBackup(day) {
   btn.classList.toggle('advent-backup-btn--open', !open);
 }
 
+function _initAdventSortable() {
+  const grid = document.querySelector('.advent-grid');
+  if (!grid || typeof Sortable === 'undefined') return;
+  Sortable.create(grid, {
+    handle: '.advent-drag-handle',
+    animation: 150,
+    ghostClass: 'advent-ghost',
+    chosenClass: 'advent-chosen',
+    onEnd() {
+      const data = getAdvent();
+      const boxes = [...grid.querySelectorAll('.advent-box[data-day]')];
+      const originalDays = boxes.map(el => el.dataset.day);
+      // snapshot all entries by their current day key
+      const snapshot = {};
+      originalDays.forEach(d => { snapshot[d] = JSON.parse(JSON.stringify(data[d] || {})); });
+      // remap: position 0 → day 1, position 1 → day 2, …
+      originalDays.forEach((originalDay, idx) => {
+        data[idx + 1] = snapshot[originalDay];
+      });
+      saveAndSyncAdvent(data);
+      renderAdventView();
+    }
+  });
+}
+
 function _adventUpdateProgress() {
   const data  = getAdvent();
   const done  = Object.values(data).filter(v => v.posted).length;
@@ -152,11 +177,14 @@ function renderAdventView() {
     const dayName = _adventDayName(d);
 
     boxes += `
-    <div class="advent-box${posted ? ' advent-box--posted' : ''}${msg ? ' advent-box--messaged' : ''}" id="advent-box-${d}">
+    <div class="advent-box${posted ? ' advent-box--posted' : ''}${msg ? ' advent-box--messaged' : ''}" id="advent-box-${d}" data-day="${d}">
       <div class="advent-box-hd">
-        <div class="advent-date-block">
-          <span class="advent-num">${d}</span>
-          <span class="advent-dname">${dayName} · Dec ${d}</span>
+        <div class="advent-box-hd-left">
+          <span class="advent-drag-handle" title="Drag to reorder">⠿</span>
+          <div class="advent-date-block">
+            <span class="advent-num">${d}</span>
+            <span class="advent-dname">${dayName} · Dec ${d}</span>
+          </div>
         </div>
         <div class="advent-checks">
           <label class="advent-ready-wrap">
@@ -244,4 +272,5 @@ function renderAdventView() {
     ${introBox}
     <div class="advent-grid">${boxes}</div>
   </div>`;
+  _initAdventSortable();
 }

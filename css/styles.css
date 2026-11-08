@@ -4122,6 +4122,28 @@ button, a { -webkit-tap-highlight-color: transparent; }
   justify-content: space-between;
   gap: 6px;
 }
+.advent-box-hd-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.advent-drag-handle {
+  color: var(--mist);
+  font-size: 18px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  padding: 2px 0;
+}
+.advent-drag-handle:hover { color: var(--ash); }
+.advent-drag-handle:active { cursor: grabbing; }
+.advent-ghost {
+  opacity: 0.3;
+  border: 2px dashed var(--ash) !important;
+}
+.advent-chosen { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
 .advent-date-block {
   display: flex;
   flex-direction: column;
