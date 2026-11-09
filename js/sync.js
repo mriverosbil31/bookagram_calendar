@@ -108,10 +108,21 @@ async function adventForcePush() {
   const btn = document.getElementById('advent-sync-btn');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
   try {
-    await _sbSet('advent', getAdvent());
-    _adventSyncStatus('✓ synced');
+    const res = await fetch(_SUPA_URL, {
+      method: 'POST',
+      headers: { ..._SUPA_HDR, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ id: 'advent', entries: getAdvent(), updated_at: new Date().toISOString() })
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.warn('[advent sync] HTTP', res.status, body);
+      _adventSyncStatus('✗ HTTP ' + res.status);
+    } else {
+      _adventSyncStatus('✓ synced');
+    }
   } catch(e) {
-    _adventSyncStatus('✗ failed');
+    console.warn('[advent sync] fetch error:', e);
+    _adventSyncStatus('✗ ' + (e.message || 'network error').slice(0, 30));
   }
   if (btn) { btn.textContent = '↑ Sync'; btn.disabled = false; }
 }
