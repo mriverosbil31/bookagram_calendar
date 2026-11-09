@@ -278,9 +278,15 @@ function renderAdventView() {
         <h2 class="advent-title">🎄 Christmas Book Countdown</h2>
         <p class="advent-sub">24 days · 24 books · 24 creators</p>
       </div>
-      <div class="advent-progress">
-        <div class="advent-prog-bar"><div class="advent-prog-fill" style="width:${(done/25)*100}%"></div></div>
-        <span class="advent-prog-label">${done} / 25 posted</span>
+      <div class="advent-hd-right">
+        <div class="advent-progress">
+          <div class="advent-prog-bar"><div class="advent-prog-fill" style="width:${(done/25)*100}%"></div></div>
+          <span class="advent-prog-label">${done} / 25 posted</span>
+        </div>
+        <div class="advent-sync-row">
+          <span class="advent-sync-status" id="advent-sync-status"></span>
+          <button class="advent-sync-btn" id="advent-sync-btn" onclick="adventForcePush()">↑ Sync</button>
+        </div>
       </div>
     </div>
     ${introBox}

@@ -80,14 +80,20 @@ function saveAndSyncTodos(arr) {
 // ─── Advent sync ──────────────────────────────────────────────────
 async function syncAdventFromCloud() {
   try {
-    const remote = await _sbGet('advent');
-    const local  = getAdvent();
-    if (!remote || !Object.keys(remote).length) {
-      if (Object.keys(local).length) _sbSet('advent', local);
+    const remote    = await _sbGet('advent');
+    const local     = getAdvent();
+    const hasLocal  = Object.keys(local).length > 0;
+    const hasRemote = remote && typeof remote === 'object' && !Array.isArray(remote) && Object.keys(remote).length > 0;
+
+    if (hasLocal && !hasRemote) {
+      // Desktop has data, cloud is empty → push up
+      await _sbSet('advent', local);
+      _adventSyncStatus('↑ pushed to cloud');
       return;
     }
-    if (JSON.stringify(remote) !== JSON.stringify(local)) {
+    if (hasRemote && JSON.stringify(remote) !== JSON.stringify(local)) {
       saveAdvent(remote);
+      _adventSyncStatus('↓ pulled from cloud');
       if (currentView === 'advent') renderAdventView();
     }
   } catch(e) { console.warn('[sync] advent fetch failed', e); }
@@ -96,6 +102,25 @@ async function syncAdventFromCloud() {
 function saveAndSyncAdvent(obj) {
   saveAdvent(obj);
   _sbSet('advent', obj);
+}
+
+async function adventForcePush() {
+  const btn = document.getElementById('advent-sync-btn');
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+  try {
+    await _sbSet('advent', getAdvent());
+    _adventSyncStatus('✓ synced');
+  } catch(e) {
+    _adventSyncStatus('✗ failed');
+  }
+  if (btn) { btn.textContent = '↑ Sync'; btn.disabled = false; }
+}
+
+function _adventSyncStatus(msg) {
+  const el = document.getElementById('advent-sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 3000);
 }
 
 // ─── Calendar data sync ───────────────────────────────────────────
