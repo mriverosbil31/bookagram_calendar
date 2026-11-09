@@ -4317,6 +4317,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
   padding-top: 10px;
   border-top: 1px dashed var(--mist);
 }
+.advent-backup-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 .advent-backup-label {
   font-size: 9px;
   font-weight: 700;
@@ -4324,6 +4329,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.advent-backup-del {
+  background: none;
+  border: none;
+  color: var(--ash);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: 0.03em;
+  transition: color 0.15s;
+}
+.advent-backup-del:hover { color: var(--blood-light); }
 
 /* Responsive */
 @media (max-width: 1050px) { .advent-grid { grid-template-columns: repeat(4, 1fr); } }

@@ -90,6 +90,17 @@ function toggleAdventBackup(day) {
   btn.classList.toggle('advent-backup-btn--open', !open);
 }
 
+function deleteAdventBackup(day) {
+  const data = getAdvent();
+  if (data[day]) { data[day].backup = {}; saveAndSyncAdvent(data); }
+  const section = document.getElementById(`advent-backup-${day}`);
+  const btn     = document.getElementById(`advent-backup-btn-${day}`);
+  if (section) section.style.display = 'none';
+  if (btn) { btn.textContent = '＋ Add backup'; btn.classList.remove('advent-backup-btn--open'); }
+  // clear the input fields visually
+  if (section) section.querySelectorAll('.advent-input, .advent-textarea').forEach(el => el.value = '');
+}
+
 function _initAdventSortable() {
   const grid = document.querySelector('.advent-grid');
   if (!grid || typeof Sortable === 'undefined') return;
@@ -235,7 +246,10 @@ function renderAdventView() {
 
       <div class="advent-backup-section" id="advent-backup-${d}"
         style="display:${hasBk ? 'flex' : 'none'}">
-        <div class="advent-backup-label">Backup option</div>
+        <div class="advent-backup-hd">
+          <span class="advent-backup-label">Backup option</span>
+          <button class="advent-backup-del" onclick="deleteAdventBackup('${d}')" title="Delete backup">✕ Delete</button>
+        </div>
         <div class="advent-field">
           <span class="advent-field-lbl">Creator</span>
           <input class="advent-input" type="text" placeholder="@handle or name"
